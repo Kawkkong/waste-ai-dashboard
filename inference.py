@@ -1,13 +1,8 @@
-# ======================================================
-# inference.py
-# YOLOv11 Segmentation + WAR
-# ======================================================
-
-
 from ultralytics import YOLO
 
 import cv2
 import numpy as np
+
 
 from config import CAMERA_CONFIG
 
@@ -22,12 +17,7 @@ model=YOLO(MODEL_PATH)
 
 
 
-# ==============================
-# Density
-# ==============================
-
-
-def classify_density(WAR,threshold):
+def get_level(WAR,threshold):
 
 
     if WAR==0:
@@ -59,184 +49,29 @@ def classify_density(WAR,threshold):
 
 
 
-def recommendation(level):
 
+def analyze_frame(img,camera):
 
-    text={
 
-        "Normal":
-        "ไม่พบขยะ",
+    h,w=img.shape[:2]
 
 
-        "Low":
-        "ติดตามสถานการณ์",
+    cfg=CAMERA_CONFIG[camera]
 
 
-        "Medium":
-        "เตรียมจัดเก็บ",
+    x1,y1,x2,y2=cfg["roi"]
 
 
-        "High":
-        "แจ้งเจ้าหน้าที่",
 
 
-        "Critical":
-        "เก็บทันที"
 
-    }
+    result=model(img)[0]
 
 
-    return text[level]
 
+    mask=np.zeros(
 
-
-
-
-
-# ==============================
-# Visualization
-# ==============================
-
-
-def create_overlay(
-        image,
-        mask,
-        roi):
-
-
-    output=image.copy()
-
-
-
-    # mask สีแดงสด
-
-
-    color=np.zeros_like(
-        image
-    )
-
-
-    color[mask==1]=(
-        0,
-        0,
-        255
-    )
-
-
-
-    output=cv2.addWeighted(
-
-        image,
-
-        0.55,
-
-        color,
-
-        0.45,
-
-        0
-
-    )
-
-
-
-    # contour สีเหลือง
-
-
-    contours,_=cv2.findContours(
-
-        mask,
-
-        cv2.RETR_EXTERNAL,
-
-        cv2.CHAIN_APPROX_SIMPLE
-
-    )
-
-
-    cv2.drawContours(
-
-        output,
-
-        contours,
-
-        -1,
-
-        (0,255,255),
-
-        3
-
-    )
-
-
-
-    # ROI
-
-
-    cv2.rectangle(
-
-        output,
-
-        (
-        roi["x1"],
-        roi["y1"]
-        ),
-
-        (
-        roi["x2"],
-        roi["y2"]
-        ),
-
-        (0,255,0),
-
-        4
-
-    )
-
-
-
-    return output
-
-
-
-
-
-
-
-# ==============================
-# Main Predict
-# ==============================
-
-
-def predict(
-        image,
-        camera):
-
-
-
-    height,width=image.shape[:2]
-
-
-
-    cam=CAMERA_CONFIG[camera]
-
-    roi=cam["roi"]
-
-
-
-
-    # =========================
-    # YOLO
-    # =========================
-
-
-    result=model(image)[0]
-
-
-
-    combined_mask=np.zeros(
-
-        (height,width),
+        (h,w),
 
         dtype=np.uint8
 
@@ -248,90 +83,64 @@ def predict(
     if result.masks is not None:
 
 
-
-        polygons=result.masks.xy
-
+        masks=result.masks.data.cpu().numpy()
 
 
-        for poly in polygons:
+
+        for m in masks:
 
 
-            poly=poly.astype(
-                np.int32
-            )
+            m=cv2.resize(
 
+                m,
 
-            cv2.fillPoly(
-
-                combined_mask,
-
-                [poly],
-
-                1
+                (w,h)
 
             )
 
 
+            mask[m>0.5]=1
 
 
-
-    # =========================
-    # ROI
-    # =========================
 
 
     roi_mask=np.zeros(
 
-        (height,width),
+        (h,w),
 
         dtype=np.uint8
 
     )
 
 
-    roi_mask[
 
-        roi["y1"]:roi["y2"],
-
-        roi["x1"]:roi["x2"]
-
-    ]=1
+    roi_mask[y1:y2,x1:x2]=1
 
 
 
 
-    garbage_mask=(
 
-        combined_mask *
+    garbage=mask*roi_mask
 
-        roi_mask
 
+
+
+    garbage_pixel=np.sum(
+        garbage
     )
 
 
-
-
-
-    # =========================
-    # WAR
-    # =========================
-
-
-    garbage_pixels=np.sum(
-        garbage_mask
-    )
-
-
-    roi_pixels=np.sum(
+    roi_pixel=np.sum(
         roi_mask
     )
+
 
 
     WAR=(
 
-        garbage_pixels /
+        garbage_pixel/
 
-        roi_pixels
+        roi_pixel
 
     )*100
 
@@ -339,12 +148,11 @@ def predict(
 
 
 
-
-    level=classify_density(
+    level=get_level(
 
         WAR,
 
-        cam["threshold"]
+        cfg["threshold"]
 
     )
 
@@ -352,39 +160,123 @@ def predict(
 
 
 
-    output=create_overlay(
+    # overlay
 
-        image,
 
-        garbage_mask,
+    output=img.copy()
 
-        roi
+
+
+    red=np.zeros_like(img)
+
+
+    red[garbage==1]=(0,0,255)
+
+
+
+    output=cv2.addWeighted(
+
+        img,
+
+        0.7,
+
+        red,
+
+        0.3,
+
+        0
 
     )
 
+
+
+    cv2.rectangle(
+
+        output,
+
+        (x1,y1),
+
+        (x2,y2),
+
+        (0,255,0),
+
+        3
+
+    )
 
 
 
     return {
 
 
-        "WAR":
-        round(WAR,2),
+        "image":output,
 
 
-        "level":
-        level,
+        "WAR":round(WAR,2),
 
 
-        "recommendation":
-        recommendation(level),
+        "level":level
 
-
-        "image":
-        output,
-
-
-        "camera":
-        cam["name"]
 
     }
+
+
+
+
+
+
+
+def analyze_video(path,camera,skip=10):
+
+
+    cap=cv2.VideoCapture(path)
+
+
+    results=[]
+
+
+
+    count=0
+
+
+
+    while True:
+
+
+        ret,frame=cap.read()
+
+
+        if not ret:
+
+            break
+
+
+
+        count+=1
+
+
+
+        if count%skip==0:
+
+
+            r=analyze_frame(
+
+                frame,
+
+                camera
+
+            )
+
+
+            results.append(
+
+                r
+
+            )
+
+
+
+    cap.release()
+
+
+    return results
