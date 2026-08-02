@@ -33,6 +33,7 @@ previous_WAR = {}
 
 
 
+
 # ======================================
 # Density Level
 # ======================================
@@ -62,6 +63,7 @@ def density_level(WAR, threshold):
 
 
 
+
 # ======================================
 # Recommendation
 # ======================================
@@ -87,15 +89,15 @@ def recommendation(level):
 
     }
 
-
     return data[level]
 
 
 
 
 
+
 # ======================================
-# Analyze Frame
+# ANALYZE FRAME
 # ======================================
 
 def analyze_frame(img, camera):
@@ -120,28 +122,15 @@ def analyze_frame(img, camera):
 
 
 
-    print("----------------")
-    print("IMAGE:", w,h)
-    print("CAMERA:", camera)
-
-
-
 
     # ==================================
-    # Camera ROI
+    # Camera Config
     # ==================================
 
     cfg = CAMERA_CONFIG[camera]
 
 
     x1,y1,x2,y2 = cfg["roi"]
-
-
-
-    print(
-        "ROI:",
-        x1,y1,x2,y2
-    )
 
 
 
@@ -169,21 +158,22 @@ def analyze_frame(img, camera):
 
 
 
+
     # ==================================
-    # Create Full Mask
+    # Combined Mask
     # ==================================
 
     combined_mask = np.zeros(
 
-        (IMG_HEIGHT, IMG_WIDTH),
+        (IMG_HEIGHT,IMG_WIDTH),
 
         dtype=np.uint8
 
     )
 
 
-
     detected = 0
+
 
 
 
@@ -196,12 +186,6 @@ def analyze_frame(img, camera):
         detected = len(masks)
 
 
-        print(
-            "Detected masks:",
-            detected
-        )
-
-
 
         for mask in masks:
 
@@ -210,12 +194,11 @@ def analyze_frame(img, camera):
 
                 mask,
 
-                (IMG_WIDTH, IMG_HEIGHT),
+                (IMG_WIDTH,IMG_HEIGHT),
 
                 interpolation=cv2.INTER_NEAREST
 
             )
-
 
 
             combined_mask[
@@ -226,16 +209,6 @@ def analyze_frame(img, camera):
 
 
 
-    else:
-
-        print(
-            "No garbage detected"
-        )
-
-
-
-
-
 
     # ==================================
     # ROI Mask
@@ -243,7 +216,7 @@ def analyze_frame(img, camera):
 
     roi_mask = np.zeros(
 
-        (IMG_HEIGHT, IMG_WIDTH),
+        (IMG_HEIGHT,IMG_WIDTH),
 
         dtype=np.uint8
 
@@ -263,7 +236,7 @@ def analyze_frame(img, camera):
 
 
     # ==================================
-    # Garbage in ROI
+    # Garbage Area
     # ==================================
 
     roi_garbage = (
@@ -279,26 +252,20 @@ def analyze_frame(img, camera):
 
 
     # ==================================
-    # WAR
+    # Calculate WAR
     # ==================================
 
     garbage_pixels = np.sum(
-
         roi_garbage
-
     )
 
 
     roi_pixels = np.sum(
-
         roi_mask
-
     )
 
 
-
     if roi_pixels > 0:
-
 
         WAR = (
 
@@ -307,7 +274,6 @@ def analyze_frame(img, camera):
             roi_pixels
 
         ) * 100
-
 
     else:
 
@@ -329,7 +295,7 @@ def analyze_frame(img, camera):
 
 
     # ==================================
-    # Compare Previous Frame
+    # Compare Previous WAR
     # ==================================
 
     change = 0
@@ -342,18 +308,11 @@ def analyze_frame(img, camera):
         old_WAR = previous_WAR[camera]
 
 
-        if old_WAR > 0:
+        # เปลี่ยนจาก percentage growth
+        # เป็น difference ของ WAR
 
+        change = WAR - old_WAR
 
-            change = (
-
-                (WAR - old_WAR)
-
-                /
-
-                old_WAR
-
-            ) * 100
 
 
 
@@ -368,6 +327,7 @@ def analyze_frame(img, camera):
         2
 
     )
+
 
 
 
@@ -394,8 +354,9 @@ def analyze_frame(img, camera):
 
 
 
+
     # ==================================
-    # Level
+    # Density Level
     # ==================================
 
     level = density_level(
@@ -405,6 +366,7 @@ def analyze_frame(img, camera):
         cfg["threshold"]
 
     )
+
 
 
 
@@ -456,8 +418,6 @@ def analyze_frame(img, camera):
 
 
 
-    # ROI Box
-
     cv2.rectangle(
 
         output,
@@ -476,13 +436,11 @@ def analyze_frame(img, camera):
 
 
 
-    # WAR
-
     cv2.putText(
 
         output,
 
-        f"WAR {WAR}%",
+        f"WAR: {WAR}%",
 
         (40,60),
 
@@ -499,8 +457,6 @@ def analyze_frame(img, camera):
 
 
 
-
-    # Change
 
     cv2.putText(
 
@@ -523,8 +479,6 @@ def analyze_frame(img, camera):
 
 
 
-
-    # Level
 
     cv2.putText(
 
@@ -557,11 +511,9 @@ def analyze_frame(img, camera):
         output,
 
 
-
         "mask":
 
         roi_garbage,
-
 
 
         "WAR":
@@ -569,11 +521,9 @@ def analyze_frame(img, camera):
         WAR,
 
 
-
         "change":
 
         change,
-
 
 
         "trend":
@@ -581,11 +531,9 @@ def analyze_frame(img, camera):
         trend,
 
 
-
         "level":
 
         level,
-
 
 
         "action":
@@ -593,11 +541,9 @@ def analyze_frame(img, camera):
         recommendation(level),
 
 
-
         "camera":
 
         camera,
-
 
 
         "detected":
