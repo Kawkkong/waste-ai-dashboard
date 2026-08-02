@@ -1,3 +1,10 @@
+# ======================================================
+# app.py
+# Waste AI Dashboard
+# YOLOv11-Seg + WAR + Streamlit
+# ======================================================
+
+
 import streamlit as st
 
 import cv2
@@ -16,9 +23,18 @@ from config import CAMERA_CONFIG
 
 
 
+
+
+# ======================================================
+# Page Config
+# ======================================================
+
+
 st.set_page_config(
 
-    page_title="Waste AI",
+    page_title="Waste AI Dashboard",
+
+    page_icon="🗑️",
 
     layout="wide"
 
@@ -26,13 +42,33 @@ st.set_page_config(
 
 
 
+
+
+# ======================================================
+# Title
+# ======================================================
+
+
 st.title(
-"🗑️ AI Waste Density Monitoring"
+    "🗑️ AI Waste Density Monitoring"
+)
+
+
+st.caption(
+    "YOLOv11-Seg + Waste Area Ratio (WAR)"
 )
 
 
 
-camera=st.selectbox(
+
+
+
+# ======================================================
+# Camera Select
+# ======================================================
+
+
+camera = st.selectbox(
 
     "เลือกกล้อง",
 
@@ -42,33 +78,47 @@ camera=st.selectbox(
 
 
 
-file=st.file_uploader(
+
+
+
+# ======================================================
+# Upload Image
+# ======================================================
+
+
+uploaded_file = st.file_uploader(
 
     "Upload CCTV Image",
 
     type=[
         "jpg",
-        "png",
-        "jpeg"
+        "jpeg",
+        "png"
     ]
 
 )
 
 
 
-if file:
 
 
 
-    bytes=file.read()
+if uploaded_file:
 
 
 
-    img=cv2.imdecode(
+    # อ่านภาพ
+
+
+    bytes_data = uploaded_file.read()
+
+
+
+    img = cv2.imdecode(
 
         np.frombuffer(
 
-            bytes,
+            bytes_data,
 
             np.uint8
 
@@ -80,9 +130,79 @@ if file:
 
 
 
-    result=predict(
+    if img is None:
 
-        img,
+
+        st.error(
+            "ไม่สามารถอ่านรูปภาพได้"
+        )
+
+
+        st.stop()
+
+
+
+
+
+
+    # ==============================
+    # Run YOLO
+    # ==============================
+
+
+    with st.spinner(
+        "กำลังวิเคราะห์..."
+    ):
+
+
+        result = predict(
+
+            img,
+
+            camera
+
+        )
+
+
+
+
+
+
+
+    # ==============================
+    # Dashboard Cards
+    # ==============================
+
+
+
+    col1,col2,col3,col4 = st.columns(4)
+
+
+
+
+    col1.metric(
+
+        "Waste Area Ratio",
+
+        f'{result["WAR"]}%'
+
+    )
+
+
+
+    col2.metric(
+
+        "Density Level",
+
+        result["level"]
+
+    )
+
+
+
+    col3.metric(
+
+        "Camera",
 
         camera
 
@@ -90,45 +210,9 @@ if file:
 
 
 
-    # ==================
-    # Cards
-    # ==================
+    col4.metric(
 
-
-    c1,c2,c3,c4=st.columns(4)
-
-
-
-    c1.metric(
-
-        "WAR",
-
-        f'{result["WAR"]}%'
-
-    )
-
-
-    c2.metric(
-
-        "Level",
-
-        result["level"]
-
-    )
-
-
-    c3.metric(
-
-        "Camera",
-
-        result["camera"]
-
-    )
-
-
-    c4.metric(
-
-        "Action",
+        "Recommendation",
 
         result["recommendation"]
 
@@ -137,51 +221,91 @@ if file:
 
 
 
+
+
+    # ==============================
     # Alert
+    # ==============================
 
 
-    if result["level"]=="Critical":
+    level=result["level"]
+
+
+
+    if level=="Critical":
+
 
         st.error(
-            "🚨 Critical ต้องเก็บทันที"
+            "🚨 Critical : ต้องเก็บขยะทันที"
         )
 
 
-    elif result["level"]=="High":
+
+    elif level=="High":
+
 
         st.warning(
-            "⚠️ High แจ้งเจ้าหน้าที่"
+            "⚠️ High : แจ้งเจ้าหน้าที่"
         )
 
 
-    elif result["level"]=="Medium":
+
+    elif level=="Medium":
+
 
         st.info(
-            "ℹ️ Medium"
+            "ℹ️ Medium : เตรียมจัดเก็บ"
         )
+
+
+
+    elif level=="Low":
+
+
+        st.success(
+            "✅ Low : ติดตามสถานการณ์"
+        )
+
 
 
     else:
 
+
         st.success(
-            "Normal / Low"
+            "✅ Normal : ไม่พบขยะ"
         )
 
 
+
+
+
+
+    # ==============================
+    # Image Result
+    # ==============================
+
+
+    st.subheader(
+        "Segmentation Result"
+    )
+
+
+
+    result_img=cv2.cvtColor(
+
+        result["image"],
+
+        cv2.COLOR_BGR2RGB
+
+    )
 
 
 
     st.image(
 
-        cv2.cvtColor(
+        result_img,
 
-            result["image"],
-
-            cv2.COLOR_BGR2RGB
-
-        ),
-
-        caption="YOLOv11 Segmentation"
+        use_container_width=True
 
     )
 
@@ -190,27 +314,36 @@ if file:
 
 
 
-    # ==================
+    # ==============================
     # Save History
-    # ==================
+    # ==============================
 
 
-    row=pd.DataFrame([{
+    history_row=pd.DataFrame([{
 
 
         "time":
-        datetime.now(),
+
+        datetime.now().strftime(
+            "%Y-%m-%d %H:%M:%S"
+        ),
+
 
 
         "camera":
+
         camera,
 
 
+
         "WAR":
+
         result["WAR"],
 
 
+
         "level":
+
         result["level"]
 
 
@@ -218,15 +351,21 @@ if file:
 
 
 
-    row.to_csv(
+
+
+    file_exists=os.path.exists(
+        "history.csv"
+    )
+
+
+
+    history_row.to_csv(
 
         "history.csv",
 
         mode="a",
 
-        header=not os.path.exists(
-            "history.csv"
-        ),
+        header=not file_exists,
 
         index=False
 
@@ -234,12 +373,30 @@ if file:
 
 
 
+    st.success(
+        "บันทึกผลเรียบร้อย"
+    )
 
 
 
-# ==================
-# Trend
-# ==================
+
+
+
+
+# ======================================================
+# History Section
+# ======================================================
+
+
+st.divider()
+
+
+st.subheader(
+    "📈 WAR Trend"
+)
+
+
+
 
 
 if os.path.exists(
@@ -247,18 +404,122 @@ if os.path.exists(
 ):
 
 
-    st.subheader(
-        "📈 WAR Trend"
+
+    try:
+
+
+        df=pd.read_csv(
+
+            "history.csv"
+
+        )
+
+
+
+        # ตรวจ column
+
+
+        if "WAR" in df.columns:
+
+
+
+            if len(df)>0:
+
+
+
+                st.line_chart(
+
+                    df["WAR"]
+
+                )
+
+
+
+                st.dataframe(
+
+                    df,
+
+                    use_container_width=True
+
+                )
+
+
+
+            else:
+
+
+                st.info(
+                    "ยังไม่มีข้อมูล"
+                )
+
+
+
+        else:
+
+
+            st.warning(
+                "history.csv ไม่มี column WAR"
+            )
+
+
+
+    except Exception as e:
+
+
+        st.warning(
+            f"อ่าน history ไม่สำเร็จ: {e}"
+        )
+
+
+
+else:
+
+
+    st.info(
+        "ยังไม่มีประวัติการตรวจจับ"
     )
 
 
-    df=pd.read_csv(
+
+
+
+
+
+# ======================================================
+# Clear History
+# ======================================================
+
+
+st.divider()
+
+
+if st.button(
+    "🗑️ Clear History"
+):
+
+
+    if os.path.exists(
         "history.csv"
-    )
+    ):
 
 
-    st.line_chart(
+        os.remove(
+            "history.csv"
+        )
 
-        df["WAR"]
 
-    )
+        st.success(
+            "ลบประวัติแล้ว"
+        )
+
+
+        st.rerun()
+
+
+
+    else:
+
+
+        st.info(
+            "ไม่มีไฟล์ history"
+        )
