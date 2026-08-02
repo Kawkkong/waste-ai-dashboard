@@ -7,24 +7,60 @@ from config import CAMERA_CONFIG
 
 
 
-# ==========================================
+# =====================================================
 # LOAD MODEL
-# ==========================================
+# =====================================================
 
-model = YOLO(
-    "best.pt"
-)
+MODEL_PATH = "best.pt"
 
-
+model = YOLO(MODEL_PATH)
 
 
 
-# ==========================================
-# Density Level
-# ==========================================
+
+# =====================================================
+# RESIZE INPUT TO CCTV STANDARD
+# =====================================================
 
 
-def get_level(WAR, threshold):
+def resize_to_cctv(img):
+
+    TARGET_W = 1920
+    TARGET_H = 1080
+
+
+    h,w = img.shape[:2]
+
+
+    if w == TARGET_W and h == TARGET_H:
+
+        return img
+
+
+
+    img = cv2.resize(
+
+        img,
+
+        (TARGET_W,TARGET_H),
+
+        interpolation=cv2.INTER_LINEAR
+
+    )
+
+
+    return img
+
+
+
+
+
+# =====================================================
+# DENSITY CLASS
+# =====================================================
+
+
+def density_level(WAR, threshold):
 
 
     if WAR == 0:
@@ -55,14 +91,12 @@ def get_level(WAR, threshold):
 
 
 
+# =====================================================
+# ACTION
+# =====================================================
 
 
-# ==========================================
-# Recommendation
-# ==========================================
-
-
-def get_action(level):
+def recommendation(level):
 
 
     if level == "Normal":
@@ -94,21 +128,35 @@ def get_action(level):
 
 
 
-
-
-# ==========================================
-# YOLO + WAR
-# ==========================================
+# =====================================================
+# MAIN ANALYSIS
+# =====================================================
 
 
 def analyze_frame(img, camera):
+
+
+
+    # -------------------------------------
+    # Resize to CCTV resolution
+    # -------------------------------------
+
+    img = resize_to_cctv(img)
+
 
 
     h,w = img.shape[:2]
 
 
 
+
+    # -------------------------------------
+    # Camera Config
+    # -------------------------------------
+
+
     cfg = CAMERA_CONFIG[camera]
+
 
 
     x1,y1,x2,y2 = cfg["roi"]
@@ -117,16 +165,18 @@ def analyze_frame(img, camera):
 
 
 
-    # ======================================
+    # -------------------------------------
     # YOLO SEGMENTATION
-    # ======================================
+    # -------------------------------------
 
 
     result = model(
 
         img,
 
-        retina_masks=True,
+        imgsz=640,
+
+        conf=0.25,
 
         verbose=False
 
@@ -156,12 +206,19 @@ def analyze_frame(img, camera):
 
 
 
-
         for mask in masks:
 
 
 
-            # ไม่ resize แล้ว
+            mask = cv2.resize(
+
+                mask,
+
+                (w,h)
+
+            )
+
+
 
             combined_mask[
 
@@ -172,10 +229,9 @@ def analyze_frame(img, camera):
 
 
 
-
-    # ======================================
+    # -------------------------------------
     # ROI MASK
-    # ======================================
+    # -------------------------------------
 
 
     roi_mask = np.zeros(
@@ -198,9 +254,9 @@ def analyze_frame(img, camera):
 
 
 
-
-
-    # เฉพาะขยะใน ROI
+    # -------------------------------------
+    # Garbage inside ROI
+    # -------------------------------------
 
 
     roi_garbage = (
@@ -216,10 +272,9 @@ def analyze_frame(img, camera):
 
 
 
-
-    # ======================================
+    # -------------------------------------
     # WAR
-    # ======================================
+    # -------------------------------------
 
 
     garbage_pixels = np.sum(
@@ -227,7 +282,6 @@ def analyze_frame(img, camera):
         roi_garbage
 
     )
-
 
 
     roi_pixels = np.sum(
@@ -271,7 +325,8 @@ def analyze_frame(img, camera):
 
 
 
-    level = get_level(
+
+    level = density_level(
 
         WAR,
 
@@ -284,9 +339,9 @@ def analyze_frame(img, camera):
 
 
 
-    # ======================================
-    # VISUALIZATION
-    # ======================================
+    # -------------------------------------
+    # Visualization
+    # -------------------------------------
 
 
     output = img.copy()
@@ -297,9 +352,7 @@ def analyze_frame(img, camera):
 
 
 
-
-
-    # สีแดง mask ขยะ
+    # สีแดง mask
 
 
     overlay[
@@ -320,16 +373,15 @@ def analyze_frame(img, camera):
 
 
 
-
     output = cv2.addWeighted(
 
         img,
 
-        0.5,
+        0.6,
 
         overlay,
 
-        0.5,
+        0.4,
 
         0
 
@@ -340,7 +392,7 @@ def analyze_frame(img, camera):
 
 
 
-    # ROI
+    # ROI rectangle
 
 
     cv2.rectangle(
@@ -353,10 +405,9 @@ def analyze_frame(img, camera):
 
         (0,255,0),
 
-        3
+        4
 
     )
-
 
 
 
@@ -369,19 +420,39 @@ def analyze_frame(img, camera):
 
         output,
 
-        f"WAR {WAR}% | {level}",
+        f"WAR: {WAR}%",
 
-        (30,50),
+        (40,60),
 
         cv2.FONT_HERSHEY_SIMPLEX,
 
-        1.2,
+        1.5,
 
         (255,255,255),
 
         3
 
     )
+
+
+    cv2.putText(
+
+        output,
+
+        level,
+
+        (40,120),
+
+        cv2.FONT_HERSHEY_SIMPLEX,
+
+        1.5,
+
+        (0,255,255),
+
+        3
+
+    )
+
 
 
 
@@ -394,6 +465,11 @@ def analyze_frame(img, camera):
         "image":
 
         output,
+
+
+        "original":
+
+        img,
 
 
         "mask":
@@ -413,6 +489,11 @@ def analyze_frame(img, camera):
 
         "action":
 
-        get_action(level)
+        recommendation(level),
+
+
+        "size":
+
+        f"{w}x{h}"
 
     }
