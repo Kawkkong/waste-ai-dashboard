@@ -1,7 +1,7 @@
 # ======================================================
 # app.py
 # Waste AI Dashboard
-# YOLOv11-Seg + WAR + Streamlit
+# YOLOv11-Seg + WAR
 # ======================================================
 
 
@@ -11,8 +11,6 @@ import cv2
 import numpy as np
 
 import pandas as pd
-
-import os
 
 from datetime import datetime
 
@@ -24,9 +22,8 @@ from config import CAMERA_CONFIG
 
 
 
-
 # ======================================================
-# Page Config
+# Page Setting
 # ======================================================
 
 
@@ -45,6 +42,19 @@ st.set_page_config(
 
 
 # ======================================================
+# Session Storage
+# ======================================================
+
+
+if "history" not in st.session_state:
+
+    st.session_state.history=[]
+
+
+
+
+
+# ======================================================
 # Title
 # ======================================================
 
@@ -54,7 +64,7 @@ st.title(
 )
 
 
-st.caption(
+st.write(
     "YOLOv11-Seg + Waste Area Ratio (WAR)"
 )
 
@@ -64,7 +74,7 @@ st.caption(
 
 
 # ======================================================
-# Camera Select
+# Select Camera
 # ======================================================
 
 
@@ -81,6 +91,7 @@ camera = st.selectbox(
 
 
 
+
 # ======================================================
 # Upload Image
 # ======================================================
@@ -88,7 +99,7 @@ camera = st.selectbox(
 
 uploaded_file = st.file_uploader(
 
-    "Upload CCTV Image",
+    "📷 Upload CCTV Image",
 
     type=[
         "jpg",
@@ -107,22 +118,26 @@ if uploaded_file:
 
 
 
-    # อ่านภาพ
+    # อ่านรูป
 
 
-    bytes_data = uploaded_file.read()
+    file_bytes = np.asarray(
+
+        bytearray(
+
+            uploaded_file.read()
+
+        ),
+
+        dtype=np.uint8
+
+    )
 
 
 
     img = cv2.imdecode(
 
-        np.frombuffer(
-
-            bytes_data,
-
-            np.uint8
-
-        ),
+        file_bytes,
 
         cv2.IMREAD_COLOR
 
@@ -134,9 +149,8 @@ if uploaded_file:
 
 
         st.error(
-            "ไม่สามารถอ่านรูปภาพได้"
+            "อ่านรูปไม่ได้"
         )
-
 
         st.stop()
 
@@ -145,17 +159,17 @@ if uploaded_file:
 
 
 
-    # ==============================
+    # ==========================
     # Run YOLO
-    # ==============================
+    # ==========================
 
 
     with st.spinner(
-        "กำลังวิเคราะห์..."
+        "กำลังประมวลผล YOLO..."
     ):
 
 
-        result = predict(
+        result=predict(
 
             img,
 
@@ -169,9 +183,12 @@ if uploaded_file:
 
 
 
-    # ==============================
-    # Dashboard Cards
-    # ==============================
+    # ==========================
+    # Dashboard Card
+    # ==========================
+
+
+    st.divider()
 
 
 
@@ -179,25 +196,22 @@ if uploaded_file:
 
 
 
-
     col1.metric(
 
-        "Waste Area Ratio",
+        "WAR",
 
         f'{result["WAR"]}%'
 
     )
 
 
-
     col2.metric(
 
-        "Density Level",
+        "Density",
 
         result["level"]
 
     )
-
 
 
     col3.metric(
@@ -209,10 +223,9 @@ if uploaded_file:
     )
 
 
-
     col4.metric(
 
-        "Recommendation",
+        "Action",
 
         result["recommendation"]
 
@@ -223,9 +236,10 @@ if uploaded_file:
 
 
 
-    # ==============================
+
+    # ==========================
     # Alert
-    # ==============================
+    # ==========================
 
 
     level=result["level"]
@@ -240,14 +254,12 @@ if uploaded_file:
         )
 
 
-
     elif level=="High":
 
 
         st.warning(
             "⚠️ High : แจ้งเจ้าหน้าที่"
         )
-
 
 
     elif level=="Medium":
@@ -258,14 +270,12 @@ if uploaded_file:
         )
 
 
-
     elif level=="Low":
 
 
         st.success(
-            "✅ Low : ติดตามสถานการณ์"
+            "✅ Low : ติดตาม"
         )
-
 
 
     else:
@@ -280,9 +290,10 @@ if uploaded_file:
 
 
 
-    # ==============================
-    # Image Result
-    # ==============================
+
+    # ==========================
+    # Display Image
+    # ==========================
 
 
     st.subheader(
@@ -291,7 +302,7 @@ if uploaded_file:
 
 
 
-    result_img=cv2.cvtColor(
+    output=cv2.cvtColor(
 
         result["image"],
 
@@ -303,7 +314,7 @@ if uploaded_file:
 
     st.image(
 
-        result_img,
+        output,
 
         use_container_width=True
 
@@ -314,23 +325,25 @@ if uploaded_file:
 
 
 
-    # ==============================
-    # Save History
-    # ==============================
+
+    # ==========================
+    # Add History
+    # ==========================
 
 
-    history_row=pd.DataFrame([{
+
+    st.session_state.history.append({
 
 
-        "time":
+        "Time":
 
         datetime.now().strftime(
-            "%Y-%m-%d %H:%M:%S"
+            "%H:%M:%S"
         ),
 
 
 
-        "camera":
+        "Camera":
 
         camera,
 
@@ -342,40 +355,21 @@ if uploaded_file:
 
 
 
-        "level":
+        "Level":
 
         result["level"]
 
 
-    }])
 
-
-
-
-
-    file_exists=os.path.exists(
-        "history.csv"
-    )
-
-
-
-    history_row.to_csv(
-
-        "history.csv",
-
-        mode="a",
-
-        header=not file_exists,
-
-        index=False
-
-    )
+    })
 
 
 
     st.success(
-        "บันทึกผลเรียบร้อย"
+        "บันทึกข้อมูลแล้ว"
     )
+
+
 
 
 
@@ -384,7 +378,7 @@ if uploaded_file:
 
 
 # ======================================================
-# History Section
+# Trend Graph
 # ======================================================
 
 
@@ -399,76 +393,43 @@ st.subheader(
 
 
 
-if os.path.exists(
-    "history.csv"
-):
+if len(st.session_state.history)>0:
 
 
 
-    try:
+    df=pd.DataFrame(
 
+        st.session_state.history
 
-        df=pd.read_csv(
-
-            "history.csv"
-
-        )
+    )
 
 
 
-        # ตรวจ column
+    st.line_chart(
 
+        df,
 
-        if "WAR" in df.columns:
+        x="Time",
 
+        y="WAR"
 
-
-            if len(df)>0:
-
-
-
-                st.line_chart(
-
-                    df["WAR"]
-
-                )
+    )
 
 
 
-                st.dataframe(
-
-                    df,
-
-                    use_container_width=True
-
-                )
+    st.subheader(
+        "📋 Detection History"
+    )
 
 
 
-            else:
+    st.dataframe(
 
+        df,
 
-                st.info(
-                    "ยังไม่มีข้อมูล"
-                )
+        use_container_width=True
 
-
-
-        else:
-
-
-            st.warning(
-                "history.csv ไม่มี column WAR"
-            )
-
-
-
-    except Exception as e:
-
-
-        st.warning(
-            f"อ่าน history ไม่สำเร็จ: {e}"
-        )
+    )
 
 
 
@@ -476,7 +437,9 @@ else:
 
 
     st.info(
-        "ยังไม่มีประวัติการตรวจจับ"
+
+        "ยังไม่มีข้อมูล กรุณา Upload รูป"
+
     )
 
 
@@ -486,11 +449,12 @@ else:
 
 
 # ======================================================
-# Clear History
+# Clear Data
 # ======================================================
 
 
 st.divider()
+
 
 
 if st.button(
@@ -498,28 +462,12 @@ if st.button(
 ):
 
 
-    if os.path.exists(
-        "history.csv"
-    ):
+    st.session_state.history=[]
 
 
-        os.remove(
-            "history.csv"
-        )
+    st.success(
+        "ล้างข้อมูลแล้ว"
+    )
 
 
-        st.success(
-            "ลบประวัติแล้ว"
-        )
-
-
-        st.rerun()
-
-
-
-    else:
-
-
-        st.info(
-            "ไม่มีไฟล์ history"
-        )
+    st.rerun()
