@@ -1,3 +1,9 @@
+# ======================================================
+# inference.py
+# YOLOv11-Seg + ROI + WAR
+# ======================================================
+
+
 from ultralytics import YOLO
 
 import cv2
@@ -8,39 +14,62 @@ from config import CAMERA_CONFIG
 
 
 
-MODEL_PATH="best.pt"
+
+# ===============================
+# Model
+# ===============================
 
 
-model=YOLO(MODEL_PATH)
+MODEL_PATH = "best.pt"
+
+
+model = YOLO(
+    MODEL_PATH
+)
 
 
 
 
 
-def get_level(WAR,threshold):
+
+# ===============================
+# Density Level
+# ===============================
 
 
-    if WAR==0:
+def get_level(WAR, threshold):
+
+
+    if WAR == 0:
+
 
         return "Normal"
 
 
+
     elif WAR <= threshold["low"]:
+
 
         return "Low"
 
 
+
     elif WAR <= threshold["medium"]:
+
 
         return "Medium"
 
 
+
     elif WAR <= threshold["high"]:
+
 
         return "High"
 
 
+
     else:
+
 
         return "Critical"
 
@@ -50,32 +79,109 @@ def get_level(WAR,threshold):
 
 
 
+
+
+# ===============================
+# Recommendation
+# ===============================
+
+
+def get_action(level):
+
+
+    if level=="Normal":
+
+        return "No action"
+
+
+
+    elif level=="Low":
+
+        return "Monitor"
+
+
+
+    elif level=="Medium":
+
+        return "Prepare collection"
+
+
+
+    elif level=="High":
+
+        return "Notify staff"
+
+
+
+    else:
+
+        return "Collect immediately"
+
+
+
+
+
+
+
+
+
+# ===============================
+# Analyze Image
+# ===============================
+
+
 def analyze_frame(img,camera):
 
 
-    h,w=img.shape[:2]
 
-
-    cfg=CAMERA_CONFIG[camera]
-
-
-    x1,y1,x2,y2=cfg["roi"]
+    h,w = img.shape[:2]
 
 
 
-
-
-    result=model(img)[0]
+    cfg = CAMERA_CONFIG[camera]
 
 
 
-    mask=np.zeros(
+    x1,y1,x2,y2 = cfg["roi"]
+
+
+
+
+
+    # ===========================
+    # YOLO Segmentation
+    # ===========================
+
+
+
+    result = model.predict(
+
+        img,
+
+        imgsz=640,
+
+        retina_masks=True,
+
+        verbose=False
+
+    )[0]
+
+
+
+
+
+
+    # mask เต็มภาพ
+
+    combined_mask = np.zeros(
 
         (h,w),
 
         dtype=np.uint8
 
     )
+
+
 
 
 
@@ -83,28 +189,37 @@ def analyze_frame(img,camera):
     if result.masks is not None:
 
 
-        masks=result.masks.data.cpu().numpy()
+
+        masks = result.masks.data.cpu().numpy()
 
 
 
         for m in masks:
 
 
-            m=cv2.resize(
 
-                m,
-
-                (w,h)
-
-            )
+            # retina_masks ทำให้ mask
+            # มีขนาดตรงกับ original image
 
 
-            mask[m>0.5]=1
+            combined_mask[
+
+                m > 0.5
+
+            ] = 1
 
 
 
 
-    roi_mask=np.zeros(
+
+
+    # ===========================
+    # ROI Mask
+    # ===========================
+
+
+
+    roi_mask = np.zeros(
 
         (h,w),
 
@@ -114,41 +229,96 @@ def analyze_frame(img,camera):
 
 
 
-    roi_mask[y1:y2,x1:x2]=1
+    roi_mask[
+
+        y1:y2,
+
+        x1:x2
+
+    ] = 1
 
 
 
 
 
-    garbage=mask*roi_mask
 
 
+    # เอาเฉพาะขยะใน ROI
 
 
-    garbage_pixel=np.sum(
-        garbage
-    )
+    garbage_mask = (
 
+        combined_mask *
 
-    roi_pixel=np.sum(
         roi_mask
+
     )
 
 
 
-    WAR=(
-
-        garbage_pixel/
-
-        roi_pixel
-
-    )*100
 
 
 
 
 
-    level=get_level(
+    # ===========================
+    # WAR
+    # ===========================
+
+
+    garbage_pixels = np.sum(
+
+        garbage_mask
+
+    )
+
+
+
+    roi_pixels = np.sum(
+
+        roi_mask
+
+    )
+
+
+
+    if roi_pixels == 0:
+
+
+        WAR=0
+
+
+    else:
+
+
+        WAR = (
+
+            garbage_pixels /
+
+            roi_pixels
+
+        ) * 100
+
+
+
+
+
+
+    WAR = round(
+
+        float(WAR),
+
+        2
+
+    )
+
+
+
+
+
+
+
+    level = get_level(
 
         WAR,
 
@@ -160,17 +330,34 @@ def analyze_frame(img,camera):
 
 
 
-    # overlay
+
+    # ===========================
+    # Overlay Mask
+    # ===========================
 
 
-    output=img.copy()
+
+    output = img.copy()
 
 
 
-    red=np.zeros_like(img)
+    overlay = img.copy()
 
 
-    red[garbage==1]=(0,0,255)
+
+    overlay[
+
+        garbage_mask==1
+
+    ] = (
+
+        0,
+
+        0,
+
+        255
+
+    )
 
 
 
@@ -178,16 +365,22 @@ def analyze_frame(img,camera):
 
         img,
 
-        0.7,
+        0.6,
 
-        red,
+        overlay,
 
-        0.3,
+        0.4,
 
         0
 
     )
 
+
+
+
+
+
+    # ROI rectangle
 
 
     cv2.rectangle(
@@ -206,16 +399,39 @@ def analyze_frame(img,camera):
 
 
 
+
+
+
+    # ===========================
+    # Return
+    # ===========================
+
+
     return {
 
 
-        "image":output,
+        "image":
+
+        output,
 
 
-        "WAR":round(WAR,2),
+
+        "WAR":
+
+        WAR,
 
 
-        "level":level
+
+        "level":
+
+        level,
+
+
+
+        "recommendation":
+
+        get_action(level)
+
 
 
     }
@@ -226,40 +442,66 @@ def analyze_frame(img,camera):
 
 
 
-def analyze_video(path,camera,skip=10):
+
+
+# ===============================
+# Analyze Video
+# ===============================
+
+
+def analyze_video(
+
+        path,
+
+        camera,
+
+        skip=10
+
+):
 
 
     cap=cv2.VideoCapture(path)
 
 
+
     results=[]
 
 
+    frame_id=0
 
-    count=0
+
+
 
 
 
     while True:
 
 
-        ret,frame=cap.read()
+
+        ret,frame = cap.read()
+
 
 
         if not ret:
+
 
             break
 
 
 
-        count+=1
+
+        frame_id +=1
 
 
 
-        if count%skip==0:
 
 
-            r=analyze_frame(
+
+        if frame_id % skip == 0:
+
+
+
+            r = analyze_frame(
 
                 frame,
 
@@ -268,15 +510,40 @@ def analyze_video(path,camera,skip=10):
             )
 
 
-            results.append(
 
-                r
+            # ไม่เก็บ image
+            # เพราะ dataframe พัง
 
-            )
+
+            results.append({
+
+
+                "Frame":
+
+                frame_id,
+
+
+                "WAR":
+
+                r["WAR"],
+
+
+                "Level":
+
+                r["level"]
+
+
+
+            })
+
+
+
+
 
 
 
     cap.release()
+
 
 
     return results
