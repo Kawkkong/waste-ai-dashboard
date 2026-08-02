@@ -1,12 +1,4 @@
-# ======================================================
-# app.py
-# Waste AI Dashboard
-# YOLOv11-Seg + WAR
-# ======================================================
-
-
 import streamlit as st
-
 
 import cv2
 import numpy as np
@@ -15,8 +7,8 @@ import pandas as pd
 
 import tempfile
 
-from datetime import datetime
 
+from datetime import datetime
 
 
 from inference import (
@@ -34,16 +26,9 @@ from config import CAMERA_CONFIG
 
 
 
-# ======================================================
-# Page Config
-# ======================================================
-
-
 st.set_page_config(
 
-    page_title="Waste AI Dashboard",
-
-    page_icon="🗑️",
+    page_title="Waste AI",
 
     layout="wide"
 
@@ -53,67 +38,37 @@ st.set_page_config(
 
 
 
-
-# ======================================================
-# Session Storage
-# ======================================================
-
-
-if "history" not in st.session_state:
-
-
-    st.session_state.history=[]
-
-
-
-
-
-
-# ======================================================
-# Header
-# ======================================================
-
-
 st.title(
     "🗑️ Waste Density Monitoring"
 )
 
 
+
 st.caption(
-    "YOLOv11-Seg + Waste Area Ratio (WAR)"
+    "YOLOv11-Seg + WAR Dashboard"
 )
 
 
 
 
 
-
-# ======================================================
+# -------------------------
 # Sidebar
-# ======================================================
+# -------------------------
 
 
-st.sidebar.header(
-    "Camera Setting"
-)
+camera=st.sidebar.selectbox(
 
-
-
-camera = st.sidebar.selectbox(
-
-    "เลือกกล้อง",
+    "Select Camera",
 
     list(CAMERA_CONFIG.keys())
 
 )
 
 
+mode=st.sidebar.radio(
 
-
-
-mode = st.sidebar.radio(
-
-    "Input Type",
+    "Input",
 
     [
 
@@ -129,62 +84,49 @@ mode = st.sidebar.radio(
 
 
 
-st.sidebar.divider()
+
+# เก็บ history
 
 
-
-if st.sidebar.button(
-    "Clear History"
-):
+if "history" not in st.session_state:
 
 
     st.session_state.history=[]
 
 
-    st.rerun()
 
 
 
 
 
-
-
-# ======================================================
-# IMAGE MODE
-# ======================================================
+# =========================
+# IMAGE
+# =========================
 
 
 if mode=="Image":
 
 
 
-    uploaded = st.file_uploader(
+    file=st.file_uploader(
 
-        "Upload CCTV Image",
+        "Upload Image",
 
-        type=[
-
-            "jpg",
-
-            "jpeg",
-
-            "png"
-
-        ]
+        type=["jpg","png","jpeg"]
 
     )
 
 
 
-    if uploaded:
+    if file:
 
 
 
-        file_bytes=np.asarray(
+        bytes_data=np.asarray(
 
             bytearray(
 
-                uploaded.read()
+                file.read()
 
             ),
 
@@ -193,69 +135,33 @@ if mode=="Image":
         )
 
 
-
         img=cv2.imdecode(
 
-            file_bytes,
+            bytes_data,
 
-            cv2.IMREAD_COLOR
+            1
 
         )
 
 
 
-        if img is None:
+
+        result=analyze_frame(
+
+            img,
+
+            camera
+
+        )
 
 
-            st.error(
-                "ไม่สามารถอ่านภาพได้"
-            )
-
-
-            st.stop()
-
-
-
-
-
-
-        with st.spinner(
-
-            "กำลังประมวลผล..."
-
-        ):
-
-
-            result=analyze_frame(
-
-                img,
-
-                camera
-
-            )
-
-
-
-
-
-
-
-
-        # ==========================
-        # Save History
-        # ==========================
 
 
         st.session_state.history.append({
 
-
             "Time":
 
-            datetime.now().strftime(
-
-                "%H:%M:%S"
-
-            ),
+            datetime.now().strftime("%H:%M:%S"),
 
 
             "Camera":
@@ -268,11 +174,9 @@ if mode=="Image":
             result["WAR"],
 
 
-
             "Level":
 
             result["level"]
-
 
         })
 
@@ -282,14 +186,7 @@ if mode=="Image":
 
 
 
-
-
-        # ==========================
-        # Metrics
-        # ==========================
-
-
-        c1,c2,c3,c4=st.columns(4)
+        c1,c2,c3=st.columns(3)
 
 
 
@@ -302,7 +199,6 @@ if mode=="Image":
         )
 
 
-
         c2.metric(
 
             "Level",
@@ -310,7 +206,6 @@ if mode=="Image":
             result["level"]
 
         )
-
 
 
         c3.metric(
@@ -323,86 +218,10 @@ if mode=="Image":
 
 
 
-        c4.metric(
-
-            "Action",
-
-            result["recommendation"]
-
-        )
 
 
 
-
-
-
-
-        # ==========================
-        # Alert
-        # ==========================
-
-
-        if result["level"]=="Critical":
-
-
-            st.error(
-
-                "🚨 Critical : เก็บขยะทันที"
-
-            )
-
-
-        elif result["level"]=="High":
-
-
-            st.warning(
-
-                "⚠️ High : แจ้งเจ้าหน้าที่"
-
-            )
-
-
-        elif result["level"]=="Medium":
-
-
-            st.info(
-
-                "ℹ️ Medium : เตรียมจัดเก็บ"
-
-            )
-
-
-        elif result["level"]=="Low":
-
-
-            st.success(
-
-                "✅ Low : ติดตาม"
-
-            )
-
-
-        else:
-
-
-            st.success(
-
-                "✅ Normal : ไม่พบขยะ"
-
-            )
-
-
-
-
-
-
-
-        # ==========================
-        # Layout
-        # ==========================
-
-
-        col_img,col_stat = st.columns(
+        col1,col2=st.columns(
 
             [2,1]
 
@@ -410,15 +229,7 @@ if mode=="Image":
 
 
 
-        with col_img:
-
-
-
-            st.subheader(
-
-                "Segmentation"
-
-            )
+        with col1:
 
 
             st.image(
@@ -431,71 +242,25 @@ if mode=="Image":
 
                 ),
 
-                width=550
+                width=600
 
             )
 
 
 
-
-
-        with col_stat:
-
+        with col2:
 
 
             st.subheader(
 
-                "Camera Statistics"
+                "Recommendation"
 
             )
 
 
-            df=pd.DataFrame(
+            st.info(
 
-                st.session_state.history
-
-            )
-
-
-
-            cam_df=df[
-
-                df["Camera"]
-
-                ==
-
-                camera
-
-            ]
-
-
-
-
-            st.metric(
-
-                "Average WAR",
-
-                f'{cam_df["WAR"].mean():.2f}%'
-
-            )
-
-
-
-            st.metric(
-
-                "Maximum WAR",
-
-                f'{cam_df["WAR"].max():.2f}%'
-
-            )
-
-
-
-            st.metric(
-
-                "Samples",
-
-                len(cam_df)
+                result["recommendation"]
 
             )
 
@@ -505,20 +270,18 @@ if mode=="Image":
 
 
 
-
-
-# ======================================================
-# VIDEO MODE
-# ======================================================
+# =========================
+# VIDEO
+# =========================
 
 
 else:
 
 
 
-    uploaded=st.file_uploader(
+    video=st.file_uploader(
 
-        "Upload CCTV Video",
+        "Upload Video",
 
         type=["mp4"]
 
@@ -526,8 +289,7 @@ else:
 
 
 
-
-    if uploaded:
+    if video:
 
 
 
@@ -542,7 +304,7 @@ else:
 
         temp.write(
 
-            uploaded.read()
+            video.read()
 
         )
 
@@ -551,53 +313,24 @@ else:
 
 
 
-
-
         if st.button(
 
-            "Analyze Video"
+            "Analyze"
 
         ):
 
 
 
-            with st.spinner(
+            results=analyze_video(
 
-                "กำลังวิเคราะห์ Video..."
+                temp.name,
 
-            ):
-
-
-                results=analyze_video(
-
-                    temp.name,
-
-                    camera
-
-                )
-
-
-
-
-
-            df=pd.DataFrame(
-
-                results
+                camera
 
             )
 
 
-
-
-            df["WAR"]=df["WAR"].astype(float)
-
-
-
-            st.subheader(
-
-                "Video WAR Trend"
-
-            )
+            df=pd.DataFrame(results)
 
 
 
@@ -608,15 +341,6 @@ else:
                 x="Frame",
 
                 y="WAR"
-
-            )
-
-
-
-
-            st.subheader(
-
-                "Video Result"
 
             )
 
@@ -635,28 +359,23 @@ else:
 
 
 
-
-# ======================================================
-# Overall Trend
-# ======================================================
+# =========================
+# Trend
+# =========================
 
 
 st.divider()
 
 
-
 st.subheader(
 
-    "📈 Camera WAR Trend"
+    "📈 WAR Trend"
 
 )
 
 
 
-
-
 if len(st.session_state.history)>0:
-
 
 
     df=pd.DataFrame(
@@ -667,13 +386,11 @@ if len(st.session_state.history)>0:
 
 
 
-    camera_df=df[
+    df=df[
 
         df["Camera"]
 
-        ==
-
-        camera
+        ==camera
 
     ]
 
@@ -681,7 +398,7 @@ if len(st.session_state.history)>0:
 
     st.line_chart(
 
-        camera_df,
+        df,
 
         x="Time",
 
@@ -690,31 +407,11 @@ if len(st.session_state.history)>0:
     )
 
 
-
-
-    with st.expander(
-
-        "ดูข้อมูลทั้งหมด"
-
-    ):
-
-
-        st.dataframe(
-
-            camera_df,
-
-            use_container_width=True
-
-        )
-
-
-
-
 else:
 
 
     st.info(
 
-        "ยังไม่มีข้อมูล"
+        "No data"
 
     )
