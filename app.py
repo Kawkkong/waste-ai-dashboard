@@ -31,11 +31,9 @@ st.set_page_config(
 
 
 
-
 # =====================================================
 # SESSION STATE
 # =====================================================
-
 
 if "camera_results" not in st.session_state:
 
@@ -55,7 +53,6 @@ if "history" not in st.session_state:
 # TITLE
 # =====================================================
 
-
 st.title(
     "🗑 Waste AI Dashboard"
 )
@@ -69,11 +66,9 @@ st.caption(
 
 
 
-
 # =====================================================
 # SIDEBAR UPLOAD
 # =====================================================
-
 
 st.sidebar.header(
     "📷 CCTV Upload"
@@ -103,16 +98,11 @@ for cam in CAMERA_CONFIG:
 
 
 
-
     if uploaded_file is not None:
 
 
-        # ---------------------------------
-        # ตรวจไฟล์ใหม่
-        # ---------------------------------
 
-
-        file_id=(
+        file_id = (
 
             uploaded_file.name,
 
@@ -138,9 +128,6 @@ for cam in CAMERA_CONFIG:
 
 
 
-
-        # วิเคราะห์เฉพาะไฟล์ใหม่
-
         if file_id != old_file:
 
 
@@ -149,13 +136,9 @@ for cam in CAMERA_CONFIG:
 
 
 
-
-
-
             # ==================================
             # IMAGE
             # ==================================
-
 
             if ext in [
 
@@ -167,7 +150,7 @@ for cam in CAMERA_CONFIG:
 
 
 
-                bytes_data=np.asarray(
+                bytes_data = np.asarray(
 
                     bytearray(
 
@@ -181,7 +164,7 @@ for cam in CAMERA_CONFIG:
 
 
 
-                img=cv2.imdecode(
+                img = cv2.imdecode(
 
                     bytes_data,
 
@@ -191,7 +174,7 @@ for cam in CAMERA_CONFIG:
 
 
 
-                result=analyze_frame(
+                result = analyze_frame(
 
                     img,
 
@@ -201,7 +184,7 @@ for cam in CAMERA_CONFIG:
 
 
 
-                st.session_state.camera_results[cam]={
+                st.session_state.camera_results[cam] = {
 
 
                     "file_id":
@@ -251,6 +234,11 @@ for cam in CAMERA_CONFIG:
                     result["WAR"],
 
 
+                    "Change":
+
+                    result["change"],
+
+
                     "Level":
 
                     result["level"],
@@ -273,19 +261,17 @@ for cam in CAMERA_CONFIG:
             # VIDEO
             # ==================================
 
-
-            elif ext=="mp4":
-
+            elif ext == "mp4":
 
 
-                temp=tempfile.NamedTemporaryFile(
+
+                temp = tempfile.NamedTemporaryFile(
 
                     delete=False,
 
                     suffix=".mp4"
 
                 )
-
 
 
                 temp.write(
@@ -295,14 +281,12 @@ for cam in CAMERA_CONFIG:
                 )
 
 
-
                 temp.close()
 
 
 
 
-
-                cap=cv2.VideoCapture(
+                cap = cv2.VideoCapture(
 
                     temp.name
 
@@ -310,14 +294,13 @@ for cam in CAMERA_CONFIG:
 
 
 
-
-                frame_id=0
-
-
-                results=[]
+                frame_id = 0
 
 
-                preview=None
+                results = []
+
+
+                preview = None
 
 
 
@@ -326,8 +309,7 @@ for cam in CAMERA_CONFIG:
                 while True:
 
 
-
-                    ret,frame=cap.read()
+                    ret, frame = cap.read()
 
 
 
@@ -337,19 +319,18 @@ for cam in CAMERA_CONFIG:
 
 
 
-
-                    frame_id+=1
+                    frame_id += 1
 
 
 
 
                     # วิเคราะห์ทุก 10 frame
 
-                    if frame_id % 10 ==0:
+                    if frame_id % 10 == 0:
 
 
 
-                        result=analyze_frame(
+                        result = analyze_frame(
 
                             frame,
 
@@ -372,6 +353,11 @@ for cam in CAMERA_CONFIG:
                             result["WAR"],
 
 
+                            "Change":
+
+                            result["change"],
+
+
                             "Level":
 
                             result["level"]
@@ -380,7 +366,7 @@ for cam in CAMERA_CONFIG:
 
 
 
-                        preview=result["image"]
+                        preview = result["image"]
 
 
 
@@ -399,9 +385,7 @@ for cam in CAMERA_CONFIG:
 
 
 
-
-
-                video_df=pd.DataFrame(
+                video_df = pd.DataFrame(
 
                     results
 
@@ -409,7 +393,7 @@ for cam in CAMERA_CONFIG:
 
 
 
-                st.session_state.camera_results[cam]={
+                st.session_state.camera_results[cam] = {
 
 
                     "file_id":
@@ -431,16 +415,15 @@ for cam in CAMERA_CONFIG:
 
                     preview
 
-
                 }
 
 
 
+                if len(video_df) > 0:
 
-                if len(video_df)>0:
 
 
-                    last=video_df.iloc[-1]
+                    last = video_df.iloc[-1]
 
 
 
@@ -466,6 +449,11 @@ for cam in CAMERA_CONFIG:
                         last["WAR"],
 
 
+                        "Change":
+
+                        last["Change"],
+
+
                         "Level":
 
                         last["Level"],
@@ -489,12 +477,10 @@ for cam in CAMERA_CONFIG:
 # =====================================================
 
 
-
 for cam,data in st.session_state.camera_results.items():
 
 
     st.divider()
-
 
 
     st.header(
@@ -506,21 +492,23 @@ for cam,data in st.session_state.camera_results.items():
 
 
 
+    # ==================================
     # IMAGE RESULT
+    # ==================================
 
-    if data["type"]=="image":
-
-
-
-        img=data["original"]
-
-
-        result=data["result"]
+    if data["type"] == "image":
 
 
 
+        img = data["original"]
 
-        col1,col2=st.columns(2)
+
+        result = data["result"]
+
+
+
+
+        col1,col2 = st.columns(2)
 
 
 
@@ -528,7 +516,9 @@ for cam,data in st.session_state.camera_results.items():
 
 
             st.subheader(
+
                 "Original CCTV"
+
             )
 
 
@@ -549,11 +539,14 @@ for cam,data in st.session_state.camera_results.items():
 
 
 
+
         with col2:
 
 
             st.subheader(
+
                 "Segmentation"
+
             )
 
 
@@ -575,7 +568,12 @@ for cam,data in st.session_state.camera_results.items():
 
 
 
-        a,b,c=st.columns(3)
+        # ===============================
+        # METRICS
+        # ===============================
+
+
+        a,b,c,d = st.columns(4)
 
 
 
@@ -591,6 +589,16 @@ for cam,data in st.session_state.camera_results.items():
 
         b.metric(
 
+            "Change from previous",
+
+            f'{result["change"]:+.2f}%'
+
+        )
+
+
+
+        c.metric(
+
             "Density",
 
             result["level"]
@@ -599,7 +607,7 @@ for cam,data in st.session_state.camera_results.items():
 
 
 
-        c.metric(
+        d.metric(
 
             "Action",
 
@@ -613,10 +621,13 @@ for cam,data in st.session_state.camera_results.items():
 
 
 
+
+
+    # ==================================
     # VIDEO RESULT
+    # ==================================
 
-
-    elif data["type"]=="video":
+    elif data["type"] == "video":
 
 
 
@@ -625,6 +636,7 @@ for cam,data in st.session_state.camera_results.items():
             "Video Segmentation Preview"
 
         )
+
 
 
         if data["preview"] is not None:
@@ -668,12 +680,32 @@ for cam,data in st.session_state.camera_results.items():
 
 
 
+        st.subheader(
+
+            "WAR Change Trend"
+
+        )
+
+
+        st.line_chart(
+
+            data["video_data"],
+
+            x="Frame",
+
+            y="Change"
+
+        )
+
+
+
+
+
 
 
 # =====================================================
-# TREND SEPARATE CAMERA
+# TREND ANALYSIS
 # =====================================================
-
 
 st.divider()
 
@@ -686,11 +718,12 @@ st.header(
 
 
 
-if len(st.session_state.history)>0:
+
+if len(st.session_state.history) > 0:
 
 
 
-    history_df=pd.DataFrame(
+    history_df = pd.DataFrame(
 
         st.session_state.history
 
@@ -702,33 +735,27 @@ if len(st.session_state.history)>0:
 
 
 
-        st.subheader(
-
-            cam
-
-        )
+        st.subheader(cam)
 
 
 
-        cam_df=history_df[
+        cam_df = history_df[
 
-            history_df["Camera"]
-
-            ==cam
+            history_df["Camera"] == cam
 
         ]
 
 
 
-        if len(cam_df)>0:
+        if len(cam_df) > 0:
 
 
 
-            cam_df=cam_df.copy()
+            cam_df = cam_df.copy()
 
 
 
-            cam_df["Time"]=pd.to_datetime(
+            cam_df["Time"] = pd.to_datetime(
 
                 cam_df["Time"]
 
@@ -748,6 +775,18 @@ if len(st.session_state.history)>0:
 
 
 
+            st.line_chart(
+
+                cam_df,
+
+                x="Time",
+
+                y="Change"
+
+            )
+
+
+
         else:
 
 
@@ -756,6 +795,7 @@ if len(st.session_state.history)>0:
                 "ไม่มีข้อมูล"
 
             )
+
 
 
 
@@ -778,11 +818,12 @@ st.header(
 
 
 
-if len(st.session_state.history)>0:
+
+if len(st.session_state.history) > 0:
 
 
 
-    history_df=pd.DataFrame(
+    history_df = pd.DataFrame(
 
         st.session_state.history
 
