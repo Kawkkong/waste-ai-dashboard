@@ -1,35 +1,22 @@
-# ======================================================
-# YOLOv11-Seg Waste Detection
-# ROI + Waste Area Ratio
-# ======================================================
-
-
 from ultralytics import YOLO
 
 import cv2
 import numpy as np
 
+
 from config import CAMERA_CONFIG
 
 
 
-MODEL_PATH="best.pt"
-
-
 model = YOLO(
-    MODEL_PATH
+    "best.pt"
 )
 
 
 
 
 
-# ==============================
-# Level
-# ==============================
-
-
-def density_level(WAR,threshold):
+def get_level(WAR,threshold):
 
 
     if WAR == 0:
@@ -61,49 +48,44 @@ def density_level(WAR,threshold):
 
 
 
-def recommendation(level):
+def get_action(level):
 
 
     if level=="Normal":
 
-        return "No trash"
+        return "ไม่พบขยะ"
 
 
     elif level=="Low":
 
-        return "Monitor"
+        return "ติดตาม"
 
 
     elif level=="Medium":
 
-        return "Prepare collection"
+        return "เตรียมจัดเก็บ"
 
 
     elif level=="High":
 
-        return "Notify staff"
+        return "แจ้งเจ้าหน้าที่"
 
 
     else:
 
-        return "Collect immediately"
+        return "เก็บขยะทันที"
 
 
 
 
 
 
-
-
-# ==============================
-# Main inference
-# ==============================
 
 
 def analyze_frame(img,camera):
 
 
-    height,width = img.shape[:2]
+    h,w = img.shape[:2]
 
 
     cfg = CAMERA_CONFIG[camera]
@@ -116,18 +98,19 @@ def analyze_frame(img,camera):
 
 
 
-    # ------------------------------
-    # YOLO
-    # ------------------------------
+
+    # ===========================
+    # YOLO Segmentation
+    # ===========================
 
 
-    result = model(img)[0]
+    result=model(img)[0]
 
 
 
-    combined_mask=np.zeros(
+    combined=np.zeros(
 
-        (height,width),
+        (h,w),
 
         dtype=np.uint8
 
@@ -136,9 +119,7 @@ def analyze_frame(img,camera):
 
 
 
-
     if result.masks is not None:
-
 
 
         masks=result.masks.data.cpu().numpy()
@@ -153,13 +134,13 @@ def analyze_frame(img,camera):
 
                 mask,
 
-                (width,height)
+                (w,h)
 
             )
 
 
 
-            combined_mask[
+            combined[
 
                 mask>0.5
 
@@ -170,84 +151,59 @@ def analyze_frame(img,camera):
 
 
 
-    # ------------------------------
+    # ===========================
     # ROI
-    # ------------------------------
+    # ===========================
 
 
-    roi_mask=np.zeros(
+    roi=np.zeros(
 
-        (height,width),
+        (h,w),
 
         dtype=np.uint8
 
     )
 
 
-    roi_mask[
-
-        y1:y2,
-
-        x1:x2
-
-    ]=1
+    roi[y1:y2,x1:x2]=1
 
 
 
 
 
-    roi_garbage = (
-
-        combined_mask *
-
-        roi_mask
-
-    )
+    garbage=combined*roi
 
 
 
 
 
-
-    # ------------------------------
+    # ===========================
     # WAR
-    # ------------------------------
+    # ===========================
 
 
-    garbage_pixels=np.sum(
+    garbage_pixel=np.sum(
 
-        roi_garbage
-
-    )
-
-
-    roi_pixels=np.sum(
-
-        roi_mask
+        garbage
 
     )
 
 
+    roi_pixel=np.sum(
 
-    if roi_pixels:
+        roi
 
-
-        WAR=(
-
-            garbage_pixels/
-
-            roi_pixels
-
-        )*100
-
-
-    else:
-
-
-        WAR=0
+    )
 
 
 
+    WAR=(
+
+        garbage_pixel/
+
+        roi_pixel
+
+    )*100
 
 
 
@@ -262,8 +218,7 @@ def analyze_frame(img,camera):
 
 
 
-
-    level=density_level(
+    level=get_level(
 
         WAR,
 
@@ -277,10 +232,9 @@ def analyze_frame(img,camera):
 
 
 
-
-    # ------------------------------
+    # ===========================
     # Visualization
-    # ------------------------------
+    # ===========================
 
 
     output=img.copy()
@@ -291,12 +245,12 @@ def analyze_frame(img,camera):
 
 
 
-    # สีแดง mask ขยะ
+    # สีแดง mask
 
 
     overlay[
 
-        roi_garbage==1
+        garbage==1
 
     ]=(
 
@@ -327,7 +281,6 @@ def analyze_frame(img,camera):
 
 
 
-    # ROI box
 
 
     cv2.rectangle(
@@ -352,7 +305,7 @@ def analyze_frame(img,camera):
 
         output,
 
-        f"WAR {WAR}% {level}",
+        f"WAR {WAR}%",
 
         (30,50),
 
@@ -365,8 +318,6 @@ def analyze_frame(img,camera):
         3
 
     )
-
-
 
 
 
@@ -389,97 +340,8 @@ def analyze_frame(img,camera):
         level,
 
 
-        "recommendation":
+        "action":
 
-        recommendation(level)
+        get_action(level)
 
     }
-
-
-
-
-
-
-
-
-
-# ==============================
-# Video
-# ==============================
-
-
-def analyze_video(path,camera,skip=10):
-
-
-    cap=cv2.VideoCapture(path)
-
-
-    data=[]
-
-
-    frame_id=0
-
-
-
-
-    while True:
-
-
-        ret,frame=cap.read()
-
-
-
-        if not ret:
-
-            break
-
-
-
-        frame_id+=1
-
-
-
-
-
-        if frame_id%skip==0:
-
-
-
-            result=analyze_frame(
-
-                frame,
-
-                camera
-
-            )
-
-
-
-            data.append({
-
-                "Frame":
-
-                frame_id,
-
-
-                "WAR":
-
-                result["WAR"],
-
-
-                "Level":
-
-                result["level"]
-
-            })
-
-
-
-
-
-
-    cap.release()
-
-
-
-    return data
