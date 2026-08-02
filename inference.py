@@ -1,3 +1,10 @@
+# ======================================================
+# inference.py
+# YOLOv11-Seg + ROI + WAR
+# ใช้ Polygon Mask (ไม่เกิด mask เลื่อน)
+# ======================================================
+
+
 from ultralytics import YOLO
 import cv2
 import numpy as np
@@ -6,32 +13,41 @@ from config import CAMERA_CONFIG
 
 
 
-MODEL_PATH="best.pt"
+# =========================
+# Load Model
+# =========================
 
+MODEL_PATH = "best.pt"
 
 model = YOLO(MODEL_PATH)
 
 
 
-def density_level(WAR, threshold):
+
+
+# =========================
+# Density Classification
+# =========================
+
+def classify_density(WAR, threshold):
 
 
     if WAR == 0:
 
-        return "No Garbage"
+        return "Normal"
 
 
-    elif WAR <= threshold["Low"]:
+    elif WAR <= threshold["low"]:
 
         return "Low"
 
 
-    elif WAR <= threshold["Medium"]:
+    elif WAR <= threshold["medium"]:
 
         return "Medium"
 
 
-    elif WAR <= threshold["High"]:
+    elif WAR <= threshold["high"]:
 
         return "High"
 
@@ -44,143 +60,238 @@ def density_level(WAR, threshold):
 
 
 
-def predict(image, camera_id):
+def recommendation(level):
 
 
-    height,width=image.shape[:2]
+    if level == "Normal":
+
+        return "ไม่ต้องเก็บ"
 
 
-    cam = CAMERA_CONFIG[camera_id]
+    elif level == "Low":
+
+        return "ติดตามสถานการณ์"
+
+
+    elif level == "Medium":
+
+        return "เตรียมจัดเก็บ"
+
+
+    elif level == "High":
+
+        return "แจ้งเจ้าหน้าที่"
+
+
+    else:
+
+        return "เก็บทันที"
 
 
 
-    # =============================
+
+
+
+# =========================
+# Main Prediction
+# =========================
+
+
+def predict(image, camera):
+
+
+    config = CAMERA_CONFIG[camera]
+
+
+    roi = config["roi"]
+
+
+    x1 = roi["x1"]
+    y1 = roi["y1"]
+
+    x2 = roi["x2"]
+    y2 = roi["y2"]
+
+
+
+    height,width = image.shape[:2]
+
+
+
+    # =====================
     # YOLO Segmentation
-    # =============================
+    # =====================
 
 
-    result=model(image)[0]
+    result = model(image)[0]
 
 
-    combined_mask=np.zeros(
+
+    combined_mask = np.zeros(
         (height,width),
         dtype=np.uint8
     )
+
 
 
     if result.masks is not None:
 
 
-        masks=result.masks.data.cpu().numpy()
+        # ใช้ polygon mask
+        # ไม่ resize tensor
 
 
-        for mask in masks:
+        polygons = result.masks.xy
 
 
-            mask=cv2.resize(
-                mask,
-                (width,height)
+
+        for poly in polygons:
+
+
+            poly = poly.astype(
+                np.int32
             )
 
 
-            combined_mask[
-                mask>0.5
-            ]=1
+            cv2.fillPoly(
+                combined_mask,
+                [poly],
+                1
+            )
 
 
 
-    # =============================
-    # ROI
-    # =============================
+
+    # =====================
+    # Full Image WAR
+    # =====================
 
 
-    roi=cam["roi"]
+    full_garbage_pixels = np.sum(
+        combined_mask
+    )
 
 
-    roi_area=np.zeros(
+    full_pixels = (
+        height *
+        width
+    )
+
+
+    WAR_full = (
+
+        full_garbage_pixels /
+        full_pixels
+
+    ) * 100
+
+
+
+
+
+
+    # =====================
+    # ROI Mask
+    # =====================
+
+
+    roi_mask = np.zeros(
         (height,width),
         dtype=np.uint8
     )
 
 
-    roi_area[
-        roi["y1"]:roi["y2"],
-        roi["x1"]:roi["x2"]
-    ]=1
+    roi_mask[
+        y1:y2,
+        x1:x2
+    ] = 1
 
 
 
-    roi_mask = (
+
+
+    # เอาขยะเฉพาะ ROI
+
+
+    garbage_mask = (
+
         combined_mask *
-        roi_area
+        roi_mask
+
     )
 
 
 
-    # =============================
-    # WAR
-    # =============================
 
 
-    garbage_pixel=np.sum(
+    # =====================
+    # ROI WAR
+    # =====================
+
+
+    garbage_pixels = np.sum(
+        garbage_mask
+    )
+
+
+    roi_pixels = np.sum(
         roi_mask
     )
 
 
-    roi_pixel=np.sum(
-        roi_area
-    )
+
+    WAR = (
+
+        garbage_pixels /
+        roi_pixels
+
+    ) * 100
 
 
-    WAR=(
-        garbage_pixel /
-        roi_pixel
-    )*100
 
 
 
-    level=density_level(
+    # =====================
+    # Level
+    # =====================
+
+
+    level = classify_density(
         WAR,
-        cam["threshold"]
+        config["threshold"]
     )
 
 
-
-    # =============================
-    # Visualization
-    # =============================
-
-
-    output=image.copy()
-
-
-    output[
-        roi_mask==1
-    ]=(
-        0,
-        0,
-        255
-    )
-
-
-    output=cv2.addWeighted(
-        image,
-        0.7,
-        output,
-        0.3,
-        0
-    )
 
 
 
     return {
 
-        "WAR":round(WAR,2),
 
-        "level":level,
+        "WAR": round(WAR,2),
 
-        "image":output,
 
-        "camera":cam["name"]
+        "WAR_full":
+        round(WAR_full,2),
+
+
+        "level":
+        level,
+
+
+        "recommendation":
+        recommendation(level),
+
+
+        "mask":
+        garbage_mask,
+
+
+        "full_mask":
+        combined_mask,
+
+
+        "roi":
+        roi
 
     }
