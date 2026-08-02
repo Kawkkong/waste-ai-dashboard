@@ -6,21 +6,24 @@
 CAMERA_CONFIG = {
 
 
-    "Camera 1":{
+    "Camera 1": {
 
 
-        "roi":(
+        "name":
+        "ข้างหอประชุมนารายณ์",
 
+
+        "roi":
+        (
             1080,
             370,
             1920,
             1080
-
         ),
 
 
-        "threshold":{
-
+        "threshold":
+        {
 
             "low":20,
 
@@ -28,40 +31,40 @@ CAMERA_CONFIG = {
 
             "high":60
 
-
         }
 
     },
 
 
 
-    "Camera 2":{
+    "Camera 2": {
 
 
-        "roi":(
+        "name":
+        "ข้างตึกเขียว",
 
+
+        "roi":
+        (
             0,
             300,
             550,
             800
-
         ),
 
 
-        "threshold":{
 
+        "threshold":
+        {
 
-            "low":15,
+            "low":20,
 
-            "medium":35,
+            "medium":40,
 
-            "high":55
-
+            "high":60
 
         }
 
-
     }
-
 
 }
