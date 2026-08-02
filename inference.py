@@ -1,32 +1,27 @@
 # ======================================================
 # inference.py
 # YOLOv11-Seg + ROI + WAR
+# Same pipeline as Colab
 # ======================================================
 
 
 from ultralytics import YOLO
-
 import cv2
 import numpy as np
-
 
 from config import CAMERA_CONFIG
 
 
 
-
 # ===============================
-# Model
+# Load Model
 # ===============================
 
 
 MODEL_PATH = "best.pt"
 
 
-model = YOLO(
-    MODEL_PATH
-)
-
+model = YOLO(MODEL_PATH)
 
 
 
@@ -42,34 +37,25 @@ def get_level(WAR, threshold):
 
     if WAR == 0:
 
-
         return "Normal"
-
 
 
     elif WAR <= threshold["low"]:
 
-
         return "Low"
-
 
 
     elif WAR <= threshold["medium"]:
 
-
         return "Medium"
-
 
 
     elif WAR <= threshold["high"]:
 
-
         return "High"
 
 
-
     else:
-
 
         return "Critical"
 
@@ -78,39 +64,27 @@ def get_level(WAR, threshold):
 
 
 
-
-
-
-# ===============================
-# Recommendation
-# ===============================
-
-
 def get_action(level):
 
 
-    if level=="Normal":
+    if level == "Normal":
 
         return "No action"
 
 
-
-    elif level=="Low":
+    elif level == "Low":
 
         return "Monitor"
 
 
-
-    elif level=="Medium":
+    elif level == "Medium":
 
         return "Prepare collection"
 
 
-
-    elif level=="High":
+    elif level == "High":
 
         return "Notify staff"
-
 
 
     else:
@@ -124,18 +98,15 @@ def get_action(level):
 
 
 
-
 # ===============================
-# Analyze Image
+# Image Analysis
 # ===============================
 
 
-def analyze_frame(img,camera):
+def analyze_frame(img, camera):
 
 
-
-    h,w = img.shape[:2]
-
+    height, width = img.shape[:2]
 
 
     cfg = CAMERA_CONFIG[camera]
@@ -153,29 +124,13 @@ def analyze_frame(img,camera):
     # ===========================
 
 
-
-    result = model.predict(
-
-        img,
-
-        imgsz=640,
-
-        retina_masks=True,
-
-        verbose=False
-
-    )[0]
+    result = model(img)[0]
 
 
-
-
-
-
-    # mask เต็มภาพ
 
     combined_mask = np.zeros(
 
-        (h,w),
+        (height,width),
 
         dtype=np.uint8
 
@@ -185,28 +140,60 @@ def analyze_frame(img,camera):
 
 
 
-
     if result.masks is not None:
-
 
 
         masks = result.masks.data.cpu().numpy()
 
 
 
-        for m in masks:
+        for mask in masks:
 
 
 
-            # retina_masks ทำให้ mask
-            # มีขนาดตรงกับ original image
+            mask = cv2.resize(
+
+                mask,
+
+                (width,height)
+
+            )
+
 
 
             combined_mask[
 
-                m > 0.5
+                mask > 0.5
 
             ] = 1
+
+
+
+
+
+    # ===========================
+    # Full Image WAR
+    # ===========================
+
+
+    full_pixels = height * width
+
+
+    full_garbage = np.sum(
+
+        combined_mask
+
+    )
+
+
+    WAR_full = (
+
+        full_garbage /
+
+        full_pixels
+
+    ) * 100
+
 
 
 
@@ -218,18 +205,16 @@ def analyze_frame(img,camera):
     # ===========================
 
 
+    roi_area = np.zeros(
 
-    roi_mask = np.zeros(
-
-        (h,w),
+        (height,width),
 
         dtype=np.uint8
 
     )
 
 
-
-    roi_mask[
+    roi_area[
 
         y1:y2,
 
@@ -241,16 +226,11 @@ def analyze_frame(img,camera):
 
 
 
-
-
-    # เอาเฉพาะขยะใน ROI
-
-
-    garbage_mask = (
+    roi_garbage_mask = (
 
         combined_mask *
 
-        roi_mask
+        roi_area
 
     )
 
@@ -259,36 +239,27 @@ def analyze_frame(img,camera):
 
 
 
-
-
     # ===========================
-    # WAR
+    # ROI WAR
     # ===========================
 
 
     garbage_pixels = np.sum(
 
-        garbage_mask
+        roi_garbage_mask
 
     )
-
 
 
     roi_pixels = np.sum(
 
-        roi_mask
+        roi_area
 
     )
 
 
 
-    if roi_pixels == 0:
-
-
-        WAR=0
-
-
-    else:
+    if roi_pixels > 0:
 
 
         WAR = (
@@ -298,6 +269,12 @@ def analyze_frame(img,camera):
             roi_pixels
 
         ) * 100
+
+
+    else:
+
+
+        WAR = 0
 
 
 
@@ -315,9 +292,6 @@ def analyze_frame(img,camera):
 
 
 
-
-
-
     level = get_level(
 
         WAR,
@@ -331,10 +305,10 @@ def analyze_frame(img,camera):
 
 
 
-    # ===========================
-    # Overlay Mask
-    # ===========================
 
+    # ===========================
+    # Visualization
+    # ===========================
 
 
     output = img.copy()
@@ -347,7 +321,7 @@ def analyze_frame(img,camera):
 
     overlay[
 
-        garbage_mask==1
+        roi_garbage_mask == 1
 
     ] = (
 
@@ -361,7 +335,7 @@ def analyze_frame(img,camera):
 
 
 
-    output=cv2.addWeighted(
+    output = cv2.addWeighted(
 
         img,
 
@@ -402,11 +376,6 @@ def analyze_frame(img,camera):
 
 
 
-    # ===========================
-    # Return
-    # ===========================
-
-
     return {
 
 
@@ -415,11 +384,20 @@ def analyze_frame(img,camera):
         output,
 
 
-
         "WAR":
 
         WAR,
 
+
+        "WAR_full":
+
+        round(
+
+            float(WAR_full),
+
+            2
+
+        ),
 
 
         "level":
@@ -427,12 +405,9 @@ def analyze_frame(img,camera):
         level,
 
 
-
         "recommendation":
 
         get_action(level)
-
-
 
     }
 
@@ -443,21 +418,12 @@ def analyze_frame(img,camera):
 
 
 
-
 # ===============================
-# Analyze Video
+# Video Analysis
 # ===============================
 
 
-def analyze_video(
-
-        path,
-
-        camera,
-
-        skip=10
-
-):
+def analyze_video(path, camera, skip=10):
 
 
     cap=cv2.VideoCapture(path)
@@ -473,9 +439,7 @@ def analyze_video(
 
 
 
-
     while True:
-
 
 
         ret,frame = cap.read()
@@ -484,15 +448,13 @@ def analyze_video(
 
         if not ret:
 
-
             break
 
 
 
 
-        frame_id +=1
 
-
+        frame_id += 1
 
 
 
@@ -501,7 +463,7 @@ def analyze_video(
 
 
 
-            r = analyze_frame(
+            result = analyze_frame(
 
                 frame,
 
@@ -510,9 +472,6 @@ def analyze_video(
             )
 
 
-
-            # ไม่เก็บ image
-            # เพราะ dataframe พัง
 
 
             results.append({
@@ -525,17 +484,15 @@ def analyze_video(
 
                 "WAR":
 
-                r["WAR"],
+                result["WAR"],
 
 
                 "Level":
 
-                r["level"]
-
+                result["level"]
 
 
             })
-
 
 
 
