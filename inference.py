@@ -1,6 +1,6 @@
 # ======================================================
 # inference.py
-# YOLOv11-Seg + ROI + WAR
+# YOLOv11 Segmentation + WAR
 # ======================================================
 
 
@@ -13,23 +13,24 @@ from config import CAMERA_CONFIG
 
 
 
-MODEL_PATH = "best.pt"
+MODEL_PATH="best.pt"
 
 
-model = YOLO(MODEL_PATH)
+model=YOLO(MODEL_PATH)
 
 
 
 
-# ===============================
-# Density Classification
-# ===============================
+
+# ==============================
+# Density
+# ==============================
 
 
-def classify_density(WAR, threshold):
+def classify_density(WAR,threshold):
 
 
-    if WAR == 0:
+    if WAR==0:
 
         return "Normal"
 
@@ -57,70 +58,176 @@ def classify_density(WAR, threshold):
 
 
 
+
 def recommendation(level):
 
 
-    if level=="Normal":
+    text={
 
-        return "No action"
-
-
-    elif level=="Low":
-
-        return "Monitor"
+        "Normal":
+        "ไม่พบขยะ",
 
 
-    elif level=="Medium":
-
-        return "Prepare collection"
-
-
-    elif level=="High":
-
-        return "Notify staff"
+        "Low":
+        "ติดตามสถานการณ์",
 
 
-    else:
-
-        return "Urgent collection"
-
+        "Medium":
+        "เตรียมจัดเก็บ",
 
 
+        "High":
+        "แจ้งเจ้าหน้าที่",
+
+
+        "Critical":
+        "เก็บทันที"
+
+    }
+
+
+    return text[level]
 
 
 
-# ===============================
-# Main Prediction
-# ===============================
 
 
-def predict(image,camera):
+
+# ==============================
+# Visualization
+# ==============================
+
+
+def create_overlay(
+        image,
+        mask,
+        roi):
+
+
+    output=image.copy()
+
+
+
+    # mask สีแดงสด
+
+
+    color=np.zeros_like(
+        image
+    )
+
+
+    color[mask==1]=(
+        0,
+        0,
+        255
+    )
+
+
+
+    output=cv2.addWeighted(
+
+        image,
+
+        0.55,
+
+        color,
+
+        0.45,
+
+        0
+
+    )
+
+
+
+    # contour สีเหลือง
+
+
+    contours,_=cv2.findContours(
+
+        mask,
+
+        cv2.RETR_EXTERNAL,
+
+        cv2.CHAIN_APPROX_SIMPLE
+
+    )
+
+
+    cv2.drawContours(
+
+        output,
+
+        contours,
+
+        -1,
+
+        (0,255,255),
+
+        3
+
+    )
+
+
+
+    # ROI
+
+
+    cv2.rectangle(
+
+        output,
+
+        (
+        roi["x1"],
+        roi["y1"]
+        ),
+
+        (
+        roi["x2"],
+        roi["y2"]
+        ),
+
+        (0,255,0),
+
+        4
+
+    )
+
+
+
+    return output
+
+
+
+
+
+
+
+# ==============================
+# Main Predict
+# ==============================
+
+
+def predict(
+        image,
+        camera):
+
 
 
     height,width=image.shape[:2]
 
 
 
-    cam = CAMERA_CONFIG[camera]
+    cam=CAMERA_CONFIG[camera]
 
-
-
-    roi = cam["roi"]
-
-
-
-    x1=roi["x1"]
-    y1=roi["y1"]
-
-    x2=roi["x2"]
-    y2=roi["y2"]
+    roi=cam["roi"]
 
 
 
 
-    # ===============================
-    # YOLO Segmentation
-    # ===============================
+    # =========================
+    # YOLO
+    # =========================
 
 
     result=model(image)[0]
@@ -128,16 +235,22 @@ def predict(image,camera):
 
 
     combined_mask=np.zeros(
+
         (height,width),
+
         dtype=np.uint8
+
     )
+
 
 
 
     if result.masks is not None:
 
 
+
         polygons=result.masks.xy
+
 
 
         for poly in polygons:
@@ -149,29 +262,39 @@ def predict(image,camera):
 
 
             cv2.fillPoly(
+
                 combined_mask,
+
                 [poly],
+
                 1
+
             )
 
 
 
 
 
-    # ===============================
-    # ROI Mask
-    # ===============================
+    # =========================
+    # ROI
+    # =========================
 
 
     roi_mask=np.zeros(
+
         (height,width),
+
         dtype=np.uint8
+
     )
 
 
     roi_mask[
-        y1:y2,
-        x1:x2
+
+        roi["y1"]:roi["y2"],
+
+        roi["x1"]:roi["x2"]
+
     ]=1
 
 
@@ -180,6 +303,7 @@ def predict(image,camera):
     garbage_mask=(
 
         combined_mask *
+
         roi_mask
 
     )
@@ -188,9 +312,9 @@ def predict(image,camera):
 
 
 
-    # ===============================
+    # =========================
     # WAR
-    # ===============================
+    # =========================
 
 
     garbage_pixels=np.sum(
@@ -206,9 +330,12 @@ def predict(image,camera):
     WAR=(
 
         garbage_pixels /
+
         roi_pixels
 
     )*100
+
+
 
 
 
@@ -225,32 +352,13 @@ def predict(image,camera):
 
 
 
-    # ===============================
-    # Output Image
-    # ===============================
-
-
-    output=image.copy()
-
-
-
-    output[
-        garbage_mask==1
-    ]=(0,0,255)
-
-
-
-    output=cv2.addWeighted(
+    output=create_overlay(
 
         image,
 
-        0.7,
+        garbage_mask,
 
-        output,
-
-        0.3,
-
-        0
+        roi
 
     )
 
@@ -274,10 +382,6 @@ def predict(image,camera):
 
         "image":
         output,
-
-
-        "mask":
-        garbage_mask,
 
 
         "camera":
