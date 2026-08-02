@@ -1,16 +1,34 @@
+# ======================================================
+# app.py
+# Streamlit Dashboard
+# ======================================================
+
+
 import streamlit as st
+
 import cv2
+import numpy as np
+
 import pandas as pd
+
 from datetime import datetime
 
+
 from inference import predict
+
 from config import CAMERA_CONFIG
 
 
 
+
 st.set_page_config(
+
+    page_title="Waste AI Dashboard",
+
     layout="wide"
+
 )
+
 
 
 
@@ -20,62 +38,58 @@ st.title(
 
 
 
-# ===================
-# เลือกกล้อง
-# ===================
 
 
-camera=st.selectbox(
-
-"เลือกกล้อง",
-
-[
-"camera1",
-"camera2"
-]
-
-)
+# ===============================
+# Select Camera
+# ===============================
 
 
+camera = st.selectbox(
 
-st.write(
-"Camera:",
-CAMERA_CONFIG[camera]["name"]
-)
+    "Select Camera",
 
-
-
-
-# ===================
-# upload
-# ===================
-
-
-file=st.file_uploader(
-
-"Upload CCTV Image",
-
-type=[
-"jpg",
-"png",
-"jpeg"
-]
+    list(
+        CAMERA_CONFIG.keys()
+    )
 
 )
 
 
 
-if file:
+
+uploaded = st.file_uploader(
+
+    "Upload CCTV Image",
+
+    type=[
+        "jpg",
+        "jpeg",
+        "png"
+    ]
+
+)
 
 
-    bytes_data=file.read()
+
+
+
+if uploaded:
+
+
+
+    bytes_data=uploaded.read()
+
 
 
     img=cv2.imdecode(
 
         np.frombuffer(
+
             bytes_data,
+
             np.uint8
+
         ),
 
         cv2.IMREAD_COLOR
@@ -84,24 +98,17 @@ if file:
 
 
 
+
+
     result=predict(
+
         img,
+
         camera
+
     )
 
 
-
-    WAR=result["WAR"]
-
-    level=result["level"]
-
-
-
-
-
-    # ==================
-    # top cards
-    # ==================
 
 
     col1,col2,col3=st.columns(3)
@@ -112,25 +119,23 @@ if file:
 
         "Waste Area Ratio",
 
-        f"{WAR}%"
+        f'{result["WAR"]}%'
 
     )
-
 
 
     col2.metric(
 
-        "Density",
+        "Density Level",
 
-        level
+        result["level"]
 
     )
 
 
-
     col3.metric(
 
-        "Action",
+        "Recommendation",
 
         result["recommendation"]
 
@@ -140,43 +145,18 @@ if file:
 
 
 
-    # ==================
-    # mask overlay
-    # ==================
-
-
-    overlay=img.copy()
-
-
-
-    overlay[
-        result["mask"]==1
-    ]=(0,0,255)
-
-
-
-    output=cv2.addWeighted(
-
-        img,
-        0.7,
-
-        overlay,
-        0.3,
-
-        0
-
-    )
-
-
 
     st.image(
 
         cv2.cvtColor(
-            output,
+
+            result["image"],
+
             cv2.COLOR_BGR2RGB
+
         ),
 
-        caption="Segmentation Result"
+        caption="YOLOv11-Seg Result"
 
     )
 
@@ -184,33 +164,30 @@ if file:
 
 
 
-    # ==================
-    # save history
-    # ==================
+    # ===============================
+    # Save History
+    # ===============================
 
 
-    data={
+    data=pd.DataFrame([{
 
-    "time":
-    datetime.now(),
+        "time":
+        datetime.now(),
 
-    "camera":
-    camera,
+        "camera":
+        camera,
 
-    "WAR":
-    WAR,
+        "WAR":
+        result["WAR"],
 
-    "level":
-    level
+        "level":
+        result["level"]
 
-    }
-
-
-
-    df=pd.DataFrame([data])
+    }])
 
 
-    df.to_csv(
+
+    data.to_csv(
 
         "history.csv",
 
