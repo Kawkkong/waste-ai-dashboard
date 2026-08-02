@@ -1,5 +1,4 @@
 from ultralytics import YOLO
-
 import cv2
 import numpy as np
 
@@ -7,142 +6,47 @@ from config import CAMERA_CONFIG
 
 
 
-# =====================================================
-# MODEL
-# =====================================================
+# ======================================================
+# LOAD MODEL
+# ======================================================
 
-model = YOLO(
-    "best.pt"
-)
+MODEL_PATH = "best.pt"
 
-
+model = YOLO(MODEL_PATH)
 
 
 
-# =====================================================
-# LETTERBOX
-# =====================================================
+# ======================================================
+# Density Level
+# ======================================================
 
-def letterbox(
-    img,
-    new_shape=(1920,1080)
-):
-
-    target_w, target_h = new_shape
-
-
-    h,w = img.shape[:2]
-
-
-    ratio = min(
-        target_w / w,
-        target_h / h
-    )
-
-
-    new_w = int(w * ratio)
-    new_h = int(h * ratio)
-
-
-
-    resized = cv2.resize(
-
-        img,
-
-        (new_w,new_h),
-
-        interpolation=cv2.INTER_LINEAR
-
-    )
-
-
-
-    canvas = np.zeros(
-
-        (target_h,target_w,3),
-
-        dtype=np.uint8
-
-    )
-
-
-
-    dx = (target_w-new_w)//2
-    dy = (target_h-new_h)//2
-
-
-
-    canvas[
-
-        dy:dy+new_h,
-
-        dx:dx+new_w
-
-    ] = resized
-
-
-
-    return canvas
-
-
-
-
-
-
-# =====================================================
-# LEVEL
-# =====================================================
-
-
-def density_level(
-    WAR,
-    threshold
-):
-
+def density_level(WAR, threshold):
 
     if WAR == 0:
-
         return "Normal"
 
-
-
     elif WAR <= threshold["low"]:
-
         return "Low"
 
-
-
     elif WAR <= threshold["medium"]:
-
         return "Medium"
 
-
-
     elif WAR <= threshold["high"]:
-
         return "High"
 
-
-
     else:
-
         return "Critical"
 
 
 
 
-
-
-
-# =====================================================
-# ACTION
-# =====================================================
-
+# ======================================================
+# Recommendation
+# ======================================================
 
 def recommendation(level):
 
-
-    table={
+    result = {
 
         "Normal":
         "No trash",
@@ -161,45 +65,40 @@ def recommendation(level):
 
     }
 
-
-    return table[level]
-
+    return result[level]
 
 
 
 
 
-
-# =====================================================
-# ANALYZE
-# =====================================================
-
-
-def analyze_frame(
-    img,
-    camera
-):
+# ======================================================
+# MAIN ANALYSIS
+# ======================================================
 
 
-    # ---------------------------------
-    # Keep aspect ratio
-    # ---------------------------------
+def analyze_frame(img, camera):
 
-    img = letterbox(
-        img,
-        (1920,1080)
-    )
 
+    # ------------------------------------------
+    # ใช้ภาพจริง ห้าม resize
+    # ------------------------------------------
 
     h,w = img.shape[:2]
 
 
 
+    print(
+        "Input image:",
+        w,
+        "x",
+        h
+    )
 
 
-    # ---------------------------------
-    # CAMERA ROI
-    # ---------------------------------
+
+    # ------------------------------------------
+    # Camera config
+    # ------------------------------------------
 
     cfg = CAMERA_CONFIG[camera]
 
@@ -210,12 +109,9 @@ def analyze_frame(
 
 
 
-
-
-    # ---------------------------------
-    # YOLO
-    # ---------------------------------
-
+    # ------------------------------------------
+    # YOLO Segmentation
+    # ------------------------------------------
 
     result = model(
 
@@ -236,10 +132,9 @@ def analyze_frame(
 
 
 
-    # ---------------------------------
-    # MASK
-    # ---------------------------------
-
+    # ------------------------------------------
+    # Create full mask
+    # ------------------------------------------
 
     combined_mask = np.zeros(
 
@@ -255,12 +150,22 @@ def analyze_frame(
     if result.masks is not None:
 
 
-
         masks = result.masks.data.cpu().numpy()
 
 
 
+        print(
+            "Mask size:",
+            masks.shape
+        )
+
+
+
         for mask in masks:
+
+
+            # ไม่ resize
+            # retina_masks คืนตามภาพแล้ว
 
 
             combined_mask[
@@ -271,13 +176,21 @@ def analyze_frame(
 
 
 
+    else:
+
+        print(
+            "No garbage detected"
+        )
 
 
 
 
-    # ---------------------------------
-    # ROI MASK
-    # ---------------------------------
+
+
+
+    # ------------------------------------------
+    # ROI mask
+    # ------------------------------------------
 
 
     roi_mask = np.zeros(
@@ -287,6 +200,7 @@ def analyze_frame(
         dtype=np.uint8
 
     )
+
 
 
     roi_mask[
@@ -301,10 +215,9 @@ def analyze_frame(
 
 
 
-
-    # ---------------------------------
-    # ROI GARBAGE
-    # ---------------------------------
+    # ------------------------------------------
+    # Garbage in ROI
+    # ------------------------------------------
 
 
     roi_garbage = (
@@ -320,9 +233,10 @@ def analyze_frame(
 
 
 
-    # ---------------------------------
-    # WAR
-    # ---------------------------------
+
+    # ------------------------------------------
+    # WAR Calculation
+    # ------------------------------------------
 
 
     garbage_pixels = np.sum(
@@ -340,8 +254,7 @@ def analyze_frame(
 
 
 
-    if roi_pixels != 0:
-
+    if roi_pixels > 0:
 
         WAR = (
 
@@ -351,12 +264,9 @@ def analyze_frame(
 
         ) * 100
 
-
     else:
 
         WAR = 0
-
-
 
 
 
@@ -385,11 +295,9 @@ def analyze_frame(
 
 
 
-
-
-    # ---------------------------------
-    # DISPLAY MASK
-    # ---------------------------------
+    # ------------------------------------------
+    # Visualization
+    # ------------------------------------------
 
 
     output = img.copy()
@@ -400,8 +308,7 @@ def analyze_frame(
 
 
 
-    # สีแดงเข้ม
-
+    # mask สีแดง
 
     overlay[
 
@@ -419,16 +326,15 @@ def analyze_frame(
 
 
 
-
     output = cv2.addWeighted(
 
         img,
 
-        0.55,
+        0.6,
 
         overlay,
 
-        0.45,
+        0.4,
 
         0
 
@@ -438,8 +344,8 @@ def analyze_frame(
 
 
 
-    # ROI BOX
 
+    # ROI rectangle
 
     cv2.rectangle(
 
@@ -459,14 +365,14 @@ def analyze_frame(
 
 
 
-    # TEXT
 
+    # Text
 
     cv2.putText(
 
         output,
 
-        f"WAR {WAR}%",
+        f"WAR: {WAR}%",
 
         (40,60),
 
@@ -505,36 +411,35 @@ def analyze_frame(
 
 
 
+
     return {
 
 
         "image":
-
         output,
 
 
         "original":
-
         img,
 
 
         "mask":
-
         roi_garbage,
 
 
         "WAR":
-
         WAR,
 
 
         "level":
-
         level,
 
 
         "action":
+        recommendation(level),
 
-        recommendation(level)
+
+        "camera":
+        camera
 
     }
