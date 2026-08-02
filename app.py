@@ -1,23 +1,18 @@
 import streamlit as st
 
+
 import cv2
+
 import numpy as np
 
 import pandas as pd
-
-import tempfile
 
 
 from datetime import datetime
 
 
-from inference import (
 
-    analyze_frame,
-
-    analyze_video
-
-)
+from inference import analyze_frame
 
 
 from config import CAMERA_CONFIG
@@ -26,9 +21,10 @@ from config import CAMERA_CONFIG
 
 
 
+
 st.set_page_config(
 
-    page_title="Waste AI",
+    page_title="Waste AI Dashboard",
 
     layout="wide"
 
@@ -38,45 +34,18 @@ st.set_page_config(
 
 
 
+
 st.title(
-    "🗑️ Waste Density Monitoring"
+
+"🗑 Dashboard ระบบตรวจจับและจำแนกระดับความหนาแน่นของกองขยะจากภาพ CCTV"
+
 )
 
 
 
 st.caption(
-    "YOLOv11-Seg + WAR Dashboard"
-)
 
-
-
-
-
-# -------------------------
-# Sidebar
-# -------------------------
-
-
-camera=st.sidebar.selectbox(
-
-    "Select Camera",
-
-    list(CAMERA_CONFIG.keys())
-
-)
-
-
-mode=st.sidebar.radio(
-
-    "Input",
-
-    [
-
-        "Image",
-
-        "Video"
-
-    ]
+"YOLOv11-Seg + Waste Area Ratio (WAR)"
 
 )
 
@@ -85,40 +54,65 @@ mode=st.sidebar.radio(
 
 
 
-# เก็บ history
 
 
-if "history" not in st.session_state:
-
-
-    st.session_state.history=[]
+uploaded_files={}
 
 
 
 
 
+st.sidebar.header(
 
+"Upload Camera Image"
 
-# =========================
-# IMAGE
-# =========================
-
-
-if mode=="Image":
+)
 
 
 
-    file=st.file_uploader(
+for cam in CAMERA_CONFIG:
 
-        "Upload Image",
 
-        type=["jpg","png","jpeg"]
+    uploaded_files[cam]=st.sidebar.file_uploader(
+
+        cam,
+
+        type=[
+
+            "jpg",
+
+            "png",
+
+            "jpeg"
+
+        ],
+
+        key=cam
 
     )
 
 
 
-    if file:
+
+
+
+
+history=[]
+
+
+
+
+
+# ==================================================
+# CAMERA DISPLAY
+# ==================================================
+
+
+for cam,file in uploaded_files.items():
+
+
+
+    if file is not None:
 
 
 
@@ -133,6 +127,7 @@ if mode=="Image":
             dtype=np.uint8
 
         )
+
 
 
         img=cv2.imdecode(
@@ -150,14 +145,15 @@ if mode=="Image":
 
             img,
 
-            camera
+            cam
 
         )
 
 
 
 
-        st.session_state.history.append({
+
+        history.append({
 
             "Time":
 
@@ -166,7 +162,7 @@ if mode=="Image":
 
             "Camera":
 
-            camera,
+            cam,
 
 
             "WAR":
@@ -176,7 +172,12 @@ if mode=="Image":
 
             "Level":
 
-            result["level"]
+            result["level"],
+
+
+            "Action":
+
+            result["action"]
 
         })
 
@@ -186,33 +187,13 @@ if mode=="Image":
 
 
 
-        c1,c2,c3=st.columns(3)
+        st.divider()
 
 
 
-        c1.metric(
+        st.subheader(
 
-            "WAR",
-
-            f'{result["WAR"]}%'
-
-        )
-
-
-        c2.metric(
-
-            "Level",
-
-            result["level"]
-
-        )
-
-
-        c3.metric(
-
-            "Camera",
-
-            camera
+            f"📷 {cam} : {CAMERA_CONFIG[cam]['name']}"
 
         )
 
@@ -220,16 +201,49 @@ if mode=="Image":
 
 
 
-
-        col1,col2=st.columns(
-
-            [2,1]
-
-        )
+        c1,c2=st.columns(2)
 
 
 
-        with col1:
+
+
+        with c1:
+
+
+            st.write(
+
+            "ภาพจากกล้อง CCTV"
+
+            )
+
+
+            st.image(
+
+                cv2.cvtColor(
+
+                    img,
+
+                    cv2.COLOR_BGR2RGB
+
+                ),
+
+                width=500
+
+            )
+
+
+
+
+
+
+        with c2:
+
+
+            st.write(
+
+            "ผลการตรวจจับ Segmentation"
+
+            )
 
 
             st.image(
@@ -242,25 +256,7 @@ if mode=="Image":
 
                 ),
 
-                width=600
-
-            )
-
-
-
-        with col2:
-
-
-            st.subheader(
-
-                "Recommendation"
-
-            )
-
-
-            st.info(
-
-                result["recommendation"]
+                width=500
 
             )
 
@@ -269,130 +265,75 @@ if mode=="Image":
 
 
 
+        # --------------------------
 
-# =========================
-# VIDEO
-# =========================
+        # Summary
 
-
-else:
+        # --------------------------
 
 
-
-    video=st.file_uploader(
-
-        "Upload Video",
-
-        type=["mp4"]
-
-    )
+        a,b,c=st.columns(3)
 
 
 
-    if video:
+        a.metric(
 
+            "WAR",
 
-
-        temp=tempfile.NamedTemporaryFile(
-
-            delete=False,
-
-            suffix=".mp4"
+            f"{result['WAR']}%"
 
         )
 
 
-        temp.write(
 
-            video.read()
+        b.metric(
+
+            "Density",
+
+            result["level"]
 
         )
 
 
-        temp.close()
+        c.metric(
 
+            "Recommendation",
 
+            result["action"]
 
-        if st.button(
-
-            "Analyze"
-
-        ):
-
-
-
-            results=analyze_video(
-
-                temp.name,
-
-                camera
-
-            )
-
-
-            df=pd.DataFrame(results)
-
-
-
-            st.line_chart(
-
-                df,
-
-                x="Frame",
-
-                y="WAR"
-
-            )
-
-
-            st.dataframe(
-
-                df,
-
-                use_container_width=True
-
-            )
+        )
 
 
 
 
 
 
-
-# =========================
-# Trend
-# =========================
-
-
-st.divider()
+# ==================================================
+# HISTORY
+# ==================================================
 
 
-st.subheader(
+if history:
 
-    "📈 WAR Trend"
-
-)
-
-
-
-if len(st.session_state.history)>0:
 
 
     df=pd.DataFrame(
 
-        st.session_state.history
+        history
 
     )
 
 
 
-    df=df[
+    st.divider()
 
-        df["Camera"]
 
-        ==camera
 
-    ]
+    st.subheader(
+
+        "📈 WAR Trend Analysis"
+
+    )
 
 
 
@@ -407,11 +348,34 @@ if len(st.session_state.history)>0:
     )
 
 
+
+
+
+    st.subheader(
+
+        "📋 Detection History"
+
+    )
+
+
+
+    st.dataframe(
+
+        df,
+
+        use_container_width=True
+
+    )
+
+
+
+
+
 else:
 
 
     st.info(
 
-        "No data"
+    "กรุณา upload ภาพจากกล้อง"
 
     )
