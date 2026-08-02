@@ -1,15 +1,11 @@
-# ======================================================
-# app.py
-# Streamlit Dashboard
-# ======================================================
-
-
 import streamlit as st
 
 import cv2
 import numpy as np
 
 import pandas as pd
+
+import os
 
 from datetime import datetime
 
@@ -20,10 +16,9 @@ from config import CAMERA_CONFIG
 
 
 
-
 st.set_page_config(
 
-    page_title="Waste AI Dashboard",
+    page_title="Waste AI",
 
     layout="wide"
 
@@ -31,54 +26,41 @@ st.set_page_config(
 
 
 
-
 st.title(
-"🗑️ Smart Waste Monitoring Dashboard"
+"🗑️ AI Waste Density Monitoring"
 )
 
 
 
+camera=st.selectbox(
 
+    "เลือกกล้อง",
 
-# ===============================
-# Select Camera
-# ===============================
-
-
-camera = st.selectbox(
-
-    "Select Camera",
-
-    list(
-        CAMERA_CONFIG.keys()
-    )
+    list(CAMERA_CONFIG.keys())
 
 )
 
 
 
-
-uploaded = st.file_uploader(
+file=st.file_uploader(
 
     "Upload CCTV Image",
 
     type=[
         "jpg",
-        "jpeg",
-        "png"
+        "png",
+        "jpeg"
     ]
 
 )
 
 
 
-
-
-if uploaded:
+if file:
 
 
 
-    bytes_data=uploaded.read()
+    bytes=file.read()
 
 
 
@@ -86,7 +68,7 @@ if uploaded:
 
         np.frombuffer(
 
-            bytes_data,
+            bytes,
 
             np.uint8
 
@@ -95,8 +77,6 @@ if uploaded:
         cv2.IMREAD_COLOR
 
     )
-
-
 
 
 
@@ -110,37 +90,82 @@ if uploaded:
 
 
 
+    # ==================
+    # Cards
+    # ==================
 
-    col1,col2,col3=st.columns(3)
+
+    c1,c2,c3,c4=st.columns(4)
 
 
 
-    col1.metric(
+    c1.metric(
 
-        "Waste Area Ratio",
+        "WAR",
 
         f'{result["WAR"]}%'
 
     )
 
 
-    col2.metric(
+    c2.metric(
 
-        "Density Level",
+        "Level",
 
         result["level"]
 
     )
 
 
-    col3.metric(
+    c3.metric(
 
-        "Recommendation",
+        "Camera",
+
+        result["camera"]
+
+    )
+
+
+    c4.metric(
+
+        "Action",
 
         result["recommendation"]
 
     )
 
+
+
+
+    # Alert
+
+
+    if result["level"]=="Critical":
+
+        st.error(
+            "🚨 Critical ต้องเก็บทันที"
+        )
+
+
+    elif result["level"]=="High":
+
+        st.warning(
+            "⚠️ High แจ้งเจ้าหน้าที่"
+        )
+
+
+    elif result["level"]=="Medium":
+
+        st.info(
+            "ℹ️ Medium"
+        )
+
+
+    else:
+
+        st.success(
+            "Normal / Low"
+        )
 
 
 
@@ -156,7 +181,7 @@ if uploaded:
 
         ),
 
-        caption="YOLOv11-Seg Result"
+        caption="YOLOv11 Segmentation"
 
     )
 
@@ -164,37 +189,76 @@ if uploaded:
 
 
 
-    # ===============================
+
+    # ==================
     # Save History
-    # ===============================
+    # ==================
 
 
-    data=pd.DataFrame([{
+    row=pd.DataFrame([{
+
 
         "time":
         datetime.now(),
 
+
         "camera":
         camera,
+
 
         "WAR":
         result["WAR"],
 
+
         "level":
         result["level"]
+
 
     }])
 
 
 
-    data.to_csv(
+    row.to_csv(
 
         "history.csv",
 
         mode="a",
 
-        header=False,
+        header=not os.path.exists(
+            "history.csv"
+        ),
 
         index=False
+
+    )
+
+
+
+
+
+
+# ==================
+# Trend
+# ==================
+
+
+if os.path.exists(
+    "history.csv"
+):
+
+
+    st.subheader(
+        "📈 WAR Trend"
+    )
+
+
+    df=pd.read_csv(
+        "history.csv"
+    )
+
+
+    st.line_chart(
+
+        df["WAR"]
 
     )
