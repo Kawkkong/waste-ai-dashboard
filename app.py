@@ -1,10 +1,3 @@
-# ======================================================
-# app.py
-# Waste AI Dashboard
-# YOLOv11-Seg + WAR
-# ======================================================
-
-
 import streamlit as st
 
 import cv2
@@ -12,26 +5,23 @@ import numpy as np
 
 import pandas as pd
 
+import tempfile
+
 from datetime import datetime
 
 
-from inference import predict
+from inference import analyze_frame, analyze_video
+
 
 from config import CAMERA_CONFIG
 
 
 
 
-# ======================================================
-# Page Setting
-# ======================================================
-
 
 st.set_page_config(
 
     page_title="Waste AI Dashboard",
-
-    page_icon="🗑️",
 
     layout="wide"
 
@@ -41,9 +31,18 @@ st.set_page_config(
 
 
 
-# ======================================================
-# Session Storage
-# ======================================================
+st.title(
+    "🗑️ Waste Density Monitoring Dashboard"
+)
+
+
+
+
+
+
+# ======================
+# Session
+# ======================
 
 
 if "history" not in st.session_state:
@@ -54,35 +53,23 @@ if "history" not in st.session_state:
 
 
 
-# ======================================================
-# Title
-# ======================================================
+
+# ======================
+# Sidebar
+# ======================
 
 
-st.title(
-    "🗑️ AI Waste Density Monitoring"
-)
-
-
-st.write(
-    "YOLOv11-Seg + Waste Area Ratio (WAR)"
+st.sidebar.header(
+    "Camera Setting"
 )
 
 
 
-
-
-
-# ======================================================
-# Select Camera
-# ======================================================
-
-
-camera = st.selectbox(
+camera=st.sidebar.selectbox(
 
     "เลือกกล้อง",
 
-    list(CAMERA_CONFIG.keys())
+    CAMERA_CONFIG.keys()
 
 )
 
@@ -92,19 +79,16 @@ camera = st.selectbox(
 
 
 
-# ======================================================
-# Upload Image
-# ======================================================
+mode=st.sidebar.radio(
 
+    "Input",
 
-uploaded_file = st.file_uploader(
+    [
 
-    "📷 Upload CCTV Image",
+        "Image",
 
-    type=[
-        "jpg",
-        "jpeg",
-        "png"
+        "Video"
+
     ]
 
 )
@@ -114,62 +98,46 @@ uploaded_file = st.file_uploader(
 
 
 
-if uploaded_file:
 
 
-
-    # อ่านรูป
-
-
-    file_bytes = np.asarray(
-
-        bytearray(
-
-            uploaded_file.read()
-
-        ),
-
-        dtype=np.uint8
-
-    )
+# ======================
+# Image Mode
+# ======================
 
 
+if mode=="Image":
 
-    img = cv2.imdecode(
 
-        file_bytes,
+    file=st.file_uploader(
 
-        cv2.IMREAD_COLOR
+        "Upload CCTV Image",
+
+        type=["jpg","png","jpeg"]
 
     )
 
 
 
-    if img is None:
+    if file:
 
 
-        st.error(
-            "อ่านรูปไม่ได้"
+        img=cv2.imdecode(
+
+            np.frombuffer(
+
+                file.read(),
+
+                np.uint8
+
+            ),
+
+            cv2.IMREAD_COLOR
+
         )
 
-        st.stop()
 
 
-
-
-
-
-    # ==========================
-    # Run YOLO
-    # ==========================
-
-
-    with st.spinner(
-        "กำลังประมวลผล YOLO..."
-    ):
-
-
-        result=predict(
+        result=analyze_frame(
 
             img,
 
@@ -179,195 +147,208 @@ if uploaded_file:
 
 
 
+        st.session_state.history.append({
+
+            "time":
+
+            datetime.now().strftime("%H:%M:%S"),
 
 
+            "camera":
+
+            camera,
 
 
-    # ==========================
-    # Dashboard Card
-    # ==========================
+            "WAR":
+
+            result["WAR"],
 
 
-    st.divider()
+            "level":
 
+            result["level"]
 
-
-    col1,col2,col3,col4 = st.columns(4)
-
-
-
-    col1.metric(
-
-        "WAR",
-
-        f'{result["WAR"]}%'
-
-    )
-
-
-    col2.metric(
-
-        "Density",
-
-        result["level"]
-
-    )
-
-
-    col3.metric(
-
-        "Camera",
-
-        camera
-
-    )
-
-
-    col4.metric(
-
-        "Action",
-
-        result["recommendation"]
-
-    )
+        })
 
 
 
 
 
 
-
-    # ==========================
-    # Alert
-    # ==========================
-
-
-    level=result["level"]
+        c1,c2,c3=st.columns(3)
 
 
 
-    if level=="Critical":
+        c1.metric(
 
+            "WAR",
 
-        st.error(
-            "🚨 Critical : ต้องเก็บขยะทันที"
+            f'{result["WAR"]}%'
+
         )
 
 
-    elif level=="High":
+        c2.metric(
 
+            "Level",
 
-        st.warning(
-            "⚠️ High : แจ้งเจ้าหน้าที่"
+            result["level"]
+
         )
 
 
-    elif level=="Medium":
+        c3.metric(
 
+            "Camera",
 
-        st.info(
-            "ℹ️ Medium : เตรียมจัดเก็บ"
-        )
+            camera
 
-
-    elif level=="Low":
-
-
-        st.success(
-            "✅ Low : ติดตาม"
-        )
-
-
-    else:
-
-
-        st.success(
-            "✅ Normal : ไม่พบขยะ"
         )
 
 
 
 
+        col1,col2=st.columns(2)
 
 
 
-    # ==========================
-    # Display Image
-    # ==========================
+        with col1:
 
 
-    st.subheader(
-        "Segmentation Result"
+            st.image(
+
+                cv2.cvtColor(
+
+                    result["image"],
+
+                    cv2.COLOR_BGR2RGB
+
+                ),
+
+                width=600
+
+            )
+
+
+
+        with col2:
+
+
+            st.subheader(
+                "Statistics"
+            )
+
+
+            df=pd.DataFrame(
+
+                st.session_state.history
+
+            )
+
+
+            cam=df[df.camera==camera]
+
+
+
+            st.metric(
+
+                "Average WAR",
+
+                f'{cam.WAR.mean():.2f}%'
+
+            )
+
+
+            st.metric(
+
+                "Maximum WAR",
+
+                f'{cam.WAR.max():.2f}%'
+
+            )
+
+
+
+
+
+
+
+
+
+# ======================
+# Video Mode
+# ======================
+
+
+else:
+
+
+    file=st.file_uploader(
+
+        "Upload CCTV Video",
+
+        type=["mp4"]
+
     )
 
 
-
-    output=cv2.cvtColor(
-
-        result["image"],
-
-        cv2.COLOR_BGR2RGB
-
-    )
+    if file:
 
 
 
-    st.image(
+        temp=tempfile.NamedTemporaryFile(
 
-        output,
+            delete=False,
 
-        use_container_width=True
+            suffix=".mp4"
 
-    )
-
-
+        )
 
 
+        temp.write(
+
+            file.read()
+
+        )
 
 
-
-    # ==========================
-    # Add History
-    # ==========================
-
-
-
-    st.session_state.history.append({
-
-
-        "Time":
-
-        datetime.now().strftime(
-            "%H:%M:%S"
-        ),
+        temp.close()
 
 
 
-        "Camera":
-
-        camera,
-
-
-
-        "WAR":
-
-        result["WAR"],
+        if st.button(
+            "Analyze Video"
+        ):
 
 
 
-        "Level":
+            results=analyze_video(
 
-        result["level"]
+                temp.name,
+
+                camera
+
+            )
 
 
 
-    })
+            df=pd.DataFrame(results)
 
 
 
-    st.success(
-        "บันทึกข้อมูลแล้ว"
-    )
+            st.line_chart(
+
+                df["WAR"]
+
+            )
+
+
+
+            st.dataframe(
+
+                df
+
+            )
 
 
 
@@ -376,10 +357,9 @@ if uploaded_file:
 
 
 
-
-# ======================================================
-# Trend Graph
-# ======================================================
+# ======================
+# Trend
+# ======================
 
 
 st.divider()
@@ -391,10 +371,7 @@ st.subheader(
 
 
 
-
-
 if len(st.session_state.history)>0:
-
 
 
     df=pd.DataFrame(
@@ -404,12 +381,15 @@ if len(st.session_state.history)>0:
     )
 
 
+    df=df[df.camera==camera]
+
+
 
     st.line_chart(
 
         df,
 
-        x="Time",
+        x="time",
 
         y="WAR"
 
@@ -417,57 +397,11 @@ if len(st.session_state.history)>0:
 
 
 
-    st.subheader(
-        "📋 Detection History"
-    )
-
-
-
-    st.dataframe(
-
-        df,
-
-        use_container_width=True
-
-    )
-
 
 
 else:
 
 
     st.info(
-
-        "ยังไม่มีข้อมูล กรุณา Upload รูป"
-
+        "ยังไม่มีข้อมูล"
     )
-
-
-
-
-
-
-
-# ======================================================
-# Clear Data
-# ======================================================
-
-
-st.divider()
-
-
-
-if st.button(
-    "🗑️ Clear History"
-):
-
-
-    st.session_state.history=[]
-
-
-    st.success(
-        "ล้างข้อมูลแล้ว"
-    )
-
-
-    st.rerun()
