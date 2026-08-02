@@ -5,7 +5,6 @@ import numpy as np
 from config import CAMERA_CONFIG
 
 
-
 # ======================================
 # LOAD MODEL
 # ======================================
@@ -13,6 +12,15 @@ from config import CAMERA_CONFIG
 MODEL_PATH = "best.pt"
 
 model = YOLO(MODEL_PATH)
+
+
+
+# ======================================
+# Fixed Image Size
+# ======================================
+
+IMG_WIDTH = 1920
+IMG_HEIGHT = 1080
 
 
 
@@ -39,7 +47,6 @@ def density_level(WAR, threshold):
 
 
 
-
 # ======================================
 # Recommendation
 # ======================================
@@ -48,25 +55,19 @@ def recommendation(level):
 
     data = {
 
-        "Normal":
-        "No trash",
+        "Normal": "No trash",
 
-        "Low":
-        "Monitor",
+        "Low": "Monitor",
 
-        "Medium":
-        "Prepare collection",
+        "Medium": "Prepare collection",
 
-        "High":
-        "Notify staff",
+        "High": "Notify staff",
 
-        "Critical":
-        "Collect immediately"
+        "Critical": "Collect immediately"
 
     }
 
     return data[level]
-
 
 
 
@@ -78,23 +79,29 @@ def recommendation(level):
 def analyze_frame(img, camera):
 
 
-    # -------------------------------
-    # Original image size
-    # -------------------------------
+    # ==================================
+    # CHECK IMAGE SIZE
+    # ==================================
 
-    h,w = img.shape[:2]
+    h, w = img.shape[:2]
+
+
+    if w != IMG_WIDTH or h != IMG_HEIGHT:
+
+        raise ValueError(
+            f"Input image must be 1920x1080 but got {w}x{h}"
+        )
 
 
     print("----------------")
-    print("IMAGE:",w,h)
-    print("CAMERA:",camera)
+    print("IMAGE:", w, h)
+    print("CAMERA:", camera)
 
 
 
-
-    # -------------------------------
-    # Camera ROI
-    # -------------------------------
+    # ==================================
+    # CAMERA CONFIG
+    # ==================================
 
     cfg = CAMERA_CONFIG[camera]
 
@@ -109,11 +116,9 @@ def analyze_frame(img, camera):
 
 
 
-
-
-    # -------------------------------
+    # ==================================
     # YOLO SEGMENTATION
-    # -------------------------------
+    # ==================================
 
     result = model(
 
@@ -121,7 +126,7 @@ def analyze_frame(img, camera):
 
         imgsz=1280,
 
-        conf=0.20,
+        conf=0.50,
 
         retina_masks=True,
 
@@ -132,14 +137,13 @@ def analyze_frame(img, camera):
 
 
 
-
-    # -------------------------------
-    # Create mask
-    # -------------------------------
+    # ==================================
+    # CREATE MASK
+    # ==================================
 
     combined_mask = np.zeros(
 
-        (h,w),
+        (IMG_HEIGHT, IMG_WIDTH),
 
         dtype=np.uint8
 
@@ -159,34 +163,29 @@ def analyze_frame(img, camera):
         detected = len(masks)
 
 
-
         print(
             "Detected masks:",
             detected
         )
 
 
-
         for mask in masks:
 
 
-            # ถ้า mask size ไม่ตรงภาพ
-            # ปรับกลับด้วย nearest
+            # YOLO output mask
+            # resize เฉพาะจาก output model
+            # ไม่เกี่ยวกับ image resize
 
 
-            if mask.shape != (h,w):
+            mask = cv2.resize(
 
+                mask,
 
-                mask = cv2.resize(
+                (IMG_WIDTH, IMG_HEIGHT),
 
-                    mask,
+                interpolation=cv2.INTER_NEAREST
 
-                    (w,h),
-
-                    interpolation=cv2.INTER_NEAREST
-
-                )
-
+            )
 
 
             combined_mask[
@@ -199,7 +198,6 @@ def analyze_frame(img, camera):
 
     else:
 
-
         print(
             "No garbage detected"
         )
@@ -208,19 +206,17 @@ def analyze_frame(img, camera):
 
 
 
-
-    # -------------------------------
+    # ==================================
     # ROI MASK
-    # -------------------------------
+    # ==================================
 
     roi_mask = np.zeros(
 
-        (h,w),
+        (IMG_HEIGHT, IMG_WIDTH),
 
         dtype=np.uint8
 
     )
-
 
 
     roi_mask[
@@ -234,11 +230,9 @@ def analyze_frame(img, camera):
 
 
 
-
-
-    # -------------------------------
-    # Garbage in ROI
-    # -------------------------------
+    # ==================================
+    # Garbage inside ROI
+    # ==================================
 
     roi_garbage = (
 
@@ -252,41 +246,27 @@ def analyze_frame(img, camera):
 
 
 
-
-
-    # -------------------------------
+    # ==================================
     # WAR
-    # -------------------------------
+    # ==================================
 
     garbage_pixels = np.sum(
-
         roi_garbage
-
     )
 
 
     roi_pixels = np.sum(
-
         roi_mask
-
     )
 
 
+    WAR = (
 
-    if roi_pixels > 0:
+        garbage_pixels /
 
-        WAR = (
+        roi_pixels
 
-            garbage_pixels /
-
-            roi_pixels
-
-        ) * 100
-
-
-    else:
-
-        WAR = 0
+    ) * 100
 
 
 
@@ -297,7 +277,6 @@ def analyze_frame(img, camera):
         2
 
     )
-
 
 
 
@@ -314,10 +293,9 @@ def analyze_frame(img, camera):
 
 
 
-
-    # -------------------------------
+    # ==================================
     # Visualization
-    # -------------------------------
+    # ==================================
 
     output = img.copy()
 
@@ -325,8 +303,6 @@ def analyze_frame(img, camera):
     overlay = img.copy()
 
 
-
-    # red mask
 
     overlay[
 
@@ -341,7 +317,6 @@ def analyze_frame(img, camera):
         255
 
     )
-
 
 
     output = cv2.addWeighted(
@@ -362,8 +337,6 @@ def analyze_frame(img, camera):
 
 
 
-    # ROI rectangle
-
     cv2.rectangle(
 
         output,
@@ -377,7 +350,6 @@ def analyze_frame(img, camera):
         4
 
     )
-
 
 
 
@@ -399,6 +371,7 @@ def analyze_frame(img, camera):
         3
 
     )
+
 
 
     cv2.putText(
@@ -423,35 +396,27 @@ def analyze_frame(img, camera):
 
 
 
-
     return {
 
 
-        "image":
-        output,
+        "image": output,
 
 
-        "mask":
-        roi_garbage,
+        "mask": roi_garbage,
 
 
-        "WAR":
-        WAR,
+        "WAR": WAR,
 
 
-        "level":
-        level,
+        "level": level,
 
 
-        "action":
-        recommendation(level),
+        "action": recommendation(level),
 
 
-        "camera":
-        camera,
+        "camera": camera,
 
 
-        "detected":
-        detected
+        "detected": detected
 
     }
