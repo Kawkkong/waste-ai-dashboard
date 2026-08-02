@@ -6,11 +6,11 @@
 CAMERA_CONFIG = {
 
 
-    "Camera 1": {
+    "Camera 01":{
 
 
         "name":
-        "ข้างหอประชุมนารายณ์",
+        "ลานหน้าอาคาร",
 
 
         "roi":
@@ -37,7 +37,7 @@ CAMERA_CONFIG = {
 
 
 
-    "Camera 2": {
+    "Camera 02":{
 
 
         "name":
@@ -51,7 +51,6 @@ CAMERA_CONFIG = {
             550,
             800
         ),
-
 
 
         "threshold":
