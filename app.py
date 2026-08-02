@@ -1,12 +1,19 @@
 import streamlit as st
+
 import cv2
 import numpy as np
 import pandas as pd
 
+import tempfile
+import os
+
 from datetime import datetime
 
+
 from inference import analyze_frame
+
 from config import CAMERA_CONFIG
+
 
 
 
@@ -14,10 +21,15 @@ from config import CAMERA_CONFIG
 # PAGE CONFIG
 # =====================================================
 
+
 st.set_page_config(
+
     page_title="Waste AI Dashboard",
+
     layout="wide"
+
 )
+
 
 
 
@@ -25,24 +37,68 @@ st.set_page_config(
 # TITLE
 # =====================================================
 
+
 st.title(
-    "🗑 Dashboard ระบบตรวจจับและจำแนกระดับความหนาแน่นของกองขยะจากภาพ CCTV"
+    "🗑 Waste AI Dashboard"
 )
 
 
 st.caption(
-    "YOLOv11-Seg + Waste Area Ratio (WAR)"
+    "YOLOv11-Seg + Waste Area Ratio (WAR) CCTV Monitoring"
 )
 
 
 
+
+
 # =====================================================
-# SIDEBAR
+# HISTORY FILE
 # =====================================================
+
+
+HISTORY_FILE = "waste_history.csv"
+
+
+
+try:
+
+    history_df = pd.read_csv(
+        HISTORY_FILE
+    )
+
+
+except:
+
+
+    history_df = pd.DataFrame(
+
+        columns=[
+
+            "Time",
+            "Camera",
+            "WAR",
+            "Level",
+            "Action"
+
+        ]
+
+    )
+
+
+
+
+
+
+
+# =====================================================
+# SIDEBAR UPLOAD
+# =====================================================
+
 
 st.sidebar.header(
-    "📷 Upload CCTV Image"
+    "📷 Upload CCTV Media"
 )
+
 
 
 uploaded_files={}
@@ -52,124 +108,126 @@ uploaded_files={}
 for cam in CAMERA_CONFIG:
 
 
-    uploaded_files[cam] = st.sidebar.file_uploader(
+    uploaded_files[cam]=st.sidebar.file_uploader(
+
         cam,
+
         type=[
+
             "jpg",
             "jpeg",
-            "png"
+            "png",
+            "mp4"
+
         ],
+
         key=cam
+
     )
 
 
 
 
 
-# =====================================================
-# LOAD HISTORY
-# =====================================================
-
-history_file="waste_history.csv"
-
-
-try:
-
-    old_df=pd.read_csv(
-        history_file
-    )
-
-except:
-
-    old_df=pd.DataFrame(
-        columns=[
-            "Time",
-            "Camera",
-            "WAR",
-            "Level",
-            "Action"
-        ]
-    )
 
 
 
+new_history=[]
 
-
-new_data=[]
 
 
 
 
 
 # =====================================================
-# CAMERA PROCESS
+# PROCESS CAMERA
 # =====================================================
 
 
 for cam,file in uploaded_files.items():
 
 
-    if file is not None:
+    if file is None:
+
+        continue
+
+
+
+
+    st.divider()
+
+
+
+    st.header(
+
+        f"📷 {cam} : {CAMERA_CONFIG[cam]['name']}"
+
+    )
+
+
+
+
+    extension=file.name.split(".")[-1].lower()
+
+
+
+
+
+    # =================================================
+    # IMAGE
+    # =================================================
+
+
+    if extension in [
+
+
+        "jpg",
+        "jpeg",
+        "png"
+
+
+    ]:
+
 
 
         bytes_data=np.asarray(
+
             bytearray(
+
                 file.read()
+
             ),
+
             dtype=np.uint8
+
         )
+
 
 
         img=cv2.imdecode(
+
             bytes_data,
+
             cv2.IMREAD_COLOR
+
         )
 
 
 
-        result = analyze_frame(
+
+        result=analyze_frame(
+
             img,
+
             cam
+
         )
 
 
 
-        now=datetime.now().strftime(
-            "%Y-%m-%d %H:%M:%S"
-        )
 
 
-
-        new_data.append({
-
-            "Time":now,
-
-            "Camera":cam,
-
-            "WAR":result["WAR"],
-
-            "Level":result["level"],
-
-            "Action":result["action"]
-
-        })
-
-
-
-
-        # =============================================
-        # DISPLAY CAMERA
-        # =============================================
-
-
-        st.divider()
-
-
-
-        st.header(
-            f"📷 {cam} : {CAMERA_CONFIG[cam]['name']}"
-        )
-
+        # ---------- display image ----------
 
 
         col1,col2=st.columns(2)
@@ -180,20 +238,26 @@ for cam,file in uploaded_files.items():
 
 
             st.subheader(
-                "ภาพจากกล้อง CCTV"
+
+                "Original CCTV"
+
             )
 
 
             st.image(
 
                 cv2.cvtColor(
+
                     img,
+
                     cv2.COLOR_BGR2RGB
+
                 ),
 
                 use_container_width=True
 
             )
+
 
 
 
@@ -202,15 +266,20 @@ for cam,file in uploaded_files.items():
 
 
             st.subheader(
-                "ผลการตรวจจับ Segmentation"
+
+                "YOLO Segmentation"
+
             )
 
 
             st.image(
 
                 cv2.cvtColor(
+
                     result["image"],
+
                     cv2.COLOR_BGR2RGB
+
                 ),
 
                 use_container_width=True
@@ -221,9 +290,8 @@ for cam,file in uploaded_files.items():
 
 
 
-        # =============================================
-        # RESULT CARD
-        # =============================================
+
+        # ---------- result ----------
 
 
         a,b,c=st.columns(3)
@@ -232,7 +300,7 @@ for cam,file in uploaded_files.items():
 
         a.metric(
 
-            "Waste Area Ratio",
+            "WAR",
 
             f"{result['WAR']}%"
 
@@ -242,7 +310,7 @@ for cam,file in uploaded_files.items():
 
         b.metric(
 
-            "Density Level",
+            "Density",
 
             result["level"]
 
@@ -252,7 +320,7 @@ for cam,file in uploaded_files.items():
 
         c.metric(
 
-            "Recommendation",
+            "Action",
 
             result["action"]
 
@@ -262,48 +330,296 @@ for cam,file in uploaded_files.items():
 
 
 
-
-        # ALERT
-
-
-        if result["level"]=="Critical":
+        new_history.append({
 
 
-            st.error(
-                "🚨 Critical : ต้องดำเนินการเก็บขยะทันที"
+            "Time":
+
+            datetime.now().strftime(
+
+                "%Y-%m-%d %H:%M:%S"
+
+            ),
+
+
+            "Camera":
+
+            cam,
+
+
+            "WAR":
+
+            result["WAR"],
+
+
+            "Level":
+
+            result["level"],
+
+
+            "Action":
+
+            result["action"]
+
+
+        })
+
+
+
+
+
+
+
+
+    # =================================================
+    # VIDEO
+    # =================================================
+
+
+    elif extension=="mp4":
+
+
+
+        st.info(
+
+            "กำลังวิเคราะห์ Video..."
+
+        )
+
+
+
+        temp=tempfile.NamedTemporaryFile(
+
+            delete=False,
+
+            suffix=".mp4"
+
+        )
+
+
+
+        temp.write(
+
+            file.read()
+
+        )
+
+
+        temp.close()
+
+
+
+
+
+        cap=cv2.VideoCapture(
+
+            temp.name
+
+        )
+
+
+
+        frame_id=0
+
+
+        video_result=[]
+
+
+
+        preview=None
+
+
+
+
+
+        while True:
+
+
+            ret,frame=cap.read()
+
+
+
+            if not ret:
+
+                break
+
+
+
+            frame_id+=1
+
+
+
+
+            # วิเคราะห์ทุก 10 frame
+
+            if frame_id % 10 ==0:
+
+
+
+                result=analyze_frame(
+
+                    frame,
+
+                    cam
+
+                )
+
+
+
+                video_result.append({
+
+
+                    "Frame":
+
+                    frame_id,
+
+
+                    "WAR":
+
+                    result["WAR"],
+
+
+                    "Level":
+
+                    result["level"]
+
+                })
+
+
+
+                preview=result["image"]
+
+
+
+
+
+        cap.release()
+
+
+
+        os.remove(
+
+            temp.name
+
+        )
+
+
+
+
+
+
+        if preview is not None:
+
+
+            st.subheader(
+
+                "ตัวอย่างผล Segmentation"
+
             )
 
 
-        elif result["level"]=="High":
+            st.image(
 
+                cv2.cvtColor(
 
-            st.warning(
-                "⚠️ High : แจ้งเจ้าหน้าที่เข้าตรวจสอบ"
+                    preview,
+
+                    cv2.COLOR_BGR2RGB
+
+                ),
+
+                use_container_width=True
+
             )
 
 
-        elif result["level"]=="Medium":
 
 
-            st.info(
-                "ℹ️ Medium : ควรเตรียมแผนจัดเก็บ"
+
+
+
+        video_df=pd.DataFrame(
+
+            video_result
+
+        )
+
+
+
+        if len(video_df)>0:
+
+
+
+            st.subheader(
+
+                "📈 Video WAR Trend"
+
             )
 
 
-        elif result["level"]=="Low":
 
+            st.line_chart(
 
-            st.success(
-                "✅ Low : อยู่ในระดับปกติ"
+                video_df,
+
+                x="Frame",
+
+                y="WAR"
+
             )
 
 
-        else:
 
+            st.dataframe(
 
-            st.success(
-                "✅ Normal : ไม่พบขยะ"
+                video_df,
+
+                use_container_width=True
+
             )
+
+
+
+
+
+            last=video_df.iloc[-1]
+
+
+
+            new_history.append({
+
+
+                "Time":
+
+                datetime.now().strftime(
+
+                    "%Y-%m-%d %H:%M:%S"
+
+                ),
+
+
+                "Camera":
+
+                cam,
+
+
+                "WAR":
+
+                last["WAR"],
+
+
+                "Level":
+
+                last["Level"],
+
+
+                "Action":
+
+                "-"
+
+
+            })
+
 
 
 
@@ -316,34 +632,42 @@ for cam,file in uploaded_files.items():
 # =====================================================
 
 
-if new_data:
+
+if len(new_history)>0:
+
 
 
     new_df=pd.DataFrame(
-        new_data
+
+        new_history
+
     )
 
 
-    df=pd.concat(
+    history_df=pd.concat(
+
         [
-            old_df,
+
+            history_df,
+
             new_df
+
         ],
+
         ignore_index=True
+
     )
 
 
 
-    df.to_csv(
-        history_file,
+    history_df.to_csv(
+
+        HISTORY_FILE,
+
         index=False
+
     )
 
-
-else:
-
-
-    df=old_df
 
 
 
@@ -351,7 +675,7 @@ else:
 
 
 # =====================================================
-# TREND ANALYSIS
+# TREND CAMERA SEPARATE
 # =====================================================
 
 
@@ -359,8 +683,11 @@ st.divider()
 
 
 st.header(
+
     "📈 WAR Trend Analysis"
+
 )
+
 
 
 
@@ -370,14 +697,18 @@ for cam in CAMERA_CONFIG:
 
     st.subheader(
 
-        f"📷 {cam} : {CAMERA_CONFIG[cam]['name']}"
+        cam
 
     )
 
 
 
-    cam_df=df[
-        df["Camera"]==cam
+    cam_df=history_df[
+
+        history_df["Camera"]
+
+        ==cam
+
     ]
 
 
@@ -385,11 +716,15 @@ for cam in CAMERA_CONFIG:
     if len(cam_df)>0:
 
 
+
         cam_df=cam_df.copy()
 
 
+
         cam_df["Time"]=pd.to_datetime(
+
             cam_df["Time"]
+
         )
 
 
@@ -409,7 +744,9 @@ for cam in CAMERA_CONFIG:
 
 
         st.info(
-            "ยังไม่มีข้อมูล"
+
+            "No data"
+
         )
 
 
@@ -417,8 +754,9 @@ for cam in CAMERA_CONFIG:
 
 
 
+
 # =====================================================
-# HISTORY
+# HISTORY TABLE
 # =====================================================
 
 
@@ -426,19 +764,26 @@ st.divider()
 
 
 st.header(
+
     "📋 Detection History"
+
 )
 
 
 
-if len(df)>0:
+
+if len(history_df)>0:
+
 
 
     st.dataframe(
 
-        df.sort_values(
+        history_df.sort_values(
+
             "Time",
+
             ascending=False
+
         ),
 
         use_container_width=True
@@ -447,9 +792,12 @@ if len(df)>0:
 
 
 
-    csv=df.to_csv(
+    csv=history_df.to_csv(
+
         index=False
+
     )
+
 
 
     st.download_button(
@@ -468,5 +816,7 @@ else:
 
 
     st.info(
-        "ยังไม่มีประวัติ"
+
+        "ยังไม่มีข้อมูล"
+
     )
