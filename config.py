@@ -1,6 +1,6 @@
 # ======================================================
 # config.py
-# Camera ROI + WAR Threshold Configuration
+# Camera Configuration
 # ======================================================
 
 
@@ -23,8 +23,6 @@ CAMERA_CONFIG = {
         },
 
 
-        # WAR Threshold
-
         "threshold":
         {
             "low":20,
@@ -33,7 +31,6 @@ CAMERA_CONFIG = {
         }
 
     },
-
 
 
 
