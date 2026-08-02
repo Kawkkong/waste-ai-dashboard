@@ -25,11 +25,11 @@ CAMERA_CONFIG = {
         "threshold":
         {
 
-            "low":20,
+            "low":3,
 
-            "medium":40,
+            "medium":4,
 
-            "high":60
+            "high":10
 
         }
 
