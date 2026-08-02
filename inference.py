@@ -3,10 +3,13 @@ from ultralytics import YOLO
 import cv2
 import numpy as np
 
-
 from config import CAMERA_CONFIG
 
 
+
+# ==========================================
+# LOAD MODEL
+# ==========================================
 
 model = YOLO(
     "best.pt"
@@ -16,7 +19,12 @@ model = YOLO(
 
 
 
-def get_level(WAR,threshold):
+# ==========================================
+# Density Level
+# ==========================================
+
+
+def get_level(WAR, threshold):
 
 
     if WAR == 0:
@@ -48,32 +56,38 @@ def get_level(WAR,threshold):
 
 
 
+
+# ==========================================
+# Recommendation
+# ==========================================
+
+
 def get_action(level):
 
 
-    if level=="Normal":
+    if level == "Normal":
 
-        return "ไม่พบขยะ"
-
-
-    elif level=="Low":
-
-        return "ติดตาม"
+        return "No trash"
 
 
-    elif level=="Medium":
+    elif level == "Low":
 
-        return "เตรียมจัดเก็บ"
+        return "Monitor"
 
 
-    elif level=="High":
+    elif level == "Medium":
 
-        return "แจ้งเจ้าหน้าที่"
+        return "Prepare collection"
+
+
+    elif level == "High":
+
+        return "Notify staff"
 
 
     else:
 
-        return "เก็บขยะทันที"
+        return "Collect immediately"
 
 
 
@@ -82,14 +96,19 @@ def get_action(level):
 
 
 
-def analyze_frame(img,camera):
+# ==========================================
+# YOLO + WAR
+# ==========================================
+
+
+def analyze_frame(img, camera):
 
 
     h,w = img.shape[:2]
 
 
-    cfg = CAMERA_CONFIG[camera]
 
+    cfg = CAMERA_CONFIG[camera]
 
 
     x1,y1,x2,y2 = cfg["roi"]
@@ -98,23 +117,33 @@ def analyze_frame(img,camera):
 
 
 
-
-    # ===========================
-    # YOLO Segmentation
-    # ===========================
-
-
-    result=model(img)[0]
+    # ======================================
+    # YOLO SEGMENTATION
+    # ======================================
 
 
+    result = model(
 
-    combined=np.zeros(
+        img,
+
+        retina_masks=True,
+
+        verbose=False
+
+    )[0]
+
+
+
+
+
+    combined_mask = np.zeros(
 
         (h,w),
 
         dtype=np.uint8
 
     )
+
 
 
 
@@ -122,7 +151,9 @@ def analyze_frame(img,camera):
     if result.masks is not None:
 
 
-        masks=result.masks.data.cpu().numpy()
+
+        masks = result.masks.data.cpu().numpy()
+
 
 
 
@@ -130,33 +161,24 @@ def analyze_frame(img,camera):
 
 
 
-            mask=cv2.resize(
+            # ไม่ resize แล้ว
 
-                mask,
+            combined_mask[
 
-                (w,h)
+                mask > 0.5
 
-            )
-
-
-
-            combined[
-
-                mask>0.5
-
-            ]=1
+            ] = 1
 
 
 
 
 
+    # ======================================
+    # ROI MASK
+    # ======================================
 
-    # ===========================
-    # ROI
-    # ===========================
 
-
-    roi=np.zeros(
+    roi_mask = np.zeros(
 
         (h,w),
 
@@ -165,49 +187,79 @@ def analyze_frame(img,camera):
     )
 
 
-    roi[y1:y2,x1:x2]=1
+    roi_mask[
+
+        y1:y2,
+
+        x1:x2
+
+    ] = 1
 
 
 
 
 
-    garbage=combined*roi
+
+    # เฉพาะขยะใน ROI
+
+
+    roi_garbage = (
+
+        combined_mask *
+
+        roi_mask
+
+    )
 
 
 
 
 
-    # ===========================
+
+
+    # ======================================
     # WAR
-    # ===========================
+    # ======================================
 
 
-    garbage_pixel=np.sum(
+    garbage_pixels = np.sum(
 
-        garbage
-
-    )
-
-
-    roi_pixel=np.sum(
-
-        roi
+        roi_garbage
 
     )
 
 
 
-    WAR=(
+    roi_pixels = np.sum(
 
-        garbage_pixel/
+        roi_mask
 
-        roi_pixel
-
-    )*100
+    )
 
 
 
-    WAR=round(
+    if roi_pixels > 0:
+
+
+        WAR = (
+
+            garbage_pixels /
+
+            roi_pixels
+
+        ) * 100
+
+
+    else:
+
+
+        WAR = 0
+
+
+
+
+
+    WAR = round(
 
         float(WAR),
 
@@ -218,7 +270,8 @@ def analyze_frame(img,camera):
 
 
 
-    level=get_level(
+
+    level = get_level(
 
         WAR,
 
@@ -231,28 +284,29 @@ def analyze_frame(img,camera):
 
 
 
-
-    # ===========================
-    # Visualization
-    # ===========================
-
-
-    output=img.copy()
+    # ======================================
+    # VISUALIZATION
+    # ======================================
 
 
-
-    overlay=img.copy()
+    output = img.copy()
 
 
 
-    # สีแดง mask
+    overlay = img.copy()
+
+
+
+
+
+    # สีแดง mask ขยะ
 
 
     overlay[
 
-        garbage==1
+        roi_garbage == 1
 
-    ]=(
+    ] = (
 
         0,
 
@@ -264,7 +318,10 @@ def analyze_frame(img,camera):
 
 
 
-    output=cv2.addWeighted(
+
+
+
+    output = cv2.addWeighted(
 
         img,
 
@@ -281,6 +338,9 @@ def analyze_frame(img,camera):
 
 
 
+
+
+    # ROI
 
 
     cv2.rectangle(
@@ -301,11 +361,15 @@ def analyze_frame(img,camera):
 
 
 
+
+    # Text
+
+
     cv2.putText(
 
         output,
 
-        f"WAR {WAR}%",
+        f"WAR {WAR}% | {level}",
 
         (30,50),
 
@@ -322,12 +386,19 @@ def analyze_frame(img,camera):
 
 
 
+
+
     return {
 
 
         "image":
 
         output,
+
+
+        "mask":
+
+        roi_garbage,
 
 
         "WAR":
