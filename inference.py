@@ -121,7 +121,7 @@ def analyze_frame(img, camera):
 
         imgsz=1280,
 
-        conf=True,
+        conf=False,
 
         retina_masks=True,
 
