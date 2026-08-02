@@ -5,6 +5,7 @@ import numpy as np
 from config import CAMERA_CONFIG
 
 
+
 # ======================================
 # LOAD MODEL
 # ======================================
@@ -16,11 +17,19 @@ model = YOLO(MODEL_PATH)
 
 
 # ======================================
-# Fixed Image Size
+# Fixed CCTV Size
 # ======================================
 
 IMG_WIDTH = 1920
 IMG_HEIGHT = 1080
+
+
+
+# ======================================
+# Store Previous WAR
+# ======================================
+
+previous_WAR = {}
 
 
 
@@ -31,19 +40,25 @@ IMG_HEIGHT = 1080
 def density_level(WAR, threshold):
 
     if WAR == 0:
+
         return "Normal"
 
     elif WAR <= threshold["low"]:
+
         return "Low"
 
     elif WAR <= threshold["medium"]:
+
         return "Medium"
 
     elif WAR <= threshold["high"]:
+
         return "High"
 
     else:
+
         return "Critical"
+
 
 
 
@@ -55,58 +70,72 @@ def recommendation(level):
 
     data = {
 
-        "Normal": "No trash",
+        "Normal":
+        "No trash",
 
-        "Low": "Monitor",
+        "Low":
+        "Monitor",
 
-        "Medium": "Prepare collection",
+        "Medium":
+        "Prepare collection",
 
-        "High": "Notify staff",
+        "High":
+        "Notify staff",
 
-        "Critical": "Collect immediately"
+        "Critical":
+        "Collect immediately"
 
     }
+
 
     return data[level]
 
 
 
 
+
 # ======================================
-# ANALYZE FRAME
+# Analyze Frame
 # ======================================
 
 def analyze_frame(img, camera):
 
 
+    global previous_WAR
+
+
+
     # ==================================
-    # CHECK IMAGE SIZE
+    # Check Image Size
     # ==================================
 
-    h, w = img.shape[:2]
+    h,w = img.shape[:2]
 
 
     if w != IMG_WIDTH or h != IMG_HEIGHT:
 
         raise ValueError(
-            f"Input image must be 1920x1080 but got {w}x{h}"
+            f"Image must be 1920x1080 but got {w}x{h}"
         )
 
 
+
     print("----------------")
-    print("IMAGE:", w, h)
+    print("IMAGE:", w,h)
     print("CAMERA:", camera)
 
 
 
+
     # ==================================
-    # CAMERA CONFIG
+    # Camera ROI
     # ==================================
 
     cfg = CAMERA_CONFIG[camera]
 
 
     x1,y1,x2,y2 = cfg["roi"]
+
 
 
     print(
@@ -116,8 +145,10 @@ def analyze_frame(img, camera):
 
 
 
+
+
     # ==================================
-    # YOLO SEGMENTATION
+    # YOLO Segmentation
     # ==================================
 
     result = model(
@@ -126,7 +157,7 @@ def analyze_frame(img, camera):
 
         imgsz=1280,
 
-        conf=0.20,
+        conf=0.50,
 
         retina_masks=True,
 
@@ -137,8 +168,9 @@ def analyze_frame(img, camera):
 
 
 
+
     # ==================================
-    # CREATE MASK
+    # Create Full Mask
     # ==================================
 
     combined_mask = np.zeros(
@@ -148,6 +180,7 @@ def analyze_frame(img, camera):
         dtype=np.uint8
 
     )
+
 
 
     detected = 0
@@ -169,12 +202,8 @@ def analyze_frame(img, camera):
         )
 
 
+
         for mask in masks:
-
-
-            # YOLO output mask
-            # resize เฉพาะจาก output model
-            # ไม่เกี่ยวกับ image resize
 
 
             mask = cv2.resize(
@@ -186,6 +215,7 @@ def analyze_frame(img, camera):
                 interpolation=cv2.INTER_NEAREST
 
             )
+
 
 
             combined_mask[
@@ -206,8 +236,9 @@ def analyze_frame(img, camera):
 
 
 
+
     # ==================================
-    # ROI MASK
+    # ROI Mask
     # ==================================
 
     roi_mask = np.zeros(
@@ -230,8 +261,9 @@ def analyze_frame(img, camera):
 
 
 
+
     # ==================================
-    # Garbage inside ROI
+    # Garbage in ROI
     # ==================================
 
     roi_garbage = (
@@ -251,22 +283,36 @@ def analyze_frame(img, camera):
     # ==================================
 
     garbage_pixels = np.sum(
+
         roi_garbage
+
     )
 
 
     roi_pixels = np.sum(
+
         roi_mask
+
     )
 
 
-    WAR = (
 
-        garbage_pixels /
+    if roi_pixels > 0:
 
-        roi_pixels
 
-    ) * 100
+        WAR = (
+
+            garbage_pixels /
+
+            roi_pixels
+
+        ) * 100
+
+
+    else:
+
+        WAR = 0
+
 
 
 
@@ -281,6 +327,77 @@ def analyze_frame(img, camera):
 
 
 
+
+    # ==================================
+    # Compare Previous Frame
+    # ==================================
+
+    change = 0
+
+
+
+    if camera in previous_WAR:
+
+
+        old_WAR = previous_WAR[camera]
+
+
+        if old_WAR > 0:
+
+
+            change = (
+
+                (WAR - old_WAR)
+
+                /
+
+                old_WAR
+
+            ) * 100
+
+
+
+    previous_WAR[camera] = WAR
+
+
+
+    change = round(
+
+        float(change),
+
+        2
+
+    )
+
+
+
+
+
+    # ==================================
+    # Trend
+    # ==================================
+
+    if change > 0:
+
+        trend = f"Increase +{change}%"
+
+    elif change < 0:
+
+        trend = f"Decrease {change}%"
+
+    else:
+
+        trend = "No change"
+
+
+
+
+
+
+    # ==================================
+    # Level
+    # ==================================
+
     level = density_level(
 
         WAR,
@@ -288,6 +405,7 @@ def analyze_frame(img, camera):
         cfg["threshold"]
 
     )
+
 
 
 
@@ -319,6 +437,7 @@ def analyze_frame(img, camera):
     )
 
 
+
     output = cv2.addWeighted(
 
         img,
@@ -337,6 +456,8 @@ def analyze_frame(img, camera):
 
 
 
+    # ROI Box
+
     cv2.rectangle(
 
         output,
@@ -353,6 +474,9 @@ def analyze_frame(img, camera):
 
 
 
+
+
+    # WAR
 
     cv2.putText(
 
@@ -374,11 +498,15 @@ def analyze_frame(img, camera):
 
 
 
+
+
+    # Change
+
     cv2.putText(
 
         output,
 
-        level,
+        trend,
 
         (40,120),
 
@@ -396,27 +524,84 @@ def analyze_frame(img, camera):
 
 
 
+    # Level
+
+    cv2.putText(
+
+        output,
+
+        level,
+
+        (40,180),
+
+        cv2.FONT_HERSHEY_SIMPLEX,
+
+        1.5,
+
+        (0,255,0),
+
+        3
+
+    )
+
+
+
+
+
+
     return {
 
 
-        "image": output,
+        "image":
+
+        output,
 
 
-        "mask": roi_garbage,
+
+        "mask":
+
+        roi_garbage,
 
 
-        "WAR": WAR,
+
+        "WAR":
+
+        WAR,
 
 
-        "level": level,
+
+        "change":
+
+        change,
 
 
-        "action": recommendation(level),
+
+        "trend":
+
+        trend,
 
 
-        "camera": camera,
+
+        "level":
+
+        level,
 
 
-        "detected": detected
+
+        "action":
+
+        recommendation(level),
+
+
+
+        "camera":
+
+        camera,
+
+
+
+        "detected":
+
+        detected
 
     }
