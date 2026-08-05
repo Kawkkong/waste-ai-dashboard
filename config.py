@@ -60,7 +60,7 @@ CAMERA_CONFIG = {
 
             "medium":2,
 
-            "high":5
+            "high":7
 
         }
 
