@@ -69,35 +69,47 @@ st.markdown(
 
 .level-box {
 
-    padding:18px;
-    border-radius:12px;
-    font-size:18px;
+    padding:12px;
+    border-radius:10px;
+    font-size:15px;
     font-weight:bold;
-    margin-bottom:15px;
+    margin-bottom:10px;
 
 }
 
 
 .notice-high {
 
-    background-color:#FF9800;
+    background:#FF9800;
     color:black;
-    padding:15px;
-    border-radius:10px;
-    font-size:18px;
+    padding:8px 12px;
+    border-radius:8px;
+    font-size:14px;
     font-weight:bold;
+    margin-bottom:10px;
 
 }
 
 
 .notice-critical {
 
-    background-color:#F44336;
+    background:#F44336;
     color:white;
-    padding:15px;
-    border-radius:10px;
-    font-size:18px;
+    padding:8px 12px;
+    border-radius:8px;
+    font-size:14px;
     font-weight:bold;
+    margin-bottom:10px;
+
+}
+
+
+.recommend {
+
+    background:#f0f2f6;
+    padding:12px;
+    border-radius:8px;
+    font-size:15px;
 
 }
 
@@ -109,7 +121,7 @@ unsafe_allow_html=True
 
 
 # =====================================================
-# SESSION STATE
+# SESSION
 # =====================================================
 
 if "camera_results" not in st.session_state:
@@ -175,7 +187,6 @@ for cam in CAMERA_CONFIG:
     )
 
 
-
     if uploaded_file is not None:
 
 
@@ -188,13 +199,10 @@ for cam in CAMERA_CONFIG:
         )
 
 
-
         old_file = (
 
             st.session_state.camera_results
-
-            .get(cam, {})
-
+            .get(cam,{})
             .get("file_id")
 
         )
@@ -207,9 +215,7 @@ for cam in CAMERA_CONFIG:
             bytes_data = np.asarray(
 
                 bytearray(
-
                     uploaded_file.read()
-
                 ),
 
                 dtype=np.uint8
@@ -240,11 +246,11 @@ for cam in CAMERA_CONFIG:
 
             st.session_state.camera_results[cam] = {
 
-                "file_id": file_id,
+                "file_id":file_id,
 
-                "original": img,
+                "original":img,
 
-                "result": result
+                "result":result
 
             }
 
@@ -253,35 +259,36 @@ for cam in CAMERA_CONFIG:
             st.session_state.history[cam].append({
 
                 "เวลา":
-                    datetime.now().strftime(
-                        "%Y-%m-%d %H:%M:%S"
-                    ),
+                datetime.now().strftime(
+                    "%Y-%m-%d %H:%M:%S"
+                ),
 
                 "ภาพ":
-                    img.copy(),
+                img.copy(),
 
                 "ผล":
-                    result["image"].copy(),
+                result["image"].copy(),
 
                 "WAR":
-                    result["WAR"],
+                result["WAR"],
 
                 "ระดับ":
-                    result["level"],
+                result["level"],
 
                 "เปลี่ยนแปลง":
-                    result["change"]
+                result["change"]
 
             })
 
 
 
 
+
 # =====================================================
-# DISPLAY CAMERA
+# DISPLAY
 # =====================================================
 
-for cam, data in st.session_state.camera_results.items():
+for cam,data in st.session_state.camera_results.items():
 
 
     result = data["result"]
@@ -301,25 +308,23 @@ for cam, data in st.session_state.camera_results.items():
 
 
 
-    # -------------------------
+    # =========================
     # LEVEL CARD
-    # -------------------------
+    # =========================
 
     st.markdown(
 
         f"""
+
         <div class="level-box"
         style="background:{info['color']}">
 
         ระดับความหนาแน่นของขยะ<br>
 
-        {info['name']}<br><br>
-
-        คำแนะนำ:<br>
-
-        {info['action']}
+        {info['name']}
 
         </div>
+
         """,
 
         unsafe_allow_html=True
@@ -328,50 +333,68 @@ for cam, data in st.session_state.camera_results.items():
 
 
 
-    # -------------------------
+    # =========================
+    # ACTION
+    # =========================
+
+    st.markdown(
+
+        f"""
+
+        <div class="recommend">
+
+        คำแนะนำ:
+        {info['action']}
+
+        </div>
+
+        """,
+
+        unsafe_allow_html=True
+
+    )
+
+
+
+    # =========================
     # NOTIFICATION
-    # -------------------------
+    # =========================
 
     if level == "High":
+
 
         st.markdown(
 
             f"""
+
             <div class="notice-high">
 
-            🟧 แจ้งเตือนเจ้าหน้าที่<br><br>
-
-            พบปริมาณขยะระดับสูง<br>
-
-            กล้อง: {cam}<br>
-
-            กรุณาตรวจสอบพื้นที่
+            🟧 แจ้งเตือนเจ้าหน้าที่ :
+            พบขยะระดับสูงที่ {cam}
 
             </div>
+
             """,
 
             unsafe_allow_html=True
 
         )
-
 
 
     elif level == "Critical":
 
+
         st.markdown(
 
             f"""
+
             <div class="notice-critical">
 
-            🟥 แจ้งเตือนด่วน<br><br>
-
-            พบปริมาณขยะระดับวิกฤต<br>
-
-            กล้อง: {cam}<br>
-
-            ต้องดำเนินการเก็บขยะทันที
+            🟥 แจ้งเตือนด่วน :
+            พบขยะระดับวิกฤตที่ {cam}
 
             </div>
+
             """,
 
             unsafe_allow_html=True
@@ -380,15 +403,18 @@ for cam, data in st.session_state.camera_results.items():
 
 
 
-    # -------------------------
+
+
+    # =========================
     # IMAGE
-    # -------------------------
+    # =========================
 
     col1,col2 = st.columns(2)
 
 
 
     with col1:
+
 
         st.subheader(
             "ภาพจากกล้อง"
@@ -413,6 +439,7 @@ for cam, data in st.session_state.camera_results.items():
 
     with col2:
 
+
         st.subheader(
             "ผลการแบ่งพื้นที่ขยะ"
         )
@@ -434,12 +461,13 @@ for cam, data in st.session_state.camera_results.items():
 
 
 
-    # -------------------------
+
+
+    # =========================
     # METRIC
-    # -------------------------
+    # =========================
 
-    a,b,c,d = st.columns(4)
-
+    a,b,c = st.columns(3)
 
 
     a.metric(
@@ -460,16 +488,12 @@ for cam, data in st.session_state.camera_results.items():
     )
 
 
-    d.metric(
-        "คำแนะนำ",
-        info["action"]
-    )
 
 
 
-    # -------------------------
+    # =========================
     # HISTORY
-    # -------------------------
+    # =========================
 
     st.subheader(
         f"📋 ประวัติการตรวจสอบ {cam}"
@@ -487,7 +511,6 @@ for cam, data in st.session_state.camera_results.items():
         history_info = LEVEL_INFO[item["ระดับ"]]
 
 
-
         with st.expander(
 
             f'{item["เวลา"]} | {history_info["name"]}'
@@ -498,6 +521,7 @@ for cam, data in st.session_state.camera_results.items():
             st.markdown(
 
                 f"""
+
                 <div class="level-box"
                 style="background:{history_info['color']}">
 
@@ -507,11 +531,13 @@ for cam, data in st.session_state.camera_results.items():
                 {history_info['action']}
 
                 </div>
+
                 """,
 
                 unsafe_allow_html=True
 
             )
+
 
 
             h1,h2 = st.columns(2)
