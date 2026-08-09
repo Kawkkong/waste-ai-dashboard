@@ -10,11 +10,11 @@ from config import CAMERA_CONFIG
 
 
 # ======================================================
-# PAGE CONFIG
+# PAGE
 # ======================================================
 
 st.set_page_config(
-    page_title="ระบบตรวจสอบปริมาณขยะด้วย AI",
+    page_title="Waste AI Dashboard",
     layout="wide"
 )
 
@@ -28,74 +28,67 @@ st.markdown(
 """
 <style>
 
-.block-container {
+.block-container{
 
-    padding-top:1rem;
+    padding-top:0.8rem;
 
-    padding-left:2rem;
+    padding-left:1.5rem;
 
-    padding-right:2rem;
-
-}
-
-
-[data-testid="stMetric"]{
-
-    background:#f5f5f5;
-
-    padding:8px;
-
-    border-radius:10px;
+    padding-right:1.5rem;
 
 }
 
 
-[data-testid="stMetricValue"]{
+.card{
 
-    font-size:18px;
-
-}
-
-
-[data-testid="stMetricLabel"]{
-
-    font-size:12px;
-
-}
-
-
-
-.info-box{
-
-    background:#eeeeee;
-
-    padding:12px;
-
-    border-radius:10px;
-
-    font-size:14px;
-
-    line-height:1.6;
-
-}
-
-
-
-.level-box{
+    height:95px;
 
     padding:10px;
 
-    border-radius:10px;
+    border-radius:12px;
 
-    color:white;
+    background:#f3f3f3;
 
     text-align:center;
 
-    font-size:17px;
+}
+
+
+.card-title{
+
+    font-size:13px;
+
+}
+
+
+.card-value{
+
+    margin-top:8px;
+
+    font-size:22px;
 
     font-weight:bold;
 
 }
+
+
+
+.action-card{
+
+    min-height:90px;
+
+    padding:12px;
+
+    border-radius:12px;
+
+    background:#eeeeee;
+
+    font-size:14px;
+
+    line-height:1.5;
+
+}
+
 
 
 </style>
@@ -106,10 +99,10 @@ unsafe_allow_html=True
 
 
 # ======================================================
-# TRANSLATION
+# TRANSLATE
 # ======================================================
 
-LEVEL_TRANSLATE = {
+LEVEL_TRANSLATE={
 
     "Normal":"ไม่มีขยะ",
 
@@ -125,23 +118,23 @@ LEVEL_TRANSLATE = {
 
 
 
-LEVEL_COLOR = {
+LEVEL_COLOR={
 
     "Normal":"#4CAF50",
 
     "Low":"#2196F3",
 
-    "Medium":"#FFC107",
+    "Medium":"#FFD600",
 
     "High":"#FF9800",
 
-    "Critical":"#F44336"
+    "Critical":"#F44336",
 
 }
 
 
 
-ACTION_TRANSLATE = {
+ACTION_TRANSLATE={
 
     "No waste detected":
         "ไม่พบขยะ",
@@ -162,47 +155,54 @@ ACTION_TRANSLATE = {
 
 
 
+
 # ======================================================
-# ROI FUNCTION
+# FUNCTION
 # ======================================================
 
-def draw_roi(image, roi):
 
-    img = image.copy()
+def dim_mask(image, mask):
+
+    """
+
+    ทำให้พื้นที่ที่ไม่ใช่ขยะมืดลง
+
+    """
+
+    dark = np.zeros_like(image)
+
+    dark[:] = (40,40,40)
 
 
-    # Dim background
+    output=np.where(
 
-    dim = cv2.addWeighted(
+        mask[:,:,None]>0,
 
-        img,
+        image,
 
-        0.35,
-
-        np.zeros_like(img),
-
-        0.65,
-
-        0
+        dark
 
     )
 
 
-    x1,y1,x2,y2 = roi
+    return output.astype(np.uint8)
 
 
 
-    # คืนพื้นที่ ROI
-
-    dim[y1:y2, x1:x2] = img[y1:y2, x1:x2]
 
 
+def draw_roi(image,roi):
 
-    # กรอบ ROI สีแดง
+
+    img=image.copy()
+
+
+    x1,y1,x2,y2=roi
+
 
     cv2.rectangle(
 
-        dim,
+        img,
 
         (x1,y1),
 
@@ -210,12 +210,12 @@ def draw_roi(image, roi):
 
         (0,0,255),
 
-        6
+        5
 
     )
 
 
-    return dim
+    return img
 
 
 
@@ -226,13 +226,13 @@ def draw_roi(image, roi):
 
 if "camera_results" not in st.session_state:
 
-    st.session_state.camera_results = {}
+    st.session_state.camera_results={}
 
 
 
 if "history" not in st.session_state:
 
-    st.session_state.history = {}
+    st.session_state.history={}
 
 
 
@@ -240,7 +240,7 @@ for cam in CAMERA_CONFIG:
 
     if cam not in st.session_state.history:
 
-        st.session_state.history[cam] = []
+        st.session_state.history[cam]=[]
 
 
 
@@ -248,6 +248,7 @@ for cam in CAMERA_CONFIG:
 # ======================================================
 # TITLE
 # ======================================================
+
 
 st.title(
     "🗑 ระบบตรวจสอบปริมาณขยะด้วย AI"
@@ -260,9 +261,11 @@ st.caption(
 
 
 
+
 # ======================================================
 # UPLOAD
 # ======================================================
+
 
 st.sidebar.header(
     "📷 อัปโหลดภาพ CCTV"
@@ -273,15 +276,11 @@ st.sidebar.header(
 for cam in CAMERA_CONFIG:
 
 
-    uploaded_file = st.sidebar.file_uploader(
+    upload=st.sidebar.file_uploader(
 
         cam,
 
-        type=[
-            "jpg",
-            "jpeg",
-            "png"
-        ],
+        type=["jpg","jpeg","png"],
 
         key=cam
 
@@ -289,20 +288,20 @@ for cam in CAMERA_CONFIG:
 
 
 
-    if uploaded_file:
+    if upload:
 
 
-        file_id = (
+        file_id=(
 
-            uploaded_file.name,
+            upload.name,
 
-            uploaded_file.size
+            upload.size
 
         )
 
 
 
-        old_file = (
+        old=(
 
             st.session_state.camera_results
 
@@ -314,26 +313,18 @@ for cam in CAMERA_CONFIG:
 
 
 
-        if file_id != old_file:
+        if file_id!=old:
 
 
+            img=cv2.imdecode(
 
-            bytes_data = np.asarray(
+                np.asarray(
 
-                bytearray(
+                    bytearray(upload.read()),
 
-                    uploaded_file.read()
+                    dtype=np.uint8
 
                 ),
-
-                dtype=np.uint8
-
-            )
-
-
-            img = cv2.imdecode(
-
-                bytes_data,
 
                 cv2.IMREAD_COLOR
 
@@ -341,7 +332,7 @@ for cam in CAMERA_CONFIG:
 
 
 
-            result = analyze_frame(
+            result=analyze_frame(
 
                 img,
 
@@ -351,7 +342,7 @@ for cam in CAMERA_CONFIG:
 
 
 
-            st.session_state.camera_results[cam] = {
+            st.session_state.camera_results[cam]={
 
                 "file_id":file_id,
 
@@ -392,22 +383,17 @@ for cam in CAMERA_CONFIG:
 
 
 
-            if len(st.session_state.history[cam]) > 20:
-
-                st.session_state.history[cam].pop(0)
-
-
-
 
 
 # ======================================================
 # DASHBOARD
 # ======================================================
 
+
 for cam,data in st.session_state.camera_results.items():
 
 
-    config = CAMERA_CONFIG[cam]
+    config=CAMERA_CONFIG[cam]
 
 
     st.divider()
@@ -415,18 +401,21 @@ for cam,data in st.session_state.camera_results.items():
 
     st.header(
 
-        f"📷 {cam} : {config['name']}"
+        f"📷 {cam} - {config['name']}"
 
     )
 
 
-    img = data["original"]
 
-    result = data["result"]
+    img=data["original"]
+
+    result=data["result"]
 
 
 
-    roi_img = draw_roi(
+    # ROI
+
+    roi_img=draw_roi(
 
         img,
 
@@ -436,7 +425,26 @@ for cam,data in st.session_state.camera_results.items():
 
 
 
-    c1,c2 = st.columns(2)
+    # Mask dim
+
+    if "mask" in result:
+
+        mask_img=dim_mask(
+
+            result["image"],
+
+            result["mask"]
+
+        )
+
+    else:
+
+        mask_img=result["image"]
+
+
+
+
+    c1,c2=st.columns(2)
 
 
 
@@ -453,9 +461,9 @@ for cam,data in st.session_state.camera_results.items():
 
             ),
 
-            width=420,
+            width=380,
 
-            caption="📷 ภาพ CCTV + ROI"
+            caption="📷 CCTV + ROI"
 
         )
 
@@ -468,66 +476,133 @@ for cam,data in st.session_state.camera_results.items():
 
             cv2.cvtColor(
 
-                result["image"],
+                mask_img,
 
                 cv2.COLOR_BGR2RGB
 
             ),
 
-            width=420,
+            width=380,
 
-            caption="🤖 ผล Segmentation"
+            caption="🤖 AI Detection"
 
         )
 
 
 
 
-    a,b,c = st.columns(3)
+
+    # =========================
+    # CARD
+    # =========================
+
+
+    a,b,c=st.columns(3)
 
 
 
     with a:
 
-        st.metric(
+        st.markdown(
 
-            "🗑 พื้นที่ขยะ (WAR)",
+        f"""
 
-            f'{result["WAR"]:.2f}%'
+        <div class="card">
+
+        <div class="card-title">
+
+        🗑 พื้นที่ขยะ
+
+        </div>
+
+
+        <div class="card-value">
+
+        {result["WAR"]:.2f}%
+
+        </div>
+
+
+        </div>
+
+        """,
+
+        unsafe_allow_html=True
 
         )
+
+
+
+
+    level=LEVEL_TRANSLATE.get(
+
+        result["level"],
+
+        result["level"]
+
+    )
 
 
 
     with b:
 
-        st.metric(
+        st.markdown(
 
-            "📈 การเปลี่ยนแปลง",
+        f"""
 
-            f'{result["change"]:+.2f}%'
+        <div class="card"
+
+        style="background:{LEVEL_COLOR.get(result['level'],'#777')}">
+
+        <div class="card-title"
+        style="color:white">
+
+        📊 ระดับความหนาแน่น
+
+        </div>
+
+
+        <div class="card-value"
+        style="color:white">
+
+        {level}
+
+        </div>
+
+
+        </div>
+
+        """,
+
+        unsafe_allow_html=True
 
         )
+
 
 
 
     with c:
 
 
-        level = result["level"]
-
-
         st.markdown(
 
         f"""
 
-        <div class="level-box"
+        <div class="card">
 
-        style="background:{LEVEL_COLOR.get(level,"#777")}">
+        <div class="card-title">
 
-        📊 ระดับความหนาแน่น<br>
+        📈 การเปลี่ยนแปลง
 
-        {LEVEL_TRANSLATE.get(level,level)}
+        </div>
+
+
+        <div class="card-value">
+
+        {result["change"]:+.2f}%
+
+        </div>
+
 
         </div>
 
@@ -541,7 +616,9 @@ for cam,data in st.session_state.camera_results.items():
 
 
 
-    action = ACTION_TRANSLATE.get(
+    # ACTION
+
+    action=ACTION_TRANSLATE.get(
 
         result["action"],
 
@@ -555,9 +632,11 @@ for cam,data in st.session_state.camera_results.items():
 
     f"""
 
-    <div class="info-box">
+    <div class="action-card">
 
-    <b>📌 คำแนะนำการจัดการขยะ</b><br><br>
+    <b>📌 คำแนะนำการจัดการขยะ</b>
+
+    <br><br>
 
     {action}
 
@@ -572,16 +651,13 @@ for cam,data in st.session_state.camera_results.items():
 
 
 
-    # ==================================================
+
     # HISTORY
-    # ==================================================
+
 
     st.subheader(
-
-        "📋 ประวัติการตรวจสอบ"
-
+        "📋 ประวัติ"
     )
-
 
 
     for item in reversed(
@@ -593,71 +669,20 @@ for cam,data in st.session_state.camera_results.items():
 
         with st.expander(
 
-            f'{item["Time"]} | {LEVEL_TRANSLATE.get(item["Level"],item["Level"])}'
+            item["Time"]
 
         ):
 
 
-            h1,h2 = st.columns(2)
-
-
-
-            with h1:
-
-                st.image(
-
-                    cv2.cvtColor(
-
-                        item["Original"],
-
-                        cv2.COLOR_BGR2RGB
-
-                    ),
-
-                    width=300,
-
-                    caption="ภาพต้นฉบับ"
-
-                )
-
-
-
-            with h2:
-
-                st.image(
-
-                    cv2.cvtColor(
-
-                        item["Segmentation"],
-
-                        cv2.COLOR_BGR2RGB
-
-                    ),
-
-                    width=300,
-
-                    caption="ผล AI"
-
-                )
-
-
-
             st.write(
 
-                f"🗑 พื้นที่ขยะ : {item['WAR']:.2f}%"
+                f"WAR : {item['WAR']:.2f}%"
 
             )
 
 
             st.write(
 
-                f"📈 การเปลี่ยนแปลง : {item['Change']:+.2f}%"
-
-            )
-
-
-            st.write(
-
-                f"📊 ระดับ : {LEVEL_TRANSLATE.get(item['Level'],item['Level'])}"
+                f"ระดับ : {LEVEL_TRANSLATE.get(item['Level'],item['Level'])}"
 
             )
