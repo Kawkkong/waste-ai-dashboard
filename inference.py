@@ -66,18 +66,14 @@ def recommendation(level):
         "Normal":
         "ไม่พบขยะ",
 
-
         "Low":
         "เฝ้าระวังพื้นที่",
-
 
         "Medium":
         "เตรียมวางแผนเก็บขยะ",
 
-
         "High":
         "แจ้งเตือนเจ้าหน้าที่",
-
 
         "Critical":
         "แจ้งเตือนด่วนและดำเนินการเก็บขยะทันที"
@@ -97,19 +93,18 @@ def recommendation(level):
 
 def analyze_frame(img, camera):
 
-
     global previous_WAR
 
 
 
-    h,w = img.shape[:2]
+    h, w = img.shape[:2]
 
 
 
     cfg = CAMERA_CONFIG[camera]
 
 
-    x1,y1,x2,y2 = cfg["roi"]
+    x1, y1, x2, y2 = cfg["roi"]
 
 
 
@@ -143,7 +138,7 @@ def analyze_frame(img, camera):
 
     combined_mask = np.zeros(
 
-        (h,w),
+        (h, w),
 
         dtype=np.uint8
 
@@ -167,14 +162,14 @@ def analyze_frame(img, camera):
         for mask in masks:
 
 
-            if mask.shape != (h,w):
+            if mask.shape != (h, w):
 
 
                 mask = cv2.resize(
 
                     mask,
 
-                    (w,h),
+                    (w, h),
 
                     interpolation=cv2.INTER_NEAREST
 
@@ -198,7 +193,7 @@ def analyze_frame(img, camera):
 
     roi_mask = np.zeros(
 
-        (h,w),
+        (h, w),
 
         dtype=np.uint8
 
@@ -335,7 +330,7 @@ def analyze_frame(img, camera):
     # VISUALIZATION
     # ==================================
 
-    # ทำ background dim
+    # ทำ background ให้มืดลง
 
     dim_background = cv2.convertScaleAbs(
 
@@ -353,7 +348,9 @@ def analyze_frame(img, camera):
 
 
 
-    # คืนภาพจริงเฉพาะ mask
+
+
+    # คืนความสว่างเฉพาะบริเวณ mask
 
     output[
 
@@ -368,27 +365,58 @@ def analyze_frame(img, camera):
 
 
 
-# สร้าง layer สีเขียว
 
-green_overlay = img.copy()
+    # ทำ mask สีเขียว
 
-
-green_overlay[garbage_mask == 1] = (
-    0,
-    255,
-    0
-)
+    green_overlay = img.copy()
 
 
-# ผสมเฉพาะบริเวณ mask
 
-output[garbage_mask == 1] = cv2.addWeighted(
-    img,
-    0.5,
-    green_overlay,
-    0.5,
-    0
-)[garbage_mask == 1]
+    green_overlay[
+
+        garbage_mask == 1
+
+    ] = (
+
+        0,
+
+        255,
+
+        0
+
+    )
+
+
+
+
+
+    blended = cv2.addWeighted(
+
+        output,
+
+        0.65,
+
+        green_overlay,
+
+        0.35,
+
+        0
+
+    )
+
+
+
+    output[
+
+        garbage_mask == 1
+
+    ] = blended[
+
+        garbage_mask == 1
+
+    ]
+
+
 
 
 
@@ -400,11 +428,11 @@ output[garbage_mask == 1] = cv2.addWeighted(
 
         output,
 
-        (x1,y1),
+        (x1, y1),
 
-        (x2,y2),
+        (x2, y2),
 
-        (0,255,255),
+        (0, 0, 255),
 
         4
 
@@ -424,7 +452,7 @@ output[garbage_mask == 1] = cv2.addWeighted(
 
         f"WAR {WAR}%",
 
-        (40,60),
+        (40, 60),
 
         cv2.FONT_HERSHEY_SIMPLEX,
 
