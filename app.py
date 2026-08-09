@@ -26,7 +26,7 @@ st.set_page_config(
 
 
 # =====================================================
-# CSS COMPACT UI
+# COMPACT UI
 # =====================================================
 
 st.markdown(
@@ -89,9 +89,19 @@ if "camera_results" not in st.session_state:
     st.session_state.camera_results = {}
 
 
+
+# แยก history ตามกล้อง
+
 if "history" not in st.session_state:
 
-    st.session_state.history = []
+    st.session_state.history = {}
+
+
+for cam in CAMERA_CONFIG:
+
+    if cam not in st.session_state.history:
+
+        st.session_state.history[cam] = []
 
 
 
@@ -143,6 +153,7 @@ for cam in CAMERA_CONFIG:
     if uploaded_file is not None:
 
 
+
         file_id = (
 
             uploaded_file.name,
@@ -178,9 +189,11 @@ for cam in CAMERA_CONFIG:
             # =================================================
 
             if ext in [
+
                 "jpg",
                 "jpeg",
                 "png"
+
             ]:
 
 
@@ -196,6 +209,7 @@ for cam in CAMERA_CONFIG:
                     dtype=np.uint8
 
                 )
+
 
 
                 img = cv2.imdecode(
@@ -245,11 +259,10 @@ for cam in CAMERA_CONFIG:
 
 
                 # ==========================
-                # SAVE HISTORY IMAGE
+                # SAVE HISTORY
                 # ==========================
 
-
-                st.session_state.history.append({
+                st.session_state.history[cam].append({
 
 
                     "Time":
@@ -259,11 +272,6 @@ for cam in CAMERA_CONFIG:
                         "%Y-%m-%d %H:%M:%S"
 
                     ),
-
-
-                    "Camera":
-
-                    cam,
 
 
                     "WAR":
@@ -286,11 +294,9 @@ for cam in CAMERA_CONFIG:
                     result["action"],
 
 
-
                     "Original":
 
                     img.copy(),
-
 
 
                     "Segmentation":
@@ -303,13 +309,11 @@ for cam in CAMERA_CONFIG:
 
 
 
-
 # =====================================================
-# DISPLAY CURRENT CAMERA
+# CURRENT CAMERA RESULT
 # =====================================================
 
-
-for cam,data in st.session_state.camera_results.items():
+for cam, data in st.session_state.camera_results.items():
 
 
     st.divider()
@@ -333,7 +337,7 @@ for cam,data in st.session_state.camera_results.items():
 
 
 
-        col1,col2 = st.columns(
+        col1, col2 = st.columns(
 
             [1,1],
 
@@ -396,6 +400,12 @@ for cam,data in st.session_state.camera_results.items():
 
 
 
+
+        # ==========================
+        # METRICS
+        # ==========================
+
+
         a,b,c,d = st.columns(
 
             4,
@@ -444,11 +454,9 @@ for cam,data in st.session_state.camera_results.items():
 
 
 
-
 # =====================================================
-# HISTORY
+# HISTORY BY CAMERA
 # =====================================================
-
 
 st.divider()
 
@@ -461,21 +469,39 @@ st.header(
 
 
 
-if len(st.session_state.history) > 0:
+for cam, histories in st.session_state.history.items():
+
+
+    st.subheader(
+
+        f"📷 {cam}"
+
+    )
 
 
 
-    for i,item in enumerate(
+    if len(histories) == 0:
 
-        reversed(st.session_state.history)
 
-    ):
+        st.info(
+
+            "ยังไม่มีข้อมูล"
+
+        )
+
+
+        continue
+
+
+
+
+    for item in reversed(histories):
 
 
 
         with st.expander(
 
-            f'{item["Time"]} | {item["Camera"]} | {item["Level"]}'
+            f'{item["Time"]} | {item["Level"]}'
 
         ):
 
@@ -494,7 +520,7 @@ if len(st.session_state.history) > 0:
             with col1:
 
 
-                st.subheader(
+                st.write(
 
                     "Original"
 
@@ -517,11 +543,10 @@ if len(st.session_state.history) > 0:
 
 
 
-
             with col2:
 
 
-                st.subheader(
+                st.write(
 
                     "Segmentation"
 
@@ -541,6 +566,7 @@ if len(st.session_state.history) > 0:
                     width=350
 
                 )
+
 
 
 
@@ -582,14 +608,3 @@ if len(st.session_state.history) > 0:
                 item["Action"]
 
             )
-
-
-
-else:
-
-
-    st.info(
-
-        "ยังไม่มีข้อมูล"
-
-    )
