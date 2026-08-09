@@ -8,7 +8,7 @@ from config import CAMERA_CONFIG
 
 
 st.set_page_config(
-    page_title="ระบบตรวจสอบขยะด้วย AI",
+    page_title="Dashboard ตรวจจับและจำแนกระดับความหนาแน่นของกองขยะจากภาพ CCTV",
     layout="wide"
 )
 
