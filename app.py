@@ -3,7 +3,6 @@ import cv2
 import numpy as np
 import pandas as pd
 import plotly.express as px
-from streamlit_plotly_events import plotly_events
 
 from datetime import datetime
 
@@ -668,48 +667,13 @@ for cam, data in st.session_state.camera_results.items():
         )
 
 
-        event = st.plotly_chart(
+        st.plotly_chart(
 
             fig,
 
-            width=400,
-
-            on_select="rerun",
-
-            selection_mode="points"
+            use_container_width=True
 
         )
-
-
-
-if event and event.selection:
-
-    if "points" in event.selection:
-
-        if len(event.selection["points"]) > 0:
-
-
-            point = event.selection.get("points", [])[0] if len(event.selection.get("points", [])) > 0 else None
-
-
-            selected_time = point["x"]
-
-
-            # แปลงเวลาให้ตรงกับ history
-
-            selected_time = str(selected_time)
-
-
-
-            for item in st.session_state.history[cam]:
-
-
-                if item["เวลา"] in selected_time:
-
-
-                    st.session_state.selected_history = item
-
-                    break
         # =========================
         # SELECTED GRAPH DATA
         # =========================
