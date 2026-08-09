@@ -368,52 +368,27 @@ def analyze_frame(img, camera):
 
 
 
+# สร้าง layer สีเขียว
 
-    # overlay สีเขียวเฉพาะ mask
-
-    green_overlay = np.zeros_like(img)
-
+green_overlay = img.copy()
 
 
-    green_overlay[
-
-        garbage_mask == 1
-
-    ] = (
-
-        0,
-
-        255,
-
-        0
-
-    )
+green_overlay[garbage_mask == 1] = (
+    0,
+    255,
+    0
+)
 
 
+# ผสมเฉพาะบริเวณ mask
 
-    output = np.where(
-
-        garbage_mask[..., None] == 1,
-
-        cv2.addWeighted(
-
-            output,
-
-            0.65,
-
-            green_overlay,
-
-            0.35,
-
-            0
-
-        ),
-
-        output
-
-    )
-
-
+output[garbage_mask == 1] = cv2.addWeighted(
+    img,
+    0.5,
+    green_overlay,
+    0.5,
+    0
+)[garbage_mask == 1]
 
 
 
