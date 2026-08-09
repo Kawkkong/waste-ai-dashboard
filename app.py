@@ -26,7 +26,7 @@ st.set_page_config(
 
 
 # =====================================================
-# COMPACT UI CSS
+# CSS COMPACT UI
 # =====================================================
 
 st.markdown(
@@ -58,26 +58,20 @@ h3 {
 }
 
 
-[data-testid="stMetricLabel"] {
-    font-size: 12px !important;
-}
-
-
 [data-testid="stImage"] img {
 
-    max-height: 420px;
+    max-height:420px;
 
-    object-fit: contain;
+    object-fit:contain;
 
 }
 
 
 section[data-testid="stSidebar"] {
 
-    width: 260px !important;
+    width:260px !important;
 
 }
-
 
 </style>
 """,
@@ -117,7 +111,7 @@ st.caption(
 
 
 # =====================================================
-# SIDEBAR
+# SIDEBAR UPLOAD
 # =====================================================
 
 st.sidebar.header(
@@ -145,6 +139,7 @@ for cam in CAMERA_CONFIG:
     )
 
 
+
     if uploaded_file is not None:
 
 
@@ -155,6 +150,7 @@ for cam in CAMERA_CONFIG:
             uploaded_file.size
 
         )
+
 
 
         old_file = (
@@ -172,21 +168,21 @@ for cam in CAMERA_CONFIG:
         if file_id != old_file:
 
 
+
             ext = uploaded_file.name.split(".")[-1].lower()
 
 
 
-            # =====================================
+            # =================================================
             # IMAGE
-            # =====================================
+            # =================================================
 
             if ext in [
-
                 "jpg",
                 "jpeg",
                 "png"
-
             ]:
+
 
 
                 bytes_data = np.asarray(
@@ -248,6 +244,11 @@ for cam in CAMERA_CONFIG:
 
 
 
+                # ==========================
+                # SAVE HISTORY IMAGE
+                # ==========================
+
+
                 st.session_state.history.append({
 
 
@@ -282,168 +283,33 @@ for cam in CAMERA_CONFIG:
 
                     "Action":
 
-                    result["action"]
+                    result["action"],
+
+
+
+                    "Original":
+
+                    img.copy(),
+
+
+
+                    "Segmentation":
+
+                    result["image"].copy()
 
                 })
 
 
 
 
-            # =====================================
-            # VIDEO
-            # =====================================
-
-            elif ext == "mp4":
-
-
-
-                temp = tempfile.NamedTemporaryFile(
-
-                    delete=False,
-
-                    suffix=".mp4"
-
-                )
-
-
-                temp.write(
-
-                    uploaded_file.read()
-
-                )
-
-
-                temp.close()
-
-
-
-                cap = cv2.VideoCapture(
-
-                    temp.name
-
-                )
-
-
-
-                frame_id = 0
-
-                results = []
-
-                preview = None
-
-
-
-                while True:
-
-
-                    ret, frame = cap.read()
-
-
-                    if not ret:
-
-                        break
-
-
-
-                    frame_id += 1
-
-
-
-                    if frame_id % 10 == 0:
-
-
-
-                        result = analyze_frame(
-
-                            frame,
-
-                            cam
-
-                        )
-
-
-                        results.append({
-
-                            "Frame":
-
-                            frame_id,
-
-
-                            "WAR":
-
-                            result["WAR"],
-
-
-                            "Change":
-
-                            result["change"],
-
-
-                            "Level":
-
-                            result["level"]
-
-                        })
-
-
-
-                        preview = result["image"]
-
-
-
-
-                cap.release()
-
-
-
-                os.remove(
-
-                    temp.name
-
-                )
-
-
-
-                video_df = pd.DataFrame(
-
-                    results
-
-                )
-
-
-
-                st.session_state.camera_results[cam] = {
-
-
-                    "file_id":
-
-                    file_id,
-
-
-                    "type":
-
-                    "video",
-
-
-                    "video_data":
-
-                    video_df,
-
-
-                    "preview":
-
-                    preview
-
-                }
-
-
 
 
 # =====================================================
-# DISPLAY CAMERA
+# DISPLAY CURRENT CAMERA
 # =====================================================
 
-for cam, data in st.session_state.camera_results.items():
+
+for cam,data in st.session_state.camera_results.items():
 
 
     st.divider()
@@ -457,11 +323,8 @@ for cam, data in st.session_state.camera_results.items():
 
 
 
-    # =====================================
-    # IMAGE RESULT
-    # =====================================
-
     if data["type"] == "image":
+
 
 
         img = data["original"]
@@ -470,7 +333,7 @@ for cam, data in st.session_state.camera_results.items():
 
 
 
-        col1, col2 = st.columns(
+        col1,col2 = st.columns(
 
             [1,1],
 
@@ -533,11 +396,6 @@ for cam, data in st.session_state.camera_results.items():
 
 
 
-
-
-        # Metrics
-
-
         a,b,c,d = st.columns(
 
             4,
@@ -586,67 +444,11 @@ for cam, data in st.session_state.camera_results.items():
 
 
 
-    # =====================================
-    # VIDEO RESULT
-    # =====================================
-
-    elif data["type"] == "video":
-
-
-        st.subheader(
-
-            "Video Segmentation Preview"
-
-        )
-
-
-
-        if data["preview"] is not None:
-
-
-            st.image(
-
-                cv2.cvtColor(
-
-                    data["preview"],
-
-                    cv2.COLOR_BGR2RGB
-
-                ),
-
-                width=500
-
-            )
-
-
-
-        if len(data["video_data"]) > 0:
-
-
-            st.subheader(
-
-                "WAR Trend"
-
-            )
-
-
-            st.line_chart(
-
-                data["video_data"],
-
-                x="Frame",
-
-                y="WAR"
-
-            )
-
-
-
-
 
 # =====================================================
 # HISTORY
 # =====================================================
+
 
 st.divider()
 
@@ -662,26 +464,125 @@ st.header(
 if len(st.session_state.history) > 0:
 
 
-    history_df = pd.DataFrame(
 
-        st.session_state.history
+    for i,item in enumerate(
 
-    )
+        reversed(st.session_state.history)
+
+    ):
 
 
-    st.dataframe(
 
-        history_df.sort_values(
+        with st.expander(
 
-            "Time",
+            f'{item["Time"]} | {item["Camera"]} | {item["Level"]}'
 
-            ascending=False
+        ):
 
-        ),
 
-        use_container_width=True
 
-    )
+            col1,col2 = st.columns(
+
+                [1,1],
+
+                gap="small"
+
+            )
+
+
+
+            with col1:
+
+
+                st.subheader(
+
+                    "Original"
+
+                )
+
+
+                st.image(
+
+                    cv2.cvtColor(
+
+                        item["Original"],
+
+                        cv2.COLOR_BGR2RGB
+
+                    ),
+
+                    width=350
+
+                )
+
+
+
+
+            with col2:
+
+
+                st.subheader(
+
+                    "Segmentation"
+
+                )
+
+
+                st.image(
+
+                    cv2.cvtColor(
+
+                        item["Segmentation"],
+
+                        cv2.COLOR_BGR2RGB
+
+                    ),
+
+                    width=350
+
+                )
+
+
+
+            a,b,c,d = st.columns(4)
+
+
+
+            a.metric(
+
+                "WAR",
+
+                f'{item["WAR"]}%'
+
+            )
+
+
+            b.metric(
+
+                "Change",
+
+                f'{item["Change"]:+.2f}%'
+
+            )
+
+
+            c.metric(
+
+                "Level",
+
+                item["Level"]
+
+            )
+
+
+            d.metric(
+
+                "Action",
+
+                item["Action"]
+
+            )
+
 
 
 else:
