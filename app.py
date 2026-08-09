@@ -1,70 +1,3 @@
-st.markdown(
-"""
-<style>
-
-html, body, [class*="css"] {
-    font-size: 13px;
-}
-
-
-h1 {
-    font-size: 26px !important;
-}
-
-
-h2 {
-    font-size: 20px !important;
-}
-
-
-h3 {
-    font-size: 16px !important;
-}
-
-
-/* metric */
-
-[data-testid="stMetricValue"] {
-
-    font-size: 18px;
-
-}
-
-
-/* image size */
-
-[data-testid="stImage"] img {
-
-    max-height: 420px;
-
-    object-fit: contain;
-
-}
-
-
-/* dataframe */
-
-.stDataFrame {
-
-    font-size: 12px;
-
-}
-
-
-/* sidebar */
-
-section[data-testid="stSidebar"] {
-
-    width: 250px !important;
-
-}
-
-
-</style>
-""",
-unsafe_allow_html=True
-)
-
 import streamlit as st
 
 import cv2
@@ -93,7 +26,7 @@ st.set_page_config(
 
 
 # =====================================================
-# CSS COMPACT UI
+# COMPACT UI CSS
 # =====================================================
 
 st.markdown(
@@ -104,8 +37,6 @@ html, body, [class*="css"] {
     font-size: 13px;
 }
 
-
-/* title */
 
 h1 {
     font-size: 26px !important;
@@ -122,19 +53,15 @@ h3 {
 }
 
 
-/* metric */
-
 [data-testid="stMetricValue"] {
-    font-size: 18px;
+    font-size: 18px !important;
 }
 
 
 [data-testid="stMetricLabel"] {
-    font-size: 12px;
+    font-size: 12px !important;
 }
 
-
-/* image */
 
 [data-testid="stImage"] img {
 
@@ -145,22 +72,12 @@ h3 {
 }
 
 
-/* sidebar */
-
 section[data-testid="stSidebar"] {
 
     width: 260px !important;
 
 }
 
-
-/* dataframe */
-
-.stDataFrame {
-
-    font-size: 12px;
-
-}
 
 </style>
 """,
@@ -228,7 +145,6 @@ for cam in CAMERA_CONFIG:
     )
 
 
-
     if uploaded_file is not None:
 
 
@@ -241,14 +157,13 @@ for cam in CAMERA_CONFIG:
         )
 
 
-
         old_file = (
 
             st.session_state.camera_results
 
             .get(cam, {})
 
-            .get("file_id", None)
+            .get("file_id")
 
         )
 
@@ -257,19 +172,20 @@ for cam in CAMERA_CONFIG:
         if file_id != old_file:
 
 
-
             ext = uploaded_file.name.split(".")[-1].lower()
 
 
 
-            # =================================================
+            # =====================================
             # IMAGE
-            # =================================================
+            # =====================================
 
             if ext in [
+
                 "jpg",
                 "jpeg",
                 "png"
+
             ]:
 
 
@@ -372,9 +288,10 @@ for cam in CAMERA_CONFIG:
 
 
 
-            # =================================================
+
+            # =====================================
             # VIDEO
-            # =================================================
+            # =====================================
 
             elif ext == "mp4":
 
@@ -432,8 +349,6 @@ for cam in CAMERA_CONFIG:
 
 
 
-                    # วิเคราะห์ทุก 10 frame
-
                     if frame_id % 10 == 0:
 
 
@@ -447,9 +362,7 @@ for cam in CAMERA_CONFIG:
                         )
 
 
-
                         results.append({
-
 
                             "Frame":
 
@@ -471,6 +384,7 @@ for cam in CAMERA_CONFIG:
                             result["level"]
 
                         })
+
 
 
                         preview = result["image"]
@@ -524,57 +438,10 @@ for cam in CAMERA_CONFIG:
 
 
 
-                if len(video_df) > 0:
-
-
-                    last = video_df.iloc[-1]
-
-
-                    st.session_state.history.append({
-
-
-                        "Time":
-
-                        datetime.now().strftime(
-
-                            "%Y-%m-%d %H:%M:%S"
-
-                        ),
-
-
-                        "Camera":
-
-                        cam,
-
-
-                        "WAR":
-
-                        last["WAR"],
-
-
-                        "Change":
-
-                        last["Change"],
-
-
-                        "Level":
-
-                        last["Level"],
-
-
-                        "Action":
-
-                        "-"
-
-                    })
-
-
-
 
 # =====================================================
-# DISPLAY RESULT
+# DISPLAY CAMERA
 # =====================================================
-
 
 for cam, data in st.session_state.camera_results.items():
 
@@ -590,12 +457,11 @@ for cam, data in st.session_state.camera_results.items():
 
 
 
-    # =================================================
-    # IMAGE
-    # =================================================
+    # =====================================
+    # IMAGE RESULT
+    # =====================================
 
     if data["type"] == "image":
-
 
 
         img = data["original"]
@@ -634,9 +500,10 @@ for cam, data in st.session_state.camera_results.items():
 
                 ),
 
-                width=450
+                width=420
 
             )
+
 
 
 
@@ -645,7 +512,7 @@ for cam, data in st.session_state.camera_results.items():
 
             st.subheader(
 
-                "Segmentation Mask"
+                "Segmentation"
 
             )
 
@@ -660,16 +527,15 @@ for cam, data in st.session_state.camera_results.items():
 
                 ),
 
-                width=450
+                width=420
 
             )
 
 
 
 
-        # ==============================
-        # METRICS
-        # ==============================
+
+        # Metrics
 
 
         a,b,c,d = st.columns(
@@ -720,17 +586,16 @@ for cam, data in st.session_state.camera_results.items():
 
 
 
-    # =================================================
-    # VIDEO
-    # =================================================
+    # =====================================
+    # VIDEO RESULT
+    # =====================================
 
     elif data["type"] == "video":
 
 
-
         st.subheader(
 
-            "Video Preview"
+            "Video Segmentation Preview"
 
         )
 
@@ -755,97 +620,33 @@ for cam, data in st.session_state.camera_results.items():
 
 
 
-        st.subheader(
-
-            "WAR Trend"
-
-        )
+        if len(data["video_data"]) > 0:
 
 
-        st.line_chart(
+            st.subheader(
 
-            data["video_data"],
+                "WAR Trend"
 
-            x="Frame",
-
-            y="WAR"
-
-        )
-
-
-
-
-# =====================================================
-# HISTORY TREND
-# =====================================================
-
-
-st.divider()
-
-
-st.header(
-
-    "📈 WAR Trend Analysis"
-
-)
-
-
-
-if len(st.session_state.history) > 0:
-
-
-
-    history_df = pd.DataFrame(
-
-        st.session_state.history
-
-    )
-
-
-    for cam in CAMERA_CONFIG:
-
-
-        st.subheader(cam)
-
-
-        cam_df = history_df[
-
-            history_df["Camera"] == cam
-
-        ]
-
-
-
-        if len(cam_df) > 0:
-
+            )
 
 
             st.line_chart(
 
-                cam_df,
+                data["video_data"],
 
-                x="Time",
+                x="Frame",
 
                 y="WAR"
 
             )
 
 
-else:
-
-
-    st.info(
-
-        "ยังไม่มีข้อมูล"
-
-    )
 
 
 
 # =====================================================
-# HISTORY TABLE
+# HISTORY
 # =====================================================
-
 
 st.divider()
 
