@@ -15,8 +15,11 @@ from config import CAMERA_CONFIG
 # =====================================================
 
 st.set_page_config(
+
     page_title="ระบบตรวจสอบขยะด้วย AI",
+
     layout="wide"
+
 )
 
 
@@ -27,37 +30,64 @@ st.set_page_config(
 
 LEVEL_INFO = {
 
+
     "Normal": {
+
         "name": "Normal (ไม่มีขยะ)",
+
         "color": "#4CAF50",
+
         "action": "ไม่พบขยะ"
+
     },
+
 
     "Low": {
+
         "name": "Low (ต่ำ)",
+
         "color": "#2196F3",
+
         "action": "เฝ้าระวังพื้นที่"
+
     },
+
 
     "Medium": {
+
         "name": "Medium (ปานกลาง)",
+
         "color": "#FFD600",
+
         "action": "เตรียมวางแผนเก็บขยะ"
+
     },
+
 
     "High": {
+
         "name": "High (สูง)",
+
         "color": "#FF9800",
+
         "action": "แจ้งเตือนเจ้าหน้าที่"
+
     },
 
+
     "Critical": {
+
         "name": "Critical (วิกฤต)",
+
         "color": "#F44336",
+
         "action": "แจ้งเตือนด่วนและดำเนินการเก็บขยะทันที"
+
     }
 
 }
+
+
 
 
 
@@ -66,57 +96,50 @@ LEVEL_INFO = {
 # =====================================================
 
 st.markdown(
+
 """
 <style>
+
 
 .level-box {
 
     padding:12px;
+
     border-radius:10px;
+
     font-size:16px;
+
     font-weight:bold;
+
     margin-bottom:10px;
 
 }
 
 
-.notice-high {
-
-    background-color:#FF9800;
-    color:black;
-    padding:8px 12px;
-    border-radius:8px;
-    font-size:14px;
-    font-weight:bold;
-
-}
-
-
-.notice-critical {
-
-    background-color:#F44336;
-    color:white;
-    padding:8px 12px;
-    border-radius:8px;
-    font-size:14px;
-    font-weight:bold;
-
-}
-
 
 .recommend {
 
     background-color:#eeeeee;
+
     padding:12px;
+
     border-radius:8px;
+
     font-size:15px;
 
 }
 
+
+
 </style>
+
 """,
+
 unsafe_allow_html=True
+
 )
+
+
 
 
 
@@ -138,9 +161,12 @@ if "history" not in st.session_state:
 
 for cam in CAMERA_CONFIG:
 
+
     if cam not in st.session_state.history:
 
         st.session_state.history[cam] = []
+
+
 
 
 
@@ -149,13 +175,19 @@ for cam in CAMERA_CONFIG:
 # =====================================================
 
 st.title(
+
     "🗑 ระบบตรวจสอบปริมาณขยะด้วย AI"
+
 )
 
 
 st.caption(
+
     "YOLOv11-Seg + Waste Area Ratio (WAR)"
+
 )
+
+
 
 
 
@@ -164,8 +196,11 @@ st.caption(
 # =====================================================
 
 st.sidebar.header(
+
     "📷 อัปโหลดภาพจากกล้อง CCTV"
+
 )
+
 
 
 
@@ -177,9 +212,13 @@ for cam in CAMERA_CONFIG:
         cam,
 
         type=[
+
             "jpg",
+
             "jpeg",
+
             "png"
+
         ],
 
         key=cam
@@ -187,7 +226,9 @@ for cam in CAMERA_CONFIG:
     )
 
 
+
     if uploaded_file is not None:
+
 
 
         file_id = (
@@ -203,7 +244,9 @@ for cam in CAMERA_CONFIG:
         old_file = (
 
             st.session_state.camera_results
-            .get(cam,{})
+
+            .get(cam, {})
+
             .get("file_id")
 
         )
@@ -213,15 +256,19 @@ for cam in CAMERA_CONFIG:
         if file_id != old_file:
 
 
+
             bytes_data = np.asarray(
 
                 bytearray(
+
                     uploaded_file.read()
+
                 ),
 
                 dtype=np.uint8
 
             )
+
 
 
             img = cv2.imdecode(
@@ -233,6 +280,7 @@ for cam in CAMERA_CONFIG:
             )
 
 
+
             result = analyze_frame(
 
                 img,
@@ -242,37 +290,63 @@ for cam in CAMERA_CONFIG:
             )
 
 
+
             st.session_state.camera_results[cam] = {
 
-                "file_id": file_id,
 
-                "original": img,
+                "file_id":
 
-                "result": result
+                file_id,
+
+
+                "original":
+
+                img,
+
+
+                "result":
+
+                result
 
             }
 
 
+
+
             st.session_state.history[cam].append({
 
+
                 "เวลา":
+
                 datetime.now().strftime(
+
                     "%Y-%m-%d %H:%M:%S"
+
                 ),
 
+
                 "ภาพ":
+
                 img.copy(),
 
+
                 "ผล":
+
                 result["image"].copy(),
 
+
                 "WAR":
+
                 result["WAR"],
 
+
                 "เปลี่ยนแปลง":
+
                 result["change"],
 
+
                 "ระดับ":
+
                 result["level"]
 
             })
@@ -302,7 +376,7 @@ for cam, data in st.session_state.camera_results.items():
 
 
     # =========================
-    # LEVEL CARD
+    # LEVEL
     # =========================
 
     st.markdown(
@@ -321,6 +395,8 @@ for cam, data in st.session_state.camera_results.items():
         unsafe_allow_html=True
 
     )
+
+
 
 
 
@@ -346,59 +422,13 @@ for cam, data in st.session_state.camera_results.items():
 
 
 
-    # =========================
-    # NOTIFICATION
-    # =========================
-
-    if level == "High":
-
-
-        st.markdown(
-
-            f"""
-            <div class="notice-high">
-
-            🟧 แจ้งเตือนเจ้าหน้าที่<br>
-
-            พบขยะระดับสูงที่ {cam}
-
-            </div>
-            """,
-
-            unsafe_allow_html=True
-
-        )
-
-
-
-    elif level == "Critical":
-
-
-        st.markdown(
-
-            f"""
-            <div class="notice-critical">
-
-            🟥 แจ้งเตือนด่วน<br>
-
-            พบขยะระดับวิกฤตที่ {cam}
-
-            </div>
-            """,
-
-            unsafe_allow_html=True
-
-        )
-
-
-
 
 
     # =========================
-    # IMAGE
+    # IMAGE DISPLAY
     # =========================
 
-    col1,col2 = st.columns(2)
+    col1, col2 = st.columns(2)
 
 
 
@@ -406,7 +436,7 @@ for cam, data in st.session_state.camera_results.items():
 
 
         st.subheader(
-            "ภาพจากกล้อง"
+            "ภาพจากกล้อง CCTV"
         )
 
 
@@ -420,9 +450,10 @@ for cam, data in st.session_state.camera_results.items():
 
             ),
 
-            width=450
+            use_container_width=True
 
         )
+
 
 
 
@@ -430,7 +461,9 @@ for cam, data in st.session_state.camera_results.items():
 
 
         st.subheader(
+
             "ผลการแบ่งพื้นที่ขยะ"
+
         )
 
 
@@ -444,7 +477,7 @@ for cam, data in st.session_state.camera_results.items():
 
             ),
 
-            width=450
+            use_container_width=True
 
         )
 
@@ -452,13 +485,17 @@ for cam, data in st.session_state.camera_results.items():
 
 
 
+
     # =========================
-    # CURRENT RESULT
+    # CURRENT DATA
     # =========================
 
     st.subheader(
+
         "📊 ผลการวิเคราะห์ปัจจุบัน"
+
     )
+
 
 
     a,b,c = st.columns(3)
@@ -474,6 +511,7 @@ for cam, data in st.session_state.camera_results.items():
     )
 
 
+
     b.metric(
 
         "เปลี่ยนแปลงจากครั้งก่อน",
@@ -483,6 +521,7 @@ for cam, data in st.session_state.camera_results.items():
     )
 
 
+
     c.metric(
 
         "ระดับความหนาแน่น",
@@ -490,6 +529,7 @@ for cam, data in st.session_state.camera_results.items():
         info["name"]
 
     )
+
 
 
 
@@ -508,6 +548,7 @@ for cam, data in st.session_state.camera_results.items():
 
 
     if len(st.session_state.history[cam]) > 0:
+
 
 
         graph_data = pd.DataFrame(
@@ -529,6 +570,7 @@ for cam, data in st.session_state.camera_results.items():
         )
 
 
+
     else:
 
 
@@ -537,6 +579,7 @@ for cam, data in st.session_state.camera_results.items():
             "ยังไม่มีข้อมูลสำหรับสร้างกราฟ"
 
         )
+
 
 
 
@@ -568,7 +611,9 @@ for cam, data in st.session_state.camera_results.items():
         )
 
 
+
     else:
+
 
 
         for item in reversed(histories):
@@ -587,7 +632,7 @@ for cam, data in st.session_state.camera_results.items():
 
 
                 # -------------------------
-                # HISTORY LEVEL
+                # LEVEL HISTORY
                 # -------------------------
 
                 st.markdown(
@@ -608,7 +653,7 @@ for cam, data in st.session_state.camera_results.items():
 
 
                 # -------------------------
-                # HISTORY DATA
+                # DATA HISTORY
                 # -------------------------
 
                 x,y,z = st.columns(3)
@@ -624,6 +669,7 @@ for cam, data in st.session_state.camera_results.items():
                 )
 
 
+
                 y.metric(
 
                     "เปลี่ยนแปลง",
@@ -631,6 +677,7 @@ for cam, data in st.session_state.camera_results.items():
                     f'{item["เปลี่ยนแปลง"]:+.2f}%'
 
                 )
+
 
 
                 z.metric(
@@ -643,8 +690,10 @@ for cam, data in st.session_state.camera_results.items():
 
 
 
+
+
                 # -------------------------
-                # HISTORY IMAGE
+                # IMAGE HISTORY
                 # -------------------------
 
                 h1,h2 = st.columns(2)
@@ -664,7 +713,7 @@ for cam, data in st.session_state.camera_results.items():
 
                         ),
 
-                        width=350,
+                        use_container_width=True,
 
                         caption="ภาพต้นฉบับ"
 
@@ -685,8 +734,8 @@ for cam, data in st.session_state.camera_results.items():
 
                         ),
 
-                        width=350,
+                        use_container_width=True,
 
-                        caption="ผลการแบ่งพื้นที่ขยะ"
+                        caption="ผล Segmentation"
 
                     )
