@@ -83,17 +83,13 @@ def analyze_frame(img, camera):
     global previous_WAR
 
 
-    h, w = img.shape[:2]
+    h,w = img.shape[:2]
 
-
-    # ==================================
-    # Camera ROI
-    # ==================================
 
     cfg = CAMERA_CONFIG[camera]
 
 
-    x1, y1, x2, y2 = cfg["roi"]
+    x1,y1,x2,y2 = cfg["roi"]
 
 
 
@@ -112,7 +108,7 @@ def analyze_frame(img, camera):
 
 
     # ==================================
-    # Create Full Mask
+    # FULL MASK
     # ==================================
 
     combined_mask = np.zeros(
@@ -129,7 +125,6 @@ def analyze_frame(img, camera):
 
 
         masks = result.masks.data.cpu().numpy()
-
 
         detected = len(masks)
 
@@ -154,7 +149,7 @@ def analyze_frame(img, camera):
 
 
     # ==================================
-    # ROI Mask
+    # ROI MASK
     # ==================================
 
     roi_mask = np.zeros(
@@ -170,9 +165,7 @@ def analyze_frame(img, camera):
 
 
 
-    # ==================================
-    # Garbage inside ROI
-    # ==================================
+    # ใช้เฉพาะขยะใน ROI คำนวณ WAR
 
     roi_garbage = (
         combined_mask *
@@ -182,7 +175,7 @@ def analyze_frame(img, camera):
 
 
     # ==================================
-    # WAR Calculation
+    # WAR
     # ==================================
 
     garbage_pixels = np.sum(
@@ -217,11 +210,10 @@ def analyze_frame(img, camera):
 
 
     # ==================================
-    # WAR Change
+    # Change
     # ==================================
 
     change = 0
-
 
 
     if camera in previous_WAR:
@@ -233,6 +225,7 @@ def analyze_frame(img, camera):
 
 
     previous_WAR[camera] = WAR
+
 
 
     change = round(
@@ -271,18 +264,21 @@ def analyze_frame(img, camera):
     # Visualization
     # ==================================
 
-    output = img.copy()
+    # dim background
+
+    dark = (
+        img * 0.35
+    ).astype(np.uint8)
 
 
-    overlay = img.copy()
+
+    output = dark.copy()
 
 
 
-    # ===============================
-    # GREEN MASK
-    # ===============================
+    # mask เขียว
 
-    overlay[
+    output[
         roi_garbage == 1
     ] = (
         0,
@@ -292,95 +288,72 @@ def analyze_frame(img, camera):
 
 
 
-    # Blend image + mask
+    # blend
 
     output = cv2.addWeighted(
-        img,
+        dark,
         0.5,
-        overlay,
+        output,
         0.5,
         0
     )
 
 
 
-    # ===============================
-    # ROI Rectangle (Yellow)
-    # ===============================
+    # ROI สีเหลือง
 
     cv2.rectangle(
         output,
         (x1,y1),
         (x2,y2),
         (0,255,255),
-        4
+        3
     )
 
 
-
-    # ===============================
-    # Text
-    # ===============================
 
     cv2.putText(
         output,
         f"WAR {WAR}%",
-        (40,60),
+        (30,50),
         cv2.FONT_HERSHEY_SIMPLEX,
-        1.5,
+        1.2,
         (255,255,255),
-        3
+        2
     )
+
 
 
     cv2.putText(
         output,
         level,
-        (40,120),
+        (30,100),
         cv2.FONT_HERSHEY_SIMPLEX,
-        1.5,
+        1.2,
         (0,255,255),
-        3
+        2
     )
 
 
 
     return {
 
+        "image": output,
 
-        "image":
-        output,
+        "mask": roi_garbage,
 
+        "WAR": WAR,
 
-        "mask":
-        roi_garbage,
+        "change": change,
 
+        "trend": trend,
 
-        "WAR":
-        WAR,
+        "level": level,
 
+        "action": recommendation(level),
 
-        "change":
-        change,
+        "camera": camera,
 
-
-        "trend":
-        trend,
-
-
-        "level":
-        level,
-
-
-        "action":
-        recommendation(level),
-
-
-        "camera":
-        camera,
-
-
-        "detected":
-        detected
+        "detected": detected
 
     }
