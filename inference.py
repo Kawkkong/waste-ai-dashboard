@@ -429,7 +429,7 @@ def analyze_frame(img, camera):
 
         (x2,y2),
 
-        (0,0,255),
+        (0,255,255),
 
         4
 
