@@ -2,6 +2,7 @@ import streamlit as st
 import cv2
 import numpy as np
 import pandas as pd
+import plotly.express as px
 
 from datetime import datetime
 
@@ -30,58 +31,57 @@ st.set_page_config(
 
 LEVEL_INFO = {
 
-
     "Normal": {
 
-        "name": "Normal (ไม่มีขยะ)",
+        "name":"Normal (ไม่มีขยะ)",
 
-        "color": "#4CAF50",
+        "color":"#4CAF50",
 
-        "action": "ไม่พบขยะ"
+        "action":"ไม่พบขยะ"
 
     },
 
 
     "Low": {
 
-        "name": "Low (ต่ำ)",
+        "name":"Low (ต่ำ)",
 
-        "color": "#2196F3",
+        "color":"#2196F3",
 
-        "action": "เฝ้าระวังพื้นที่"
+        "action":"เฝ้าระวังพื้นที่"
 
     },
 
 
     "Medium": {
 
-        "name": "Medium (ปานกลาง)",
+        "name":"Medium (ปานกลาง)",
 
-        "color": "#FFD600",
+        "color":"#FFD600",
 
-        "action": "เตรียมวางแผนเก็บขยะ"
+        "action":"เตรียมวางแผนเก็บขยะ"
 
     },
 
 
     "High": {
 
-        "name": "High (สูง)",
+        "name":"High (สูง)",
 
-        "color": "#FF9800",
+        "color":"#FF9800",
 
-        "action": "แจ้งเตือนเจ้าหน้าที่"
+        "action":"แจ้งเตือนเจ้าหน้าที่"
 
     },
 
 
     "Critical": {
 
-        "name": "Critical (วิกฤต)",
+        "name":"Critical (วิกฤต)",
 
-        "color": "#F44336",
+        "color":"#F44336",
 
-        "action": "แจ้งเตือนด่วนและดำเนินการเก็บขยะทันที"
+        "action":"แจ้งเตือนด่วนและดำเนินการเก็บขยะทันที"
 
     }
 
@@ -92,46 +92,85 @@ LEVEL_INFO = {
 
 
 # =====================================================
-# CSS
+# CSS SMALL UI
 # =====================================================
 
 st.markdown(
 
 """
+
 <style>
 
 
-.level-box {
+h1{
 
-    padding:12px;
+font-size:28px !important;
 
-    border-radius:10px;
+}
 
-    font-size:16px;
 
-    font-weight:bold;
+h2{
 
-    margin-bottom:10px;
+font-size:20px !important;
+
+}
+
+
+h3{
+
+font-size:16px !important;
 
 }
 
 
 
-.recommend {
+.level-box{
 
-    background-color:#eeeeee;
+padding:8px;
 
-    padding:12px;
+border-radius:8px;
 
-    border-radius:8px;
+font-size:14px;
 
-    font-size:15px;
+font-weight:bold;
+
+margin-bottom:5px;
 
 }
 
+
+
+.recommend{
+
+background:#eeeeee;
+
+padding:8px;
+
+border-radius:8px;
+
+font-size:13px;
+
+}
+
+
+
+[data-testid="stMetricValue"]{
+
+font-size:20px;
+
+}
+
+
+
+[data-testid="stMetricLabel"]{
+
+font-size:12px;
+
+}
 
 
 </style>
+
 
 """,
 
@@ -144,7 +183,7 @@ unsafe_allow_html=True
 
 
 # =====================================================
-# SESSION STATE
+# SESSION
 # =====================================================
 
 if "camera_results" not in st.session_state:
@@ -159,8 +198,14 @@ if "history" not in st.session_state:
 
 
 
-for cam in CAMERA_CONFIG:
+if "selected_history" not in st.session_state:
 
+    st.session_state.selected_history = None
+
+
+
+
+for cam in CAMERA_CONFIG:
 
     if cam not in st.session_state.history:
 
@@ -176,31 +221,23 @@ for cam in CAMERA_CONFIG:
 
 st.title(
 
-    "🗑 ระบบตรวจสอบปริมาณขยะด้วย AI"
+"🗑 ระบบตรวจสอบปริมาณขยะด้วย AI"
 
 )
 
 
 st.caption(
 
-    "YOLOv11-Seg + Waste Area Ratio (WAR)"
+"YOLOv11-Seg + Waste Area Ratio (WAR)"
 
 )
-
-
-
-
-
 # =====================================================
-# UPLOAD
+# UPLOAD CCTV IMAGE
 # =====================================================
 
 st.sidebar.header(
-
     "📷 อัปโหลดภาพจากกล้อง CCTV"
-
 )
-
 
 
 
@@ -214,9 +251,7 @@ for cam in CAMERA_CONFIG:
         type=[
 
             "jpg",
-
             "jpeg",
-
             "png"
 
         ],
@@ -228,7 +263,6 @@ for cam in CAMERA_CONFIG:
 
 
     if uploaded_file is not None:
-
 
 
         file_id = (
@@ -291,6 +325,7 @@ for cam in CAMERA_CONFIG:
 
 
 
+
             st.session_state.camera_results[cam] = {
 
 
@@ -308,12 +343,27 @@ for cam in CAMERA_CONFIG:
 
                 result
 
+
             }
 
 
 
 
+            history_id = len(
+
+                st.session_state.history[cam]
+
+            )
+
+
+
+
             st.session_state.history[cam].append({
+
+
+                "ID":
+
+                history_id,
 
 
                 "เวลา":
@@ -350,6 +400,13 @@ for cam in CAMERA_CONFIG:
                 result["level"]
 
             })
+
+
+
+
+
+
+
 # =====================================================
 # DISPLAY CAMERA
 # =====================================================
@@ -359,7 +416,9 @@ for cam, data in st.session_state.camera_results.items():
 
     result = data["result"]
 
+
     level = result["level"]
+
 
     info = LEVEL_INFO[level]
 
@@ -370,8 +429,12 @@ for cam, data in st.session_state.camera_results.items():
 
 
     st.header(
+
         f"📷 {cam}"
+
     )
+
+
 
 
 
@@ -382,14 +445,20 @@ for cam, data in st.session_state.camera_results.items():
     st.markdown(
 
         f"""
+
         <div class="level-box"
+
         style="background-color:{info['color']};">
 
-        ระดับความหนาแน่นของขยะ<br><br>
+
+        ระดับความหนาแน่นของขยะ<br>
 
         {info['name']}
 
+
         </div>
+
+
         """,
 
         unsafe_allow_html=True
@@ -401,19 +470,22 @@ for cam, data in st.session_state.camera_results.items():
 
 
     # =========================
-    # RECOMMENDATION
+    # ACTION
     # =========================
 
     st.markdown(
 
         f"""
+
         <div class="recommend">
 
-        <b>คำแนะนำ:</b><br>
+        <b>คำแนะนำ:</b>
 
         {info['action']}
 
         </div>
+
+
         """,
 
         unsafe_allow_html=True
@@ -424,19 +496,23 @@ for cam, data in st.session_state.camera_results.items():
 
 
 
+
+
     # =========================
-    # IMAGE DISPLAY
+    # IMAGE
     # =========================
 
-    col1, col2 = st.columns(2)
+    c1,c2 = st.columns(2)
 
 
 
-    with col1:
+    with c1:
 
 
         st.subheader(
-            "ภาพจากกล้อง CCTV"
+
+            "ภาพจากกล้อง"
+
         )
 
 
@@ -457,12 +533,13 @@ for cam, data in st.session_state.camera_results.items():
 
 
 
-    with col2:
+
+    with c2:
 
 
         st.subheader(
 
-            "ผลการแบ่งพื้นที่ขยะ"
+            "ผล Segmentation"
 
         )
 
@@ -487,12 +564,12 @@ for cam, data in st.session_state.camera_results.items():
 
 
     # =========================
-    # CURRENT DATA
+    # CURRENT RESULT
     # =========================
 
     st.subheader(
 
-        "📊 ผลการวิเคราะห์ปัจจุบัน"
+        "📊 ผลการวิเคราะห์"
 
     )
 
@@ -504,27 +581,25 @@ for cam, data in st.session_state.camera_results.items():
 
     a.metric(
 
-        "พื้นที่ขยะ (WAR)",
+        "WAR",
 
         f'{result["WAR"]}%'
 
     )
 
 
-
     b.metric(
 
-        "เปลี่ยนแปลงจากครั้งก่อน",
+        "เปลี่ยนแปลง",
 
         f'{result["change"]:+.2f}%'
 
     )
 
 
-
     c.metric(
 
-        "ระดับความหนาแน่น",
+        "ระดับ",
 
         info["name"]
 
@@ -541,14 +616,13 @@ for cam, data in st.session_state.camera_results.items():
 
     st.subheader(
 
-        f"📈 แนวโน้ม WAR ของ {cam}"
+        f"📈 แนวโน้ม WAR : {cam}"
 
     )
 
 
 
     if len(st.session_state.history[cam]) > 0:
-
 
 
         graph_data = pd.DataFrame(
@@ -559,35 +633,160 @@ for cam, data in st.session_state.camera_results.items():
 
 
 
-        st.line_chart(
+        fig = px.line(
 
             graph_data,
 
             x="เวลา",
 
-            y="WAR"
+            y="WAR",
+
+            markers=True,
+
+            title=None
+
+        )
+
+
+        fig.update_layout(
+
+            height=250,
+
+            margin=dict(
+
+                l=20,
+
+                r=20,
+
+                t=20,
+
+                b=20
+
+            )
+
+        )
+
+
+        event = st.plotly_chart(
+
+            fig,
+
+            use_container_width=True,
+
+            on_select="rerun",
+
+            selection_mode="points"
 
         )
 
 
 
-    else:
+        if event and event.selection:
 
 
-        st.info(
-
-            "ยังไม่มีข้อมูลสำหรับสร้างกราฟ"
-
-        )
+            point = event.selection["points"][0]
 
 
+            selected_time = point["x"]
 
 
 
+            for item in st.session_state.history[cam]:
 
-    # =========================
+
+                if item["เวลา"] == selected_time:
+
+
+                    st.session_state.selected_history = item
+
+                    break
+        # =========================
+        # SELECTED GRAPH DATA
+        # =========================
+
+        if st.session_state.selected_history is not None:
+
+
+            item = st.session_state.selected_history
+
+
+            st.subheader(
+
+                "🔎 ข้อมูลที่เลือกจากกราฟ"
+
+            )
+
+
+
+            x,y,z = st.columns(3)
+
+
+
+            x.metric(
+
+                "WAR",
+
+                f'{item["WAR"]}%'
+
+            )
+
+
+
+            y.metric(
+
+                "เปลี่ยนแปลง",
+
+                f'{item["เปลี่ยนแปลง"]:+.2f}%'
+
+            )
+
+
+
+            selected_info = LEVEL_INFO[
+
+                item["ระดับ"]
+
+            ]
+
+
+
+            z.metric(
+
+                "ระดับ",
+
+                selected_info["name"]
+
+            )
+
+
+
+
+
+            st.image(
+
+                cv2.cvtColor(
+
+                    item["ผล"],
+
+                    cv2.COLOR_BGR2RGB
+
+                ),
+
+                caption="ผล Segmentation จากข้อมูลที่เลือก",
+
+                use_container_width=True
+
+            )
+
+
+
+
+
+
+
+    # =================================================
     # HISTORY
-    # =========================
+    # =================================================
 
     st.subheader(
 
@@ -615,35 +814,48 @@ for cam, data in st.session_state.camera_results.items():
     else:
 
 
-
         for item in reversed(histories):
 
 
-            history_info = LEVEL_INFO[item["ระดับ"]]
+            history_info = LEVEL_INFO[
+
+                item["ระดับ"]
+
+            ]
 
 
 
             with st.expander(
 
-                f'{item["เวลา"]} | {history_info["name"]}'
+                f'#{item["ID"]+1} | '
+
+                f'{item["เวลา"]} | '
+
+                f'{history_info["name"]}'
 
             ):
 
 
 
                 # -------------------------
-                # LEVEL HISTORY
+                # LEVEL
                 # -------------------------
 
                 st.markdown(
 
                     f"""
+
                     <div class="level-box"
+
                     style="background-color:{history_info['color']};">
+
 
                     {history_info['name']}
 
+
                     </div>
+
+
                     """,
 
                     unsafe_allow_html=True
@@ -652,15 +864,17 @@ for cam, data in st.session_state.camera_results.items():
 
 
 
+
+
                 # -------------------------
-                # DATA HISTORY
+                # DATA
                 # -------------------------
 
-                x,y,z = st.columns(3)
+                a,b,c = st.columns(3)
 
 
 
-                x.metric(
+                a.metric(
 
                     "WAR",
 
@@ -669,8 +883,7 @@ for cam, data in st.session_state.camera_results.items():
                 )
 
 
-
-                y.metric(
+                b.metric(
 
                     "เปลี่ยนแปลง",
 
@@ -679,8 +892,7 @@ for cam, data in st.session_state.camera_results.items():
                 )
 
 
-
-                z.metric(
+                c.metric(
 
                     "ระดับ",
 
@@ -692,8 +904,10 @@ for cam, data in st.session_state.camera_results.items():
 
 
 
+
+
                 # -------------------------
-                # IMAGE HISTORY
+                # IMAGES
                 # -------------------------
 
                 h1,h2 = st.columns(2)
@@ -713,11 +927,13 @@ for cam, data in st.session_state.camera_results.items():
 
                         ),
 
-                        use_container_width=True,
+                        caption="ภาพต้นฉบับ",
 
-                        caption="ภาพต้นฉบับ"
+                        use_container_width=True
 
                     )
+
+
 
 
 
@@ -734,8 +950,8 @@ for cam, data in st.session_state.camera_results.items():
 
                         ),
 
-                        use_container_width=True,
+                        caption="ผล Segmentation",
 
-                        caption="ผล Segmentation"
+                        use_container_width=True
 
                     )
