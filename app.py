@@ -526,7 +526,7 @@ for cam, data in st.session_state.camera_results.items():
 
             ),
 
-            use_container_width=True
+            width=400
 
         )
 
@@ -554,7 +554,7 @@ for cam, data in st.session_state.camera_results.items():
 
             ),
 
-            use_container_width=True
+            width=400
 
         )
 
@@ -650,7 +650,7 @@ for cam, data in st.session_state.camera_results.items():
 
         fig.update_layout(
 
-            height=250,
+            height=180,
 
             margin=dict(
 
@@ -671,7 +671,7 @@ for cam, data in st.session_state.camera_results.items():
 
             fig,
 
-            use_container_width=True,
+            width=400,
 
             on_select="rerun",
 
@@ -688,7 +688,7 @@ if event and event.selection:
         if len(event.selection["points"]) > 0:
 
 
-            point = event.selection["points"][0]
+            point = event.selection.get("points", [])[0] if len(event.selection.get("points", [])) > 0 else None
 
 
             selected_time = point["x"]
@@ -783,7 +783,7 @@ if event and event.selection:
 
                 caption="ผล Segmentation จากข้อมูลที่เลือก",
 
-                use_container_width=True
+                width=400
 
             )
 
@@ -938,7 +938,7 @@ if event and event.selection:
 
                         caption="ภาพต้นฉบับ",
 
-                        use_container_width=True
+                        width=400
 
                     )
 
@@ -961,6 +961,6 @@ if event and event.selection:
 
                         caption="ผล Segmentation",
 
-                        use_container_width=True
+                        width=400
 
                     )
