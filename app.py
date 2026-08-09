@@ -681,7 +681,11 @@ for cam, data in st.session_state.camera_results.items():
 
 
 
-        if event and event.selection:
+if event and event.selection:
+
+    if "points" in event.selection:
+
+        if len(event.selection["points"]) > 0:
 
 
             point = event.selection["points"][0]
@@ -690,11 +694,16 @@ for cam, data in st.session_state.camera_results.items():
             selected_time = point["x"]
 
 
+            # แปลงเวลาให้ตรงกับ history
+
+            selected_time = str(selected_time)
+
+
 
             for item in st.session_state.history[cam]:
 
 
-                if item["เวลา"] == selected_time:
+                if item["เวลา"] in selected_time:
 
 
                     st.session_state.selected_history = item
