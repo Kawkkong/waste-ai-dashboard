@@ -1,7 +1,7 @@
+from ultralytics import YOLO
+
 import cv2
 import numpy as np
-
-from ultralytics import YOLO
 
 from config import CAMERA_CONFIG
 
@@ -55,7 +55,7 @@ def density_level(WAR, threshold):
 
 
 # ======================================
-# THAI ACTION
+# ACTION THAI
 # ======================================
 
 def recommendation(level):
@@ -65,61 +65,21 @@ def recommendation(level):
         "Normal":
         "ไม่พบขยะ",
 
-
         "Low":
         "เฝ้าระวังพื้นที่",
-
 
         "Medium":
         "เตรียมวางแผนเก็บขยะ",
 
-
         "High":
         "แจ้งเตือนเจ้าหน้าที่",
-
 
         "Critical":
         "แจ้งเตือนด่วนและดำเนินการเก็บขยะทันที"
 
     }
 
-
     return action[level]
-
-
-
-
-# ======================================
-# LEVEL DISPLAY
-# ======================================
-
-def level_thai(level):
-
-    data = {
-
-        "Normal":
-        "Normal (ไม่มีขยะ)",
-
-
-        "Low":
-        "Low (ต่ำ)",
-
-
-        "Medium":
-        "Medium (ปานกลาง)",
-
-
-        "High":
-        "High (สูง)",
-
-
-        "Critical":
-        "Critical (วิกฤต)"
-
-    }
-
-
-    return data[level]
 
 
 
@@ -171,7 +131,7 @@ def analyze_frame(img, camera):
 
 
     # ==================================
-    # CREATE MASK
+    # COMBINE MASK
     # ==================================
 
     combined_mask = np.zeros(
@@ -181,7 +141,6 @@ def analyze_frame(img, camera):
         dtype=np.uint8
 
     )
-
 
 
     detected = 0
@@ -250,8 +209,7 @@ def analyze_frame(img, camera):
 
 
 
-
-    roi_garbage = (
+    garbage_mask = (
 
         combined_mask *
 
@@ -269,7 +227,7 @@ def analyze_frame(img, camera):
 
     garbage_pixels = np.sum(
 
-        roi_garbage
+        garbage_mask
 
     )
 
@@ -284,6 +242,7 @@ def analyze_frame(img, camera):
 
     if roi_pixels > 0:
 
+
         WAR = (
 
             garbage_pixels /
@@ -292,10 +251,10 @@ def analyze_frame(img, camera):
 
         ) * 100
 
+
     else:
 
         WAR = 0
-
 
 
 
@@ -368,18 +327,33 @@ def analyze_frame(img, camera):
     # VISUALIZATION
     # ==================================
 
-    output = img.copy()
+    # ทำภาพ dim
+
+    dim = cv2.convertScaleAbs(
+
+        img,
+
+        alpha=0.55,
+
+        beta=0
+
+    )
 
 
-    overlay = img.copy()
+
+    output = dim.copy()
 
 
 
-    # สีเขียวสำหรับ mask
+    # layer mask สีเขียว
 
-    overlay[
+    mask_layer = img.copy()
 
-        roi_garbage == 1
+
+
+    mask_layer[
+
+        garbage_mask == 1
 
     ] = (
 
@@ -393,15 +367,17 @@ def analyze_frame(img, camera):
 
 
 
+    # ผสมภาพ
+
     output = cv2.addWeighted(
 
-        img,
+        dim,
 
-        0.6,
+        0.65,
 
-        overlay,
+        mask_layer,
 
-        0.4,
+        0.35,
 
         0
 
@@ -411,7 +387,9 @@ def analyze_frame(img, camera):
 
 
 
-    # ROI
+    # ==================================
+    # ROI RED
+    # ==================================
 
     cv2.rectangle(
 
@@ -421,15 +399,19 @@ def analyze_frame(img, camera):
 
         (x2,y2),
 
-        (255,255,0),
+        (0,0,255),
 
-        3
+        4
 
     )
 
 
 
 
+
+    # ==================================
+    # TEXT
+    # ==================================
 
     cv2.putText(
 
@@ -483,7 +465,7 @@ def analyze_frame(img, camera):
 
         "mask":
 
-        roi_garbage,
+        garbage_mask,
 
 
         "WAR":
@@ -499,11 +481,6 @@ def analyze_frame(img, camera):
         "level":
 
         level,
-
-
-        "level_th":
-
-        level_thai(level),
 
 
         "action":
