@@ -97,9 +97,13 @@ def analyze_frame(img, camera):
 
 
 
+    # image size
+
     h, w = img.shape[:2]
 
 
+
+    # camera config
 
     cfg = CAMERA_CONFIG[camera]
 
@@ -133,12 +137,12 @@ def analyze_frame(img, camera):
 
 
     # ==================================
-    # CREATE MASK
+    # CREATE GARBAGE MASK
     # ==================================
 
     combined_mask = np.zeros(
 
-        (h, w),
+        (h,w),
 
         dtype=np.uint8
 
@@ -162,14 +166,14 @@ def analyze_frame(img, camera):
         for mask in masks:
 
 
-            if mask.shape != (h, w):
+            if mask.shape != (h,w):
 
 
                 mask = cv2.resize(
 
                     mask,
 
-                    (w, h),
+                    (w,h),
 
                     interpolation=cv2.INTER_NEAREST
 
@@ -193,7 +197,7 @@ def analyze_frame(img, camera):
 
     roi_mask = np.zeros(
 
-        (h, w),
+        (h,w),
 
         dtype=np.uint8
 
@@ -274,7 +278,7 @@ def analyze_frame(img, camera):
 
 
     # ==================================
-    # CHANGE
+    # WAR CHANGE
     # ==================================
 
     change = 0
@@ -330,7 +334,10 @@ def analyze_frame(img, camera):
     # VISUALIZATION
     # ==================================
 
-    # ทำ background ให้มืดลง
+
+    # -------------------------------
+    # Dim background
+    # -------------------------------
 
     dim_background = cv2.convertScaleAbs(
 
@@ -343,14 +350,15 @@ def analyze_frame(img, camera):
     )
 
 
-
     output = dim_background.copy()
 
 
 
 
 
-    # คืนความสว่างเฉพาะบริเวณ mask
+    # -------------------------------
+    # คืนภาพจริงเฉพาะ mask
+    # -------------------------------
 
     output[
 
@@ -366,9 +374,11 @@ def analyze_frame(img, camera):
 
 
 
-    # ทำ mask สีเขียว
+    # -------------------------------
+    # Green mask overlay
+    # -------------------------------
 
-    green_overlay = img.copy()
+    green_overlay = np.zeros_like(img)
 
 
 
@@ -388,51 +398,45 @@ def analyze_frame(img, camera):
 
 
 
+    output = np.where(
 
+        garbage_mask[..., None] == 1,
 
-    blended = cv2.addWeighted(
+        cv2.addWeighted(
 
-        output,
+            output,
 
-        0.65,
+            0.35,
 
-        green_overlay,
+            green_overlay,
 
-        0.35,
+            0.65,
 
-        0
+            0
+
+        ),
+
+        output
 
     )
 
 
 
-    output[
-
-        garbage_mask == 1
-
-    ] = blended[
-
-        garbage_mask == 1
-
-    ]
 
 
-
-
-
-    # ==================================
-    # ROI RED
-    # ==================================
+    # -------------------------------
+    # ROI yellow
+    # -------------------------------
 
     cv2.rectangle(
 
         output,
 
-        (x1, y1),
+        (x1,y1),
 
-        (x2, y2),
+        (x2,y2),
 
-        (0, 0, 255),
+        (0,255,255),
 
         4
 
@@ -442,9 +446,9 @@ def analyze_frame(img, camera):
 
 
 
-    # ==================================
-    # TEXT
-    # ==================================
+    # -------------------------------
+    # Text
+    # -------------------------------
 
     cv2.putText(
 
@@ -452,7 +456,7 @@ def analyze_frame(img, camera):
 
         f"WAR {WAR}%",
 
-        (40, 60),
+        (40,60),
 
         cv2.FONT_HERSHEY_SIMPLEX,
 
@@ -487,6 +491,10 @@ def analyze_frame(img, camera):
 
 
 
+
+    # ==================================
+    # RETURN
+    # ==================================
 
     return {
 
