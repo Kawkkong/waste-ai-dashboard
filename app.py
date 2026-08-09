@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 import pandas as pd
 import plotly.express as px
+from streamlit_plotly_events import plotly_events
 
 from datetime import datetime
 
