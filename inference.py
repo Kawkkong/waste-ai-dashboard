@@ -26,7 +26,7 @@ previous_WAR = {}
 
 
 # ======================================
-# LEVEL
+# DENSITY LEVEL
 # ======================================
 
 def density_level(WAR, threshold):
@@ -54,8 +54,9 @@ def density_level(WAR, threshold):
 
 
 
+
 # ======================================
-# ACTION THAI
+# ACTION
 # ======================================
 
 def recommendation(level):
@@ -65,21 +66,27 @@ def recommendation(level):
         "Normal":
         "ไม่พบขยะ",
 
+
         "Low":
         "เฝ้าระวังพื้นที่",
+
 
         "Medium":
         "เตรียมวางแผนเก็บขยะ",
 
+
         "High":
         "แจ้งเตือนเจ้าหน้าที่",
+
 
         "Critical":
         "แจ้งเตือนด่วนและดำเนินการเก็บขยะทันที"
 
     }
 
+
     return action[level]
+
 
 
 
@@ -102,8 +109,8 @@ def analyze_frame(img, camera):
     cfg = CAMERA_CONFIG[camera]
 
 
-
     x1,y1,x2,y2 = cfg["roi"]
+
 
 
 
@@ -131,7 +138,7 @@ def analyze_frame(img, camera):
 
 
     # ==================================
-    # COMBINE MASK
+    # CREATE MASK
     # ==================================
 
     combined_mask = np.zeros(
@@ -209,6 +216,7 @@ def analyze_frame(img, camera):
 
 
 
+
     garbage_mask = (
 
         combined_mask *
@@ -222,7 +230,7 @@ def analyze_frame(img, camera):
 
 
     # ==================================
-    # WAR
+    # WAR CALCULATION
     # ==================================
 
     garbage_pixels = np.sum(
@@ -327,13 +335,13 @@ def analyze_frame(img, camera):
     # VISUALIZATION
     # ==================================
 
-    # ทำภาพ dim
+    # ทำ background dim
 
-    dim = cv2.convertScaleAbs(
+    dim_background = cv2.convertScaleAbs(
 
         img,
 
-        alpha=0.55,
+        alpha=0.45,
 
         beta=0
 
@@ -341,17 +349,33 @@ def analyze_frame(img, camera):
 
 
 
-    output = dim.copy()
+    output = dim_background.copy()
 
 
 
-    # layer mask สีเขียว
+    # คืนภาพจริงเฉพาะ mask
 
-    mask_layer = img.copy()
+    output[
+
+        garbage_mask == 1
+
+    ] = img[
+
+        garbage_mask == 1
+
+    ]
 
 
 
-    mask_layer[
+
+
+    # overlay สีเขียวเฉพาะ mask
+
+    green_overlay = np.zeros_like(img)
+
+
+
+    green_overlay[
 
         garbage_mask == 1
 
@@ -367,19 +391,25 @@ def analyze_frame(img, camera):
 
 
 
-    # ผสมภาพ
+    output = np.where(
 
-    output = cv2.addWeighted(
+        garbage_mask[..., None] == 1,
 
-        dim,
+        cv2.addWeighted(
 
-        0.65,
+            output,
 
-        mask_layer,
+            0.65,
 
-        0.35,
+            green_overlay,
 
-        0
+            0.35,
+
+            0
+
+        ),
+
+        output
 
     )
 
