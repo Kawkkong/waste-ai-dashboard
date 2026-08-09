@@ -1,8 +1,10 @@
-from ultralytics import YOLO
 import cv2
 import numpy as np
 
+from ultralytics import YOLO
+
 from config import CAMERA_CONFIG
+
 
 
 # ======================================
@@ -14,8 +16,9 @@ MODEL_PATH = "best.pt"
 model = YOLO(MODEL_PATH)
 
 
+
 # ======================================
-# Store Previous WAR
+# STORE PREVIOUS WAR
 # ======================================
 
 previous_WAR = {}
@@ -23,30 +26,36 @@ previous_WAR = {}
 
 
 # ======================================
-# Density Level
+# LEVEL
 # ======================================
 
 def density_level(WAR, threshold):
 
     if WAR == 0:
+
         return "Normal"
 
     elif WAR <= threshold["low"]:
+
         return "Low"
 
     elif WAR <= threshold["medium"]:
+
         return "Medium"
 
     elif WAR <= threshold["high"]:
+
         return "High"
 
     else:
+
         return "Critical"
 
 
 
+
 # ======================================
-# Recommendation
+# THAI ACTION
 # ======================================
 
 def recommendation(level):
@@ -54,23 +63,64 @@ def recommendation(level):
     action = {
 
         "Normal":
-        "No trash",
+        "ไม่พบขยะ",
+
 
         "Low":
-        "Monitor",
+        "เฝ้าระวังพื้นที่",
+
 
         "Medium":
-        "Prepare collection",
+        "เตรียมวางแผนเก็บขยะ",
+
 
         "High":
-        "Notify staff",
+        "แจ้งเตือนเจ้าหน้าที่",
+
 
         "Critical":
-        "Collect immediately"
+        "แจ้งเตือนด่วนและดำเนินการเก็บขยะทันที"
 
     }
 
+
     return action[level]
+
+
+
+
+# ======================================
+# LEVEL DISPLAY
+# ======================================
+
+def level_thai(level):
+
+    data = {
+
+        "Normal":
+        "Normal (ไม่มีขยะ)",
+
+
+        "Low":
+        "Low (ต่ำ)",
+
+
+        "Medium":
+        "Medium (ปานกลาง)",
+
+
+        "High":
+        "High (สูง)",
+
+
+        "Critical":
+        "Critical (วิกฤต)"
+
+    }
+
+
+    return data[level]
+
 
 
 
@@ -80,16 +130,21 @@ def recommendation(level):
 
 def analyze_frame(img, camera):
 
+
     global previous_WAR
+
 
 
     h,w = img.shape[:2]
 
 
+
     cfg = CAMERA_CONFIG[camera]
 
 
+
     x1,y1,x2,y2 = cfg["roi"]
+
 
 
 
@@ -98,23 +153,35 @@ def analyze_frame(img, camera):
     # ==================================
 
     result = model(
+
         img,
+
         imgsz=1280,
+
         conf=0.30,
+
         retina_masks=True,
+
         verbose=False
+
     )[0]
 
 
 
+
+
     # ==================================
-    # FULL MASK
+    # CREATE MASK
     # ==================================
 
     combined_mask = np.zeros(
+
         (h,w),
+
         dtype=np.uint8
+
     )
+
 
 
     detected = 0
@@ -126,6 +193,7 @@ def analyze_frame(img, camera):
 
         masks = result.masks.data.cpu().numpy()
 
+
         detected = len(masks)
 
 
@@ -135,16 +203,26 @@ def analyze_frame(img, camera):
 
             if mask.shape != (h,w):
 
+
                 mask = cv2.resize(
+
                     mask,
+
                     (w,h),
+
                     interpolation=cv2.INTER_NEAREST
+
                 )
 
 
+
             combined_mask[
+
                 mask > 0.5
+
             ] = 1
+
+
 
 
 
@@ -153,24 +231,35 @@ def analyze_frame(img, camera):
     # ==================================
 
     roi_mask = np.zeros(
+
         (h,w),
+
         dtype=np.uint8
+
     )
 
 
     roi_mask[
+
         y1:y2,
+
         x1:x2
+
     ] = 1
 
 
 
-    # ใช้เฉพาะขยะใน ROI คำนวณ WAR
+
 
     roi_garbage = (
+
         combined_mask *
+
         roi_mask
+
     )
+
+
 
 
 
@@ -179,12 +268,16 @@ def analyze_frame(img, camera):
     # ==================================
 
     garbage_pixels = np.sum(
+
         roi_garbage
+
     )
 
 
     roi_pixels = np.sum(
+
         roi_mask
+
     )
 
 
@@ -192,8 +285,11 @@ def analyze_frame(img, camera):
     if roi_pixels > 0:
 
         WAR = (
+
             garbage_pixels /
+
             roi_pixels
+
         ) * 100
 
     else:
@@ -202,26 +298,38 @@ def analyze_frame(img, camera):
 
 
 
+
     WAR = round(
+
         float(WAR),
+
         2
+
     )
 
 
 
+
+
     # ==================================
-    # Change
+    # CHANGE
     # ==================================
 
     change = 0
 
 
+
     if camera in previous_WAR:
 
+
         change = (
+
             WAR -
+
             previous_WAR[camera]
+
         )
+
 
 
     previous_WAR[camera] = WAR
@@ -229,131 +337,187 @@ def analyze_frame(img, camera):
 
 
     change = round(
+
         float(change),
+
         2
+
     )
 
 
 
-    if change > 0:
-
-        trend = f"Increase +{change}%"
-
-    elif change < 0:
-
-        trend = f"Decrease {change}%"
-
-    else:
-
-        trend = "No change"
-
 
 
     # ==================================
-    # Density
+    # LEVEL
     # ==================================
 
     level = density_level(
+
         WAR,
+
         cfg["threshold"]
+
     )
 
 
 
+
+
     # ==================================
-    # Visualization
+    # VISUALIZATION
     # ==================================
 
-    # dim background
-
-    dark = (
-        img * 0.35
-    ).astype(np.uint8)
+    output = img.copy()
 
 
-
-    output = dark.copy()
+    overlay = img.copy()
 
 
 
-    # mask เขียว
+    # สีเขียวสำหรับ mask
 
-    output[
+    overlay[
+
         roi_garbage == 1
+
     ] = (
+
         0,
+
         255,
+
         0
+
     )
 
 
-
-    # blend
 
     output = cv2.addWeighted(
-        dark,
-        0.5,
-        output,
-        0.5,
+
+        img,
+
+        0.6,
+
+        overlay,
+
+        0.4,
+
         0
+
     )
 
 
 
-    # ROI สีเหลือง
+
+
+    # ROI
 
     cv2.rectangle(
+
         output,
+
         (x1,y1),
+
         (x2,y2),
-        (0,255,255),
+
+        (255,255,0),
+
         3
+
     )
 
 
 
+
+
     cv2.putText(
+
         output,
+
         f"WAR {WAR}%",
-        (30,50),
+
+        (40,60),
+
         cv2.FONT_HERSHEY_SIMPLEX,
-        1.2,
+
+        1.5,
+
         (255,255,255),
-        2
+
+        3
+
     )
 
 
 
     cv2.putText(
+
         output,
+
         level,
-        (30,100),
+
+        (40,120),
+
         cv2.FONT_HERSHEY_SIMPLEX,
-        1.2,
+
+        1.5,
+
         (0,255,255),
-        2
+
+        3
+
     )
+
+
 
 
 
     return {
 
-        "image": output,
 
-        "mask": roi_garbage,
+        "image":
 
-        "WAR": WAR,
+        output,
 
-        "change": change,
 
-        "trend": trend,
+        "mask":
 
-        "level": level,
+        roi_garbage,
 
-        "action": recommendation(level),
 
-        "camera": camera,
+        "WAR":
 
-        "detected": detected
+        WAR,
+
+
+        "change":
+
+        change,
+
+
+        "level":
+
+        level,
+
+
+        "level_th":
+
+        level_thai(level),
+
+
+        "action":
+
+        recommendation(level),
+
+
+        "camera":
+
+        camera,
+
+
+        "detected":
+
+        detected
 
     }
