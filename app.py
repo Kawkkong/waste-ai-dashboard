@@ -178,43 +178,31 @@ html, body, [class*="css"], [data-testid="stAppViewContainer"],
 [data-testid="stAppViewContainer"] { font-size: 14px; }
 [data-testid="stMarkdownContainer"] p, [data-testid="stMarkdownContainer"] li { line-height: 1.55; }
 
-.collection-section {
-    margin-top: 28px; padding: 20px 18px 24px; border-radius: 18px;
-    background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
-    border: 1px solid #d9e1ea; overflow: hidden;
+ .collection-section {
+    margin-top: 30px; padding: 22px 18px 26px; border-radius: 18px;
+    background: linear-gradient(180deg,#f8fafc 0%,#eef2f7 100%);
+    border: 1px solid #d9e1ea; overflow:hidden;
 }
 .collection-title { text-align:center; font-size:22px; font-weight:700; color:#26364a; margin-bottom:4px; }
-.collection-subtitle { text-align:center; color:#667085; font-size:13px; margin-bottom:18px; }
-.collection-road {
-    position:relative; height:92px; margin:0 10px 18px; border-radius:18px;
-    background:linear-gradient(180deg,#4b5563 0%,#374151 100%);
-    box-shadow:inset 0 4px 10px rgba(0,0,0,.18); overflow:hidden;
-}
-.collection-road::before {
-    content:''; position:absolute; left:0; right:0; top:50%; height:5px; transform:translateY(-50%);
-    background:repeating-linear-gradient(90deg,#f8fafc 0 42px,transparent 42px 72px); opacity:.85;
-}
-.collection-truck {
-    position:absolute; top:23px; left:2%; font-size:40px; z-index:3;
-    filter:drop-shadow(0 4px 3px rgba(0,0,0,.25)); animation:collectionDrive 8s ease-in-out infinite;
-}
-@keyframes collectionDrive {
-    0% { left:2%; transform:translateX(0); }
-    45% { left:72%; transform:translateX(-50%); }
-    55% { left:72%; transform:translateX(-50%); }
-    100% { left:2%; transform:translateX(0); }
-}
-.collection-stops { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px; }
+.collection-subtitle { text-align:center; color:#667085; font-size:13px; margin-bottom:16px; }
+.collection-road { position:relative; height:118px; margin:0 12px 18px; border-radius:20px; background:linear-gradient(180deg,#4b5563 0%,#374151 100%); box-shadow:inset 0 5px 12px rgba(0,0,0,.20); overflow:hidden; }
+.collection-road::before { content:''; position:absolute; left:0; right:0; top:57%; height:5px; transform:translateY(-50%); background:repeating-linear-gradient(90deg,#f8fafc 0 42px,transparent 42px 72px); opacity:.9; }
+.collection-road::after { content:'→  เส้นทางการจัดเก็บขยะ  →'; position:absolute; left:50%; bottom:9px; transform:translateX(-50%); color:rgba(255,255,255,.82); font-size:12px; font-weight:600; white-space:nowrap; }
+.collection-truck { position:absolute; top:26px; left:1.5%; font-size:38px; z-index:5; filter:drop-shadow(0 4px 3px rgba(0,0,0,.28)); animation:collectionDriveOneWay 10s linear infinite; }
+@keyframes collectionDriveOneWay { 0% { left:1.5%; transform:translateX(0); } 100% { left:96%; transform:translateX(-100%); } }
+.collection-checkpoints { position:absolute; left:3%; right:3%; top:35px; height:45px; z-index:2; display:flex; align-items:center; justify-content:space-between; }
+.collection-checkpoint { position:relative; width:28px; height:28px; border-radius:50%; border:4px solid #fff; box-shadow:0 2px 7px rgba(0,0,0,.28); }
+.collection-checkpoint-label { position:absolute; top:32px; left:50%; transform:translateX(-50%); color:#fff; font-size:11px; font-weight:700; white-space:nowrap; text-shadow:0 1px 2px rgba(0,0,0,.65); }
+.collection-arrow { position:absolute; top:47px; left:0; right:0; text-align:center; color:#fff; font-size:22px; opacity:.9; }
+.collection-stops { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:10px; }
 .collection-stop { position:relative; background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:11px 12px; box-shadow:0 2px 8px rgba(15,23,42,.05); }
-.collection-rank {
-    position:absolute; top:9px; right:10px; width:26px; height:26px; border-radius:50%;
-    display:flex; align-items:center; justify-content:center; color:white; font-weight:700; font-size:12px;
-}
-.collection-camera { font-size:14px; font-weight:700; color:#1f2937; padding-right:30px; }
+.collection-rank { position:absolute; top:9px; right:10px; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-weight:700; font-size:12px; }
+.collection-camera { font-size:14px; font-weight:700; color:#1f2937; padding-right:34px; }
 .collection-war { font-size:20px; font-weight:700; color:#111827; margin-top:5px; }
 .collection-level { font-size:12px; color:#667085; margin-top:2px; }
+.collection-detail { font-size:11px; color:#7a8492; margin-top:6px; line-height:1.5; }
 .collection-note { margin-top:14px; text-align:center; font-size:12px; color:#667085; }
-
+.collection-rule { margin:10px auto 18px; max-width:720px; text-align:center; font-size:12px; color:#475467; background:#fff; border:1px solid #e4e7ec; border-radius:10px; padding:9px 12px; }
 </style>
 
 
@@ -952,32 +940,90 @@ for cam, data in st.session_state.camera_results.items():
 
 st.divider()
 
+LEVEL_ORDER = {
+    "Normal": 0,
+    "Low": 1,
+    "Medium": 2,
+    "High": 3,
+    "Critical": 4,
+}
+
 collection_priority = []
+reference_roi_area = 0
 
 for cam, data in st.session_state.camera_results.items():
     result = data.get("result", {})
-    if "WAR" in result:
-        collection_priority.append({
-            "camera": cam,
-            "WAR": float(result.get("WAR", 0)),
-            "level": result.get("level", "Normal")
-        })
+    cfg = CAMERA_CONFIG.get(cam, {})
+    roi = cfg.get("roi", (0, 0, 0, 0))
 
-collection_priority.sort(key=lambda item: item["WAR"], reverse=True)
+    try:
+        x1, y1, x2, y2 = [int(v) for v in roi]
+        roi_area = max(0, x2 - x1) * max(0, y2 - y1)
+    except (TypeError, ValueError):
+        roi_area = 0
 
-section_html = """
-<section class="collection-section">
-    <div class="collection-title">🚛 ลำดับการจัดเก็บขยะ</div>
-    <div class="collection-subtitle">เรียงลำดับจากค่า WAR สูงที่สุด → ต่ำที่สุด เพื่อช่วยวางแผนเส้นทางการเก็บขยะ</div>
-    <div class="collection-road"><div class="collection-truck">🚛</div></div>
-</section>
-"""
+    garbage_mask = result.get("mask")
+    garbage_pixels = int(np.sum(np.asarray(garbage_mask) > 0)) if garbage_mask is not None else 0
 
-st.markdown(section_html, unsafe_allow_html=True)
+    level = result.get("level", "Normal")
+    war = float(result.get("WAR", 0))
+    reference_roi_area = max(reference_roi_area, roi_area)
+
+    collection_priority.append({
+        "camera": cam,
+        "WAR": war,
+        "level": level,
+        "level_rank": LEVEL_ORDER.get(level, 0),
+        "roi_area": roi_area,
+        "garbage_pixels": garbage_pixels,
+    })
+
+for item in collection_priority:
+    if item["roi_area"] > 0 and reference_roi_area > 0:
+        item["normalized_garbage_pixels"] = item["garbage_pixels"] * reference_roi_area / item["roi_area"]
+    else:
+        item["normalized_garbage_pixels"] = 0.0
+
+collection_priority.sort(
+    key=lambda item: (item["level_rank"], item["normalized_garbage_pixels"]),
+    reverse=True
+)
+
+st.markdown(
+    """
+    <section class="collection-section">
+        <div class="collection-title">🚛 ลำดับการจัดเก็บขยะ</div>
+        <div class="collection-subtitle">รถเก็บขยะเดินทางทางเดียวจากจุดที่ควรจัดเก็บก่อน → จุดที่ควรจัดเก็บภายหลัง</div>
+    """,
+    unsafe_allow_html=True
+)
 
 if len(collection_priority) == 0:
     st.info("ยังไม่มีข้อมูลจากกล้องสำหรับจัดลำดับการจัดเก็บขยะ")
 else:
+    checkpoint_html = []
+    for rank, item in enumerate(collection_priority, start=1):
+        info = LEVEL_INFO.get(item["level"], LEVEL_INFO["Normal"])
+        checkpoint_html.append(
+            f'<div class="collection-checkpoint" style="background:{info["color"]};">'
+            f'<span class="collection-checkpoint-label">{rank}. {item["camera"]}</span>'
+            f'</div>'
+        )
+
+    road_html = (
+        '<div class="collection-road">'
+        '<div class="collection-checkpoints">' + ''.join(checkpoint_html) + '</div>'
+        '<div class="collection-arrow">→</div>'
+        '<div class="collection-truck">🚛</div>'
+        '</div>'
+    )
+    st.markdown(road_html, unsafe_allow_html=True)
+
+    st.markdown(
+        f'<div class="collection-rule"><b>หลักการจัดลำดับ:</b> ระดับความหนาแน่น → ถ้าระดับเท่ากันจึงเทียบพิกเซลขยะหลังปรับ ROI ให้มีพื้นที่อ้างอิงเท่ากัน<br>พื้นที่ ROI อ้างอิง = <b>{reference_roi_area:,} px</b></div>',
+        unsafe_allow_html=True
+    )
+
     cards = []
     for rank, item in enumerate(collection_priority, start=1):
         info = LEVEL_INFO.get(item["level"], LEVEL_INFO["Normal"])
@@ -985,18 +1031,14 @@ else:
             f'<div class="collection-stop">'
             f'<div class="collection-rank" style="background:{info["color"]};">{rank}</div>'
             f'<div class="collection-camera">📷 {item["camera"]}</div>'
-            f'<div class="collection-war">{item["WAR"]:.2f}%</div>'
+            f'<div class="collection-war">WAR {item["WAR"]:.2f}%</div>'
             f'<div class="collection-level">{info["name"]}</div>'
+            f'<div class="collection-detail">ขยะจริง: {item["garbage_pixels"]:,} px<br>ROI: {item["roi_area"]:,} px<br>ขยะเทียบ ROI อ้างอิง: {item["normalized_garbage_pixels"]:,.1f} px</div>'
             f'</div>'
         )
 
-    st.markdown(
-        '<div class="collection-stops">' + ''.join(cards) + '</div>',
-        unsafe_allow_html=True
-    )
+    st.markdown('<div class="collection-stops">' + ''.join(cards) + '</div>', unsafe_allow_html=True)
+    st.markdown('<div class="collection-note">อันดับ 1 คือ checkpoint แรกของเส้นทาง และรถจะวิ่งต่อไปตามลำดับจนถึง checkpoint สุดท้าย</div>', unsafe_allow_html=True)
 
-    st.markdown(
-        '<div class="collection-note">อันดับ 1 คือจุดที่มีพื้นที่ขยะสูงที่สุดและควรพิจารณาเข้าจัดเก็บก่อน</div>',
-        unsafe_allow_html=True
-    )
+st.markdown('</section>', unsafe_allow_html=True)
 
