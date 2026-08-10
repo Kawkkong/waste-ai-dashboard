@@ -168,15 +168,18 @@ font-size:12px;
 
 }
 
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap');
 
 html, body, [class*="css"], [data-testid="stAppViewContainer"],
-[data-testid="stHeader"], [data-testid="stSidebar"] {
-    font-family: 'Noto Sans Thai', 'Sarabun', Tahoma, sans-serif !important;
+[data-testid="stHeader"], [data-testid="stSidebar"],
+button, input, textarea, select {
+    font-family: 'IBM Plex Sans Thai', 'Noto Sans Thai', Tahoma, sans-serif !important;
 }
 
 [data-testid="stAppViewContainer"] { font-size: 14px; }
 [data-testid="stMarkdownContainer"] p, [data-testid="stMarkdownContainer"] li { line-height: 1.55; }
+[data-testid="stMetricValue"] { font-family: 'IBM Plex Sans Thai', 'Noto Sans Thai', Tahoma, sans-serif !important; }
+[data-testid="stMetricLabel"] { font-family: 'IBM Plex Sans Thai', 'Noto Sans Thai', Tahoma, sans-serif !important; }
 
  .collection-section {
     margin-top: 30px; padding: 22px 18px 26px; border-radius: 18px;
@@ -985,7 +988,7 @@ for item in collection_priority:
         item["normalized_garbage_pixels"] = 0.0
 
 collection_priority.sort(
-    key=lambda item: (item["level_rank"], item["normalized_garbage_pixels"]),
+    key=lambda item: (item["normalized_garbage_pixels"], item["level_rank"]),
     reverse=True
 )
 
@@ -1020,7 +1023,7 @@ else:
     st.markdown(road_html, unsafe_allow_html=True)
 
     st.markdown(
-        f'<div class="collection-rule"><b>หลักการจัดลำดับ:</b> ระดับความหนาแน่น → ถ้าระดับเท่ากันจึงเทียบพิกเซลขยะหลังปรับ ROI ให้มีพื้นที่อ้างอิงเท่ากัน<br>พื้นที่ ROI อ้างอิง = <b>{reference_roi_area:,} px</b></div>',
+        f'<div class="collection-rule"><b>หลักการจัดลำดับ:</b> พื้นที่ขยะหลังปรับ ROI เป็นตัวหลัก → หากมีค่าใกล้เคียงกันจึงใช้ระดับความหนาแน่นเป็นตัวช่วยตัดสิน<br>พื้นที่ ROI อ้างอิง = <b>{reference_roi_area:,} px</b></div>',
         unsafe_allow_html=True
     )
 
