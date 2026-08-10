@@ -456,7 +456,7 @@ section[data-testid="stSidebar"] { border-right: 1px solid #e7ebf0; }
 /* Collection */
 .collection-section {
     margin-top: 10px;
-    padding: 20px 18px 19px;
+    padding: 18px 16px 17px;
     border-radius: 18px;
     background: linear-gradient(180deg,#f8fafc 0%,#f1f5f9 100%);
     border: 1px solid #dfe6ee;
@@ -481,7 +481,7 @@ section[data-testid="stSidebar"] { border-right: 1px solid #e7ebf0; }
 
 .collection-road {
     position: relative;
-    height: 112px;
+    height: 106px;
     margin: 0 8px 16px;
     border-radius: 18px;
     background: linear-gradient(180deg,#4b5563 0%,#364152 100%);
@@ -636,6 +636,78 @@ section[data-testid="stSidebar"] { border-right: 1px solid #e7ebf0; }
     .collection-checkpoint-label { font-size:9px; }
 }
 
+/* Modern dashboard header */
+.app-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 58px;
+}
+
+.app-brand-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #eef4fb, #f7f9fc);
+    border: 1px solid #dbe5f0;
+    box-shadow: 0 5px 16px rgba(49,91,138,.08);
+    font-size: 23px;
+}
+
+.app-title {
+    font-size: 28px;
+    line-height: 1.2;
+    font-weight: 700;
+    letter-spacing: -.025em;
+    color: #172033;
+}
+
+.app-subtitle {
+    margin-top: 4px;
+    color: #718096;
+    font-size: 12px;
+}
+
+.header-divider {
+    height: 1px;
+    margin: 15px 0 20px;
+    background: linear-gradient(90deg, transparent, #e5eaf1 10%, #e5eaf1 90%, transparent);
+}
+
+/* Soft interactive lift */
+.collection-stop {
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+
+.collection-stop:hover {
+    transform: translateY(-2px);
+    border-color: #cbd8e8;
+    box-shadow: 0 8px 20px rgba(15,23,42,.08);
+}
+
+[data-testid="stMetric"] {
+    transition: transform .18s ease, box-shadow .18s ease;
+}
+
+[data-testid="stMetric"]:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(15,23,42,.07);
+}
+
+[data-testid="stPopover"] > div {
+    border-radius: 12px !important;
+}
+
+/* Make the truck face right without reversing its travel animation */
+.collection-truck span {
+    display: inline-block;
+    transform: scaleX(-1);
+    transform-origin: center;
+}
+
 </style>
 """,
 
@@ -742,16 +814,6 @@ def restore_camera_default(camera, restore_roi=True, restore_threshold=True):
     CAMERA_CONFIG.update(
         copy.deepcopy(new_config)
     )
-
-
-# =====================================================
-# ปุ่มฟันเฟือง
-# =====================================================
-
-settings_col1, settings_col2 = st.columns([12, 1])
-with settings_col2:
-    if st.button("⚙️", key="open_settings", help="ตั้งค่า ROI และเกณฑ์ระดับความหนาแน่น"):
-        st.session_state.show_settings = not st.session_state.show_settings
 
 
 if st.session_state.show_settings:
@@ -878,20 +940,63 @@ if st.session_state.show_settings:
 
 
 # =====================================================
-# TITLE
+# HEADER
 # =====================================================
 
-st.title(
-
-"🗑 ระบบตรวจสอบปริมาณขยะด้วย AI"
-
+header_left, header_settings, header_help = st.columns(
+    [0.82, 0.09, 0.09],
+    vertical_alignment="center"
 )
 
+with header_left:
+    st.markdown(
+        '<div class="app-brand">'
+        '<div class="app-brand-icon">🗑️</div>'
+        '<div>'
+        '<div class="app-title">ระบบตรวจสอบปริมาณขยะด้วย AI</div>'
+        '<div class="app-subtitle">YOLOv11-Seg · Waste Area Ratio (WAR)</div>'
+        '</div>'
+        '</div>',
+        unsafe_allow_html=True
+    )
 
-st.caption(
+with header_settings:
+    if st.button(
+        "⚙️",
+        key="header_settings",
+        help="ตั้งค่า ROI และเกณฑ์ระดับความหนาแน่น"
+    ):
+        st.session_state.show_settings = not st.session_state.show_settings
+        st.rerun()
 
-"YOLOv11-Seg + Waste Area Ratio (WAR)"
+with header_help:
+    with st.popover("❔", use_container_width=False):
+        st.markdown("### วิธีใช้งานระบบ")
+        st.markdown(
+            "**1. อัปโหลดภาพ**  \n"
+            "เลือกภาพจากกล้อง CCTV ในแถบด้านซ้าย"
+        )
+        st.markdown(
+            "**2. ตรวจผล AI**  \n"
+            "ระบบจะแสดง ROI, Mask, WAR, ระดับขยะ และคำแนะนำ"
+        )
+        st.markdown(
+            "**3. ดูประวัติ**  \n"
+            "เปิดรายการ History เพื่อดูผลของแต่ละครั้ง"
+        )
+        st.markdown(
+            "**4. ดูกราฟ WAR**  \n"
+            "ใช้กราฟติดตามแนวโน้มของแต่ละกล้อง"
+        )
+        st.markdown(
+            "**5. ตั้งค่า**  \n"
+            "กด ⚙️ เพื่อปรับ ROI และ Threshold ได้ตามกล้อง"
+        )
+        st.caption("คำแนะนำ: ตั้ง ROI ให้ครอบคลุมเฉพาะพื้นที่ที่ต้องการวัด")
 
+st.markdown(
+    '<div class="header-divider"></div>',
+    unsafe_allow_html=True
 )
 # =====================================================
 # UPLOAD CCTV IMAGE
@@ -1626,7 +1731,7 @@ else:
         '<div class="collection-road">'
         '<div class="collection-checkpoints">' + ''.join(checkpoint_html) + '</div>'
         '<div class="collection-arrow">→</div>'
-        '<div class="collection-truck">🚛</div>'
+        '<div class="collection-truck"><span>🚛</span></div>'
         '</div>'
     )
     st.markdown(road_html, unsafe_allow_html=True)
