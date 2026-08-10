@@ -443,26 +443,10 @@ for cam, data in st.session_state.camera_results.items():
     # =========================
 
     st.markdown(
-
-        f"""
-
-        <div class="level-box"
-
-        style="background-color:{info['color']};">
-
-
-        ระดับความหนาแน่นของขยะ<br>
-
-        {info['name']}
-
-
-        </div>
-
-
-        """,
-
+        f'<div style="background-color:{info["color"]}; padding:8px 12px; border-radius:8px; font-size:14px; font-weight:600; margin-bottom:6px;">'
+        f'ระดับความหนาแน่นของขยะ<br>{info["name"]}'
+        f'</div>',
         unsafe_allow_html=True
-
     )
 
 
@@ -816,24 +800,10 @@ for cam, data in st.session_state.camera_results.items():
                 # -------------------------
 
                 st.markdown(
-
-                    f"""
-
-                    <div class="level-box"
-
-                    style="background-color:{history_info['color']};">
-
-
-                    {history_info['name']}
-
-
-                    </div>
-
-
-                    """,
-
+                    f'<div style="background-color:{history_info["color"]}; padding:8px 12px; border-radius:8px; font-size:14px; font-weight:600; margin-bottom:6px;">'
+                    f'{history_info["name"]}'
+                    f'</div>',
                     unsafe_allow_html=True
-
                 )
 
 
