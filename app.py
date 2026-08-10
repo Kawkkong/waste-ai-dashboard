@@ -5,6 +5,8 @@ import pandas as pd
 import plotly.express as px
 import streamlit.components.v1 as components
 import base64
+import copy
+import inference as inference_module
 
 from datetime import datetime
 
@@ -321,7 +323,6 @@ LEVEL_INFO = {
 
 
 
-
 # =====================================================
 # CSS SMALL UI
 # =====================================================
@@ -481,6 +482,126 @@ for cam in CAMERA_CONFIG:
 
 
 
+# =====================================================
+# การตั้งค่า ROI และ Threshold จากหน้าเว็บ
+# =====================================================
+
+if "show_settings" not in st.session_state:
+    st.session_state.show_settings = False
+
+# ค่าเริ่มต้นของ ROI และ Threshold จะอ่านจาก config.py โดยตรง
+# ดังนั้นเมื่อเปิด session ใหม่ หน้าเว็บจะใช้ค่าที่กำหนดไว้ใน config.py เป็น default
+if "default_camera_config" not in st.session_state:
+    st.session_state.default_camera_config = copy.deepcopy(CAMERA_CONFIG)
+
+if "runtime_camera_config" not in st.session_state:
+    st.session_state.runtime_camera_config = copy.deepcopy(
+        st.session_state.default_camera_config
+    )
+else:
+    CAMERA_CONFIG.clear()
+    CAMERA_CONFIG.update(
+        copy.deepcopy(st.session_state.runtime_camera_config)
+    )
+
+
+def save_camera_config(camera, roi, thresholds):
+    new_config = copy.deepcopy(st.session_state.runtime_camera_config)
+    if camera not in new_config:
+        new_config[camera] = {}
+    new_config[camera]["roi"] = tuple(int(v) for v in roi)
+    new_config[camera]["threshold"] = {
+        "low": float(thresholds["low"]),
+        "medium": float(thresholds["medium"]),
+        "high": float(thresholds["high"]),
+    }
+    st.session_state.runtime_camera_config = new_config
+    CAMERA_CONFIG.clear()
+    CAMERA_CONFIG.update(copy.deepcopy(new_config))
+
+
+# =====================================================
+# ปุ่มฟันเฟือง
+# =====================================================
+
+settings_col1, settings_col2 = st.columns([12, 1])
+with settings_col2:
+    if st.button("⚙️", key="open_settings", help="ตั้งค่า ROI และเกณฑ์ระดับความหนาแน่น"):
+        st.session_state.show_settings = not st.session_state.show_settings
+
+
+if st.session_state.show_settings:
+    st.markdown("### ⚙️ ตั้งค่า ROI และระดับความหนาแน่น")
+    st.caption("แก้ค่าแยกตามกล้องได้จากหน้านี้ ค่าใหม่จะใช้กับการวิเคราะห์ครั้งถัดไป")
+
+    setting_camera = st.selectbox("เลือกกล้อง", list(CAMERA_CONFIG.keys()), key="setting_camera")
+    cfg = CAMERA_CONFIG[setting_camera]
+    current_roi = cfg["roi"]
+    current_threshold = cfg["threshold"]
+
+    if setting_camera in st.session_state.camera_results:
+        setting_img = st.session_state.camera_results[setting_camera].get("original")
+        if setting_img is not None:
+            image_h, image_w = setting_img.shape[:2]
+        else:
+            image_w = max(int(current_roi[2]), 1000)
+            image_h = max(int(current_roi[3]), 1000)
+    else:
+        image_w = max(int(current_roi[2]), 1000)
+        image_h = max(int(current_roi[3]), 1000)
+
+    r1, r2, r3, r4 = st.columns(4)
+    with r1:
+        new_x1 = st.number_input("X1", min_value=0, max_value=max(0, image_w - 1), value=min(max(0, int(current_roi[0])), max(0, image_w - 1)), step=1, key=f"roi_x1_{setting_camera}")
+    with r2:
+        new_y1 = st.number_input("Y1", min_value=0, max_value=max(0, image_h - 1), value=min(max(0, int(current_roi[1])), max(0, image_h - 1)), step=1, key=f"roi_y1_{setting_camera}")
+    with r3:
+        new_x2 = st.number_input("X2", min_value=1, max_value=max(1, image_w), value=min(max(1, int(current_roi[2])), max(1, image_w)), step=1, key=f"roi_x2_{setting_camera}")
+    with r4:
+        new_y2 = st.number_input("Y2", min_value=1, max_value=max(1, image_h), value=min(max(1, int(current_roi[3])), max(1, image_h)), step=1, key=f"roi_y2_{setting_camera}")
+
+    st.markdown("**เกณฑ์ระดับความหนาแน่น (%)**")
+    t1, t2, t3 = st.columns(3)
+    with t1:
+        new_low = st.number_input("Low ถึง", min_value=0.0, max_value=100.0, value=float(current_threshold["low"]), step=0.1, key=f"threshold_low_{setting_camera}")
+    with t2:
+        new_medium = st.number_input("Medium ถึง", min_value=0.0, max_value=100.0, value=float(current_threshold["medium"]), step=0.1, key=f"threshold_medium_{setting_camera}")
+    with t3:
+        new_high = st.number_input("High ถึง", min_value=0.0, max_value=100.0, value=float(current_threshold["high"]), step=0.1, key=f"threshold_high_{setting_camera}")
+
+    st.caption("Normal = 0% | Low ≤ Low | Medium ≤ Medium | High ≤ High | Critical > High")
+
+    apply_current = st.checkbox("วิเคราะห์ภาพล่าสุดของกล้องนี้ใหม่ทันทีหลังบันทึก", value=False, key=f"reanalyze_{setting_camera}")
+
+    save_col, close_col = st.columns(2)
+    with save_col:
+        if st.button("💾 บันทึกการตั้งค่า", type="primary", use_container_width=True, key="save_camera_config"):
+            if not (new_x1 < new_x2 and new_y1 < new_y2):
+                st.error("ROI ไม่ถูกต้อง: ต้องให้ X1 < X2 และ Y1 < Y2")
+            elif not (new_low < new_medium < new_high):
+                st.error("Threshold ต้องเรียงจากน้อยไปมาก: Low < Medium < High")
+            else:
+                save_camera_config(setting_camera, (new_x1, new_y1, new_x2, new_y2), {"low": new_low, "medium": new_medium, "high": new_high})
+                if apply_current and setting_camera in st.session_state.camera_results:
+                    current_img = st.session_state.camera_results[setting_camera]["original"]
+                    inference_module.previous_WAR.pop(setting_camera, None)
+                    refreshed = analyze_frame(current_img, setting_camera)
+                    st.session_state.camera_results[setting_camera]["result"] = refreshed
+                    st.session_state.camera_results[setting_camera]["config_roi"] = tuple(CAMERA_CONFIG[setting_camera].get("roi", (0, 0, 0, 0)))
+                    st.session_state.camera_results[setting_camera]["config_threshold"] = dict(CAMERA_CONFIG[setting_camera].get("threshold", {}))
+                st.session_state.show_settings = True
+                st.rerun()
+    with close_col:
+        if st.button("✕ ปิดการตั้งค่า", use_container_width=True, key="close_camera_config"):
+            st.session_state.show_settings = False
+            st.rerun()
+
+    st.divider()
+
+
+
+
+
 
 
 # =====================================================
@@ -595,23 +716,11 @@ for cam in CAMERA_CONFIG:
 
 
             st.session_state.camera_results[cam] = {
-
-
-                "file_id":
-
-                file_id,
-
-
-                "original":
-
-                img,
-
-
-                "result":
-
-                result
-
-
+                "file_id": file_id,
+                "original": img,
+                "result": result,
+                "config_roi": tuple(CAMERA_CONFIG[cam].get("roi", (0, 0, 0, 0))),
+                "config_threshold": dict(CAMERA_CONFIG[cam].get("threshold", {})),
             }
 
 
@@ -1142,7 +1251,7 @@ reference_roi_area = 0
 for cam, data in st.session_state.camera_results.items():
     result = data.get("result", {})
     cfg = CAMERA_CONFIG.get(cam, {})
-    roi = cfg.get("roi", (0, 0, 0, 0))
+    roi = data.get("config_roi", cfg.get("roi", (0, 0, 0, 0)))
 
     try:
         x1, y1, x2, y2 = [int(v) for v in roi]
