@@ -18,83 +18,108 @@ from config import CAMERA_CONFIG
 # FULLSCREEN IMAGE VIEWER
 # =====================================================
 
-def show_image_viewer(img_bgr, title="", display_width=400, viewer_height=330):
+def show_image_viewer(img_bgr, title="", display_width=400, viewer_height=300):
     """
-    แสดงภาพขนาดพอดี และมีปุ่ม/คลิกเพื่อเปิดภาพเต็มหน้าจอจริง
-    ใช้ Browser Fullscreen API ภายใน Streamlit component
+    แสดงภาพตามสัดส่วนจริง ไม่มีแถบดำบน-ล่าง
+    และสามารถเปิดภาพเต็มหน้าจอด้วย Fullscreen API
     """
     if img_bgr is None:
         return
 
-    ok, encoded = cv2.imencode(".jpg", img_bgr, [cv2.IMWRITE_JPEG_QUALITY, 92])
+    h, w = img_bgr.shape[:2]
+
+    if w <= 0 or h <= 0:
+        return
+
+    ok, encoded = cv2.imencode(
+        ".jpg",
+        img_bgr,
+        [cv2.IMWRITE_JPEG_QUALITY, 92]
+    )
 
     if not ok:
         st.error("ไม่สามารถแสดงภาพได้")
         return
 
-    image_b64 = base64.b64encode(encoded.tobytes()).decode("utf-8")
+    image_b64 = base64.b64encode(
+        encoded.tobytes()
+    ).decode("utf-8")
+
+    # ความสูงของภาพตาม aspect ratio จริง
+    aspect_height = int(display_width * h / w)
 
     html = f"""
     <!DOCTYPE html>
     <html>
     <head>
         <meta charset="UTF-8">
+
         <style>
             * {{
                 box-sizing: border-box;
             }}
 
-            body {{
+            html, body {{
                 margin: 0;
                 padding: 0;
+                width: 100%;
                 background: transparent;
-                font-family: "IBM Plex Sans Thai", "Noto Sans Thai", Arial, sans-serif;
                 overflow: hidden;
+            }}
+
+            body {{
+                font-family:
+                    "IBM Plex Sans Thai",
+                    "Noto Sans Thai",
+                    Arial,
+                    sans-serif;
             }}
 
             .viewer {{
                 position: relative;
                 width: min(100%, {display_width}px);
-                height: {viewer_height}px;
+                aspect-ratio: {w} / {h};
                 margin: 0 auto;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                background: #111827;
-                border-radius: 10px;
                 overflow: hidden;
+                background: transparent;
+                border-radius: 8px;
                 cursor: zoom-in;
             }}
 
             .viewer img {{
+                display: block;
                 width: 100%;
                 height: 100%;
-                object-fit: contain;
-                display: block;
+                object-fit: cover;
+                object-position: center;
             }}
 
             .zoom-btn {{
                 position: absolute;
-                right: 10px;
-                top: 10px;
+                top: 8px;
+                right: 8px;
                 z-index: 10;
+
                 border: 0;
-                border-radius: 8px;
-                padding: 7px 10px;
-                background: rgba(0,0,0,.65);
+                border-radius: 7px;
+
+                padding: 6px 9px;
+
+                background: rgba(0, 0, 0, 0.65);
                 color: white;
-                font-size: 14px;
+
+                font-size: 13px;
                 cursor: pointer;
-                backdrop-filter: blur(4px);
             }}
 
             .zoom-btn:hover {{
-                background: rgba(0,0,0,.85);
+                background: rgba(0, 0, 0, 0.85);
             }}
 
             .viewer:fullscreen {{
                 width: 100vw;
                 height: 100vh;
+                aspect-ratio: auto;
                 max-width: none;
                 border-radius: 0;
                 background: #000;
@@ -102,59 +127,117 @@ def show_image_viewer(img_bgr, title="", display_width=400, viewer_height=330):
             }}
 
             .viewer:fullscreen img {{
-                object-fit: contain;
                 width: 100vw;
                 height: 100vh;
+                object-fit: contain;
             }}
         </style>
     </head>
 
     <body>
-        <div class="viewer" id="viewer" title="คลิกเพื่อขยายเต็มหน้าจอ">
-            <button class="zoom-btn" id="zoom">⛶ ขยายภาพ</button>
-            <img src="data:image/jpeg;base64,{image_b64}" alt="{title}">
+
+        <div
+            class="viewer"
+            id="viewer"
+            title="ดับเบิลคลิกเพื่อขยายภาพ"
+        >
+
+            <button
+                class="zoom-btn"
+                id="zoom"
+            >
+                ⛶ ขยายภาพ
+            </button>
+
+            <img
+                src="data:image/jpeg;base64,{image_b64}"
+                alt="{title}"
+            >
+
         </div>
 
         <script>
-            const viewer = document.getElementById("viewer");
-            const zoom = document.getElementById("zoom");
+
+            const viewer =
+                document.getElementById("viewer");
+
+            const zoom =
+                document.getElementById("zoom");
+
 
             async function toggleFullscreen() {{
+
                 try {{
+
                     if (!document.fullscreenElement) {{
+
                         await viewer.requestFullscreen();
+
                     }} else {{
+
                         await document.exitFullscreen();
+
                     }}
-                }} catch (e) {{
-                    console.log("Fullscreen unavailable:", e);
+
+                }} catch (error) {{
+
+                    console.log(
+                        "Fullscreen unavailable:",
+                        error
+                    );
+
                 }}
+
             }}
 
-            zoom.addEventListener("click", (e) => {{
-                e.stopPropagation();
-                toggleFullscreen();
-            }});
 
-            viewer.addEventListener("dblclick", (e) => {{
-                if (e.target !== zoom) {{
+            zoom.addEventListener(
+                "click",
+                function(event) {{
+
+                    event.stopPropagation();
+
                     toggleFullscreen();
-                }}
-            }});
 
-            document.addEventListener("fullscreenchange", () => {{
-                zoom.textContent = document.fullscreenElement
-                    ? "⛶ ออกจากเต็มหน้าจอ"
-                    : "⛶ ขยายภาพ";
-            }});
+                }}
+            );
+
+
+            viewer.addEventListener(
+                "dblclick",
+                function(event) {{
+
+                    if (event.target !== zoom) {{
+
+                        toggleFullscreen();
+
+                    }}
+
+                }}
+            );
+
+
+            document.addEventListener(
+                "fullscreenchange",
+                function() {{
+
+                    zoom.textContent =
+                        document.fullscreenElement
+                        ? "⛶ ออกจากเต็มหน้าจอ"
+                        : "⛶ ขยายภาพ";
+
+                }}
+            );
+
         </script>
+
     </body>
     </html>
     """
 
     components.html(
         html,
-        height=viewer_height + 8,
+        height=aspect_height + 12,
         scrolling=False
     )
 
@@ -688,8 +771,7 @@ for cam, data in st.session_state.camera_results.items():
         show_image_viewer(
             data["original"],
             title="ภาพจากกล้อง",
-            display_width=400,
-            viewer_height=300
+            display_width=400
         )
 
 
@@ -709,8 +791,7 @@ for cam, data in st.session_state.camera_results.items():
         show_image_viewer(
             result["image"],
             title="ผล Segmentation",
-            display_width=400,
-            viewer_height=300
+            display_width=400
         )
 
 
@@ -894,8 +975,7 @@ for cam, data in st.session_state.camera_results.items():
             show_image_viewer(
                 item["ผล"],
                 title="ผล Segmentation จากข้อมูลที่เลือก",
-                display_width=400,
-                viewer_height=300
+                display_width=400
             )
 
 
@@ -1026,8 +1106,7 @@ for cam, data in st.session_state.camera_results.items():
                     show_image_viewer(
                         item["ภาพ"],
                         title="ภาพต้นฉบับ",
-                        display_width=330,
-                        viewer_height=250
+                        display_width=330
                     )
 
 
@@ -1040,8 +1119,7 @@ for cam, data in st.session_state.camera_results.items():
                     show_image_viewer(
                         item["ผล"],
                         title="ผล Segmentation",
-                        display_width=330,
-                        viewer_height=250
+                        display_width=330
                     )
 
 # =====================================================
