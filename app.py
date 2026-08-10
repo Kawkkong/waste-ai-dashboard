@@ -474,6 +474,71 @@ hr {
 
 section[data-testid="stSidebar"] { border-right: 1px solid #e7ebf0; }
 
+.history-level-only {
+    display: flex;
+    align-items: center;
+    min-height: 34px;
+    margin: 2px 0 12px;
+    padding: 7px 11px;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    box-sizing: border-box;
+    box-shadow: 0 2px 7px rgba(15,23,42,.08);
+}
+
+.settings-card {
+    margin: 6px 0 12px;
+    padding: 14px 16px;
+    border: 1px solid #e4e9f0;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #fbfcfe, #f6f8fb);
+    box-shadow: 0 4px 14px rgba(15,23,42,.04);
+}
+
+.settings-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #172033;
+}
+
+.settings-subtitle {
+    margin-top: 2px;
+    color: #7a8492;
+    font-size: 11px;
+}
+
+.settings-section-label {
+    margin: 13px 0 7px;
+    color: #475467;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .01em;
+}
+
+.settings-section-label::before {
+    content: '';
+    display: inline-block;
+    width: 4px;
+    height: 14px;
+    margin-right: 7px;
+    vertical-align: -2px;
+    border-radius: 4px;
+    background: #8da9c7;
+}
+
+div[data-testid="stNumberInput"] input {
+    border-radius: 9px !important;
+    border: 1px solid #dce3ec !important;
+    background: #fff !important;
+}
+
+div[data-testid="stNumberInput"] label {
+    font-size: 11px !important;
+    color: #667085 !important;
+}
+
 /* Collection */
 .collection-section {
     margin-top: 10px;
@@ -838,10 +903,27 @@ def restore_camera_default(camera, restore_roi=True, restore_threshold=True):
 
 
 if st.session_state.show_settings:
-    st.markdown("### ⚙️ ตั้งค่า ROI และระดับความหนาแน่น")
-    st.caption("แก้ค่าแยกตามกล้องได้จากหน้านี้ ค่าใหม่จะใช้กับการวิเคราะห์ครั้งถัดไป")
+    st.markdown(
+        """
+        <div class="settings-card">
+            <div class="settings-heading">
+                <div>
+                    <div class="settings-title">⚙️ การตั้งค่ากล้อง</div>
+                    <div class="settings-subtitle">ปรับพื้นที่ ROI และเกณฑ์ความหนาแน่นสำหรับกล้องที่เลือก</div>
+                </div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
-    setting_camera = st.selectbox("เลือกกล้อง", list(CAMERA_CONFIG.keys()), key="setting_camera")
+    setting_camera = st.selectbox(
+        "กล้อง",
+        list(CAMERA_CONFIG.keys()),
+        key="setting_camera",
+        label_visibility="collapsed"
+    )
+
     cfg = CAMERA_CONFIG[setting_camera]
     current_roi = cfg["roi"]
     current_threshold = cfg["threshold"]
@@ -857,24 +939,55 @@ if st.session_state.show_settings:
         image_w = max(int(current_roi[2]), 1000)
         image_h = max(int(current_roi[3]), 1000)
 
+    st.markdown('<div class="settings-section-label">พื้นที่ ROI</div>', unsafe_allow_html=True)
+
     r1, r2, r3, r4 = st.columns(4)
     with r1:
-        new_x1 = st.number_input("X1", min_value=0, max_value=max(0, image_w - 1), value=min(max(0, int(current_roi[0])), max(0, image_w - 1)), step=1, key=f"roi_x1_{setting_camera}")
+        new_x1 = st.number_input(
+            "X1", min_value=0, max_value=max(0, image_w - 1),
+            value=min(max(0, int(current_roi[0])), max(0, image_w - 1)),
+            step=1, key=f"roi_x1_{setting_camera}"
+        )
     with r2:
-        new_y1 = st.number_input("Y1", min_value=0, max_value=max(0, image_h - 1), value=min(max(0, int(current_roi[1])), max(0, image_h - 1)), step=1, key=f"roi_y1_{setting_camera}")
+        new_y1 = st.number_input(
+            "Y1", min_value=0, max_value=max(0, image_h - 1),
+            value=min(max(0, int(current_roi[1])), max(0, image_h - 1)),
+            step=1, key=f"roi_y1_{setting_camera}"
+        )
     with r3:
-        new_x2 = st.number_input("X2", min_value=1, max_value=max(1, image_w), value=min(max(1, int(current_roi[2])), max(1, image_w)), step=1, key=f"roi_x2_{setting_camera}")
+        new_x2 = st.number_input(
+            "X2", min_value=1, max_value=max(1, image_w),
+            value=min(max(1, int(current_roi[2])), max(1, image_w)),
+            step=1, key=f"roi_x2_{setting_camera}"
+        )
     with r4:
-        new_y2 = st.number_input("Y2", min_value=1, max_value=max(1, image_h), value=min(max(1, int(current_roi[3])), max(1, image_h)), step=1, key=f"roi_y2_{setting_camera}")
+        new_y2 = st.number_input(
+            "Y2", min_value=1, max_value=max(1, image_h),
+            value=min(max(1, int(current_roi[3])), max(1, image_h)),
+            step=1, key=f"roi_y2_{setting_camera}"
+        )
 
-    st.markdown("**เกณฑ์ระดับความหนาแน่น (%)**")
+    st.markdown('<div class="settings-section-label">ระดับความหนาแน่น</div>', unsafe_allow_html=True)
+
     t1, t2, t3 = st.columns(3)
     with t1:
-        new_low = st.number_input("Low ถึง", min_value=0.0, max_value=100.0, value=float(current_threshold["low"]), step=0.1, key=f"threshold_low_{setting_camera}")
+        new_low = st.number_input(
+            "Low", min_value=0.0, max_value=100.0,
+            value=float(current_threshold["low"]), step=0.1,
+            key=f"threshold_low_{setting_camera}"
+        )
     with t2:
-        new_medium = st.number_input("Medium ถึง", min_value=0.0, max_value=100.0, value=float(current_threshold["medium"]), step=0.1, key=f"threshold_medium_{setting_camera}")
+        new_medium = st.number_input(
+            "Medium", min_value=0.0, max_value=100.0,
+            value=float(current_threshold["medium"]), step=0.1,
+            key=f"threshold_medium_{setting_camera}"
+        )
     with t3:
-        new_high = st.number_input("High ถึง", min_value=0.0, max_value=100.0, value=float(current_threshold["high"]), step=0.1, key=f"threshold_high_{setting_camera}")
+        new_high = st.number_input(
+            "High", min_value=0.0, max_value=100.0,
+            value=float(current_threshold["high"]), step=0.1,
+            key=f"threshold_high_{setting_camera}"
+        )
 
 
     apply_current = st.checkbox(
@@ -1563,8 +1676,8 @@ for cam, data in st.session_state.camera_results.items():
                 # -------------------------
 
                 st.markdown(
-                    f'<div style="background-color:{history_info["color"]}; padding:8px 12px; border-radius:8px; font-size:14px; font-weight:600; margin-bottom:6px;">'
-                    f'{history_info["name"]}'
+                    f'<div class="history-level-only" style="background:{history_info["color"]};">'
+                    f'<span>{history_info["name"]}</span>'
                     f'</div>',
                     unsafe_allow_html=True
                 )
