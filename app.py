@@ -334,6 +334,27 @@ st.markdown(
 
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap');
 
+/* Hide Streamlit top chrome / toolbar */
+[data-testid="stHeader"] {
+    display: none !important;
+}
+
+[data-testid="stToolbar"] {
+    display: none !important;
+}
+
+#MainMenu {
+    visibility: hidden !important;
+}
+
+footer {
+    visibility: hidden !important;
+}
+
+[data-testid="stDecoration"] {
+    display: none !important;
+}
+
 :root {
     --ink: #172033;
     --muted: #667085;
@@ -357,7 +378,7 @@ button, input, textarea, select {
 
 .block-container {
     max-width: 1380px !important;
-    padding-top: 1.8rem !important;
+    padding-top: 1.2rem !important;
     padding-bottom: 2rem !important;
 }
 
