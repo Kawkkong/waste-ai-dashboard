@@ -1404,15 +1404,7 @@ for cam, data in st.session_state.camera_results.items():
 
 
     if len(histories) == 0:
-
-
-        st.info(
-
-            "ยังไม่มีประวัติ"
-
-        )
-
-
+        pass
 
     else:
 
@@ -1578,13 +1570,6 @@ collection_priority.sort(
     reverse=True
 )
 
-st.markdown(
-    """
-    <section class="collection-section">
-    """,
-    unsafe_allow_html=True
-)
-
 collection_title_col, collection_info_col = st.columns(
     [0.94, 0.06],
     vertical_alignment="center"
@@ -1662,5 +1647,4 @@ else:
     st.markdown('<div class="collection-stops">' + ''.join(cards) + '</div>', unsafe_allow_html=True)
     st.markdown('<div class="collection-note">อันดับ 1 คือ checkpoint แรกของเส้นทาง และรถจะวิ่งต่อไปตามลำดับจนถึง checkpoint สุดท้าย</div>', unsafe_allow_html=True)
 
-st.markdown('</section>', unsafe_allow_html=True)
 
