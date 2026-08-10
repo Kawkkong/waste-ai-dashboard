@@ -3,12 +3,160 @@ import cv2
 import numpy as np
 import pandas as pd
 import plotly.express as px
+import streamlit.components.v1 as components
+import base64
 
 from datetime import datetime
 
 from inference import analyze_frame
 from config import CAMERA_CONFIG
 
+
+
+
+# =====================================================
+# FULLSCREEN IMAGE VIEWER
+# =====================================================
+
+def show_image_viewer(img_bgr, title="", display_width=400, viewer_height=330):
+    """
+    แสดงภาพขนาดพอดี และมีปุ่ม/คลิกเพื่อเปิดภาพเต็มหน้าจอจริง
+    ใช้ Browser Fullscreen API ภายใน Streamlit component
+    """
+    if img_bgr is None:
+        return
+
+    ok, encoded = cv2.imencode(".jpg", img_bgr, [cv2.IMWRITE_JPEG_QUALITY, 92])
+
+    if not ok:
+        st.error("ไม่สามารถแสดงภาพได้")
+        return
+
+    image_b64 = base64.b64encode(encoded.tobytes()).decode("utf-8")
+
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            * {{
+                box-sizing: border-box;
+            }}
+
+            body {{
+                margin: 0;
+                padding: 0;
+                background: transparent;
+                font-family: "IBM Plex Sans Thai", "Noto Sans Thai", Arial, sans-serif;
+                overflow: hidden;
+            }}
+
+            .viewer {{
+                position: relative;
+                width: min(100%, {display_width}px);
+                height: {viewer_height}px;
+                margin: 0 auto;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: #111827;
+                border-radius: 10px;
+                overflow: hidden;
+                cursor: zoom-in;
+            }}
+
+            .viewer img {{
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+                display: block;
+            }}
+
+            .zoom-btn {{
+                position: absolute;
+                right: 10px;
+                top: 10px;
+                z-index: 10;
+                border: 0;
+                border-radius: 8px;
+                padding: 7px 10px;
+                background: rgba(0,0,0,.65);
+                color: white;
+                font-size: 14px;
+                cursor: pointer;
+                backdrop-filter: blur(4px);
+            }}
+
+            .zoom-btn:hover {{
+                background: rgba(0,0,0,.85);
+            }}
+
+            .viewer:fullscreen {{
+                width: 100vw;
+                height: 100vh;
+                max-width: none;
+                border-radius: 0;
+                background: #000;
+                cursor: zoom-out;
+            }}
+
+            .viewer:fullscreen img {{
+                object-fit: contain;
+                width: 100vw;
+                height: 100vh;
+            }}
+        </style>
+    </head>
+
+    <body>
+        <div class="viewer" id="viewer" title="คลิกเพื่อขยายเต็มหน้าจอ">
+            <button class="zoom-btn" id="zoom">⛶ ขยายภาพ</button>
+            <img src="data:image/jpeg;base64,{image_b64}" alt="{title}">
+        </div>
+
+        <script>
+            const viewer = document.getElementById("viewer");
+            const zoom = document.getElementById("zoom");
+
+            async function toggleFullscreen() {{
+                try {{
+                    if (!document.fullscreenElement) {{
+                        await viewer.requestFullscreen();
+                    }} else {{
+                        await document.exitFullscreen();
+                    }}
+                }} catch (e) {{
+                    console.log("Fullscreen unavailable:", e);
+                }}
+            }}
+
+            zoom.addEventListener("click", (e) => {{
+                e.stopPropagation();
+                toggleFullscreen();
+            }});
+
+            viewer.addEventListener("dblclick", (e) => {{
+                if (e.target !== zoom) {{
+                    toggleFullscreen();
+                }}
+            }});
+
+            document.addEventListener("fullscreenchange", () => {{
+                zoom.textContent = document.fullscreenElement
+                    ? "⛶ ออกจากเต็มหน้าจอ"
+                    : "⛶ ขยายภาพ";
+            }});
+        </script>
+    </body>
+    </html>
+    """
+
+    components.html(
+        html,
+        height=viewer_height + 8,
+        scrolling=False
+    )
 
 
 # =====================================================
@@ -537,18 +685,11 @@ for cam, data in st.session_state.camera_results.items():
         )
 
 
-        st.image(
-
-            cv2.cvtColor(
-
-                data["original"],
-
-                cv2.COLOR_BGR2RGB
-
-            ),
-
-            width=400
-
+        show_image_viewer(
+            data["original"],
+            title="ภาพจากกล้อง",
+            display_width=400,
+            viewer_height=300
         )
 
 
@@ -565,18 +706,11 @@ for cam, data in st.session_state.camera_results.items():
         )
 
 
-        st.image(
-
-            cv2.cvtColor(
-
-                result["image"],
-
-                cv2.COLOR_BGR2RGB
-
-            ),
-
-            width=400
-
+        show_image_viewer(
+            result["image"],
+            title="ผล Segmentation",
+            display_width=400,
+            viewer_height=300
         )
 
 
@@ -757,20 +891,11 @@ for cam, data in st.session_state.camera_results.items():
 
 
 
-            st.image(
-
-                cv2.cvtColor(
-
-                    item["ผล"],
-
-                    cv2.COLOR_BGR2RGB
-
-                ),
-
-                caption="ผล Segmentation จากข้อมูลที่เลือก",
-
-                width=400
-
+            show_image_viewer(
+                item["ผล"],
+                title="ผล Segmentation จากข้อมูลที่เลือก",
+                display_width=400,
+                viewer_height=300
             )
 
 
@@ -898,20 +1023,11 @@ for cam, data in st.session_state.camera_results.items():
                 with h1:
 
 
-                    st.image(
-
-                        cv2.cvtColor(
-
-                            item["ภาพ"],
-
-                            cv2.COLOR_BGR2RGB
-
-                        ),
-
-                        caption="ภาพต้นฉบับ",
-
-                        width=400
-
+                    show_image_viewer(
+                        item["ภาพ"],
+                        title="ภาพต้นฉบับ",
+                        display_width=330,
+                        viewer_height=250
                     )
 
 
@@ -921,20 +1037,11 @@ for cam, data in st.session_state.camera_results.items():
                 with h2:
 
 
-                    st.image(
-
-                        cv2.cvtColor(
-
-                            item["ผล"],
-
-                            cv2.COLOR_BGR2RGB
-
-                        ),
-
-                        caption="ผล Segmentation",
-
-                        width=400
-
+                    show_image_viewer(
+                        item["ผล"],
+                        title="ผล Segmentation",
+                        display_width=330,
+                        viewer_height=250
                     )
 
 # =====================================================
