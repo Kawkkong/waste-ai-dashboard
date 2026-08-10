@@ -437,6 +437,22 @@ button, input, textarea, select {
 .collection-level { font-size:12px; color:#667085; margin-top:2px; }
 .collection-detail { font-size:11px; color:#7a8492; margin-top:6px; line-height:1.5; }
 .collection-note { margin-top:14px; text-align:center; font-size:12px; color:#667085; }
+.info-inline {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:18px;
+    height:18px;
+    border-radius:50%;
+    background:#e8eef7;
+    color:#315b8a;
+    font-size:11px;
+    font-weight:800;
+    border:1px solid #cbd8e8;
+    margin-left:5px;
+    vertical-align:middle;
+}
+
 .collection-rule { margin:10px auto 18px; max-width:720px; text-align:center; font-size:12px; color:#475467; background:#fff; border:1px solid #e4e7ec; border-radius:10px; padding:9px 12px; }
 </style>
 
@@ -569,7 +585,6 @@ if st.session_state.show_settings:
     with t3:
         new_high = st.number_input("High ถึง", min_value=0.0, max_value=100.0, value=float(current_threshold["high"]), step=0.1, key=f"threshold_high_{setting_camera}")
 
-    st.caption("Normal = 0% | Low ≤ Low | Medium ≤ Medium | High ≤ High | Critical > High")
 
     apply_current = st.checkbox("วิเคราะห์ภาพล่าสุดของกล้องนี้ใหม่ทันทีหลังบันทึก", value=False, key=f"reanalyze_{setting_camera}")
 
@@ -959,11 +974,32 @@ for cam, data in st.session_state.camera_results.items():
     # GRAPH
     # =========================
 
-    st.subheader(
-
-        f"📈 แนวโน้ม WAR : {cam}"
-
+    war_title_col, war_info_col = st.columns(
+        [0.94, 0.06],
+        vertical_alignment="center"
     )
+
+    with war_title_col:
+        st.subheader(
+            f"📈 แนวโน้ม WAR : {cam}"
+        )
+
+    with war_info_col:
+        with st.popover("ⓘ"):
+            st.markdown("### WAR คืออะไร?")
+            st.write(
+                "WAR (Waste Area Ratio) คือสัดส่วนพื้นที่พิกเซลขยะ "
+                "ภายใน ROI เมื่อเทียบกับพื้นที่ ROI ทั้งหมด"
+            )
+            st.latex(
+                r"WAR = \frac{\text{พิกเซลขยะใน ROI}}{\text{พื้นที่ ROI}} \times 100"
+            )
+            st.markdown(
+                "**ตัวอย่าง** 25 px จาก ROI 100 px → WAR = 25%"
+            )
+            st.caption(
+                "WAR ใช้เปรียบเทียบความหนาแน่นของขยะภายในพื้นที่ ROI ของแต่ละกล้อง"
+            )
 
 
 
@@ -1289,11 +1325,49 @@ collection_priority.sort(
 st.markdown(
     """
     <section class="collection-section">
-        <div class="collection-title">🚛 ลำดับการจัดเก็บขยะ</div>
-        <div class="collection-subtitle">รถเก็บขยะเดินทางทางเดียวจากจุดที่ควรจัดเก็บก่อน → จุดที่ควรจัดเก็บภายหลัง</div>
     """,
     unsafe_allow_html=True
 )
+
+collection_title_col, collection_info_col = st.columns(
+    [0.94, 0.06],
+    vertical_alignment="center"
+)
+
+with collection_title_col:
+    st.markdown(
+        '<div class="collection-title">🚛 ลำดับการจัดเก็บขยะ</div>'
+        '<div class="collection-subtitle">รถเก็บขยะเดินทางทางเดียวจากจุดที่ควรจัดเก็บก่อน → จุดที่ควรจัดเก็บภายหลัง</div>',
+        unsafe_allow_html=True
+    )
+
+with collection_info_col:
+    with st.popover("ⓘ"):
+        st.markdown("### วิธีเรียงลำดับการจัดเก็บ")
+        st.write(
+            "ระบบใช้ **พื้นที่ขยะหลังปรับ ROI ให้เทียบกับพื้นที่อ้างอิง** "
+            "เป็นตัวหลักในการจัดลำดับ"
+        )
+
+        st.markdown("**ลำดับการพิจารณา**")
+        st.markdown(
+            "1. หาพิกเซลขยะที่อยู่ใน ROI ของแต่ละกล้อง\n"
+            "2. ปรับเทียบพื้นที่ ROI ให้มีขนาดอ้างอิงเดียวกัน\n"
+            "3. เปรียบเทียบพื้นที่ขยะหลังปรับ — มากกว่าจัดเก็บก่อน\n"
+            "4. หากพื้นที่ขยะใกล้เคียงกัน จึงใช้ระดับความหนาแน่นเป็นตัวช่วย"
+        )
+
+        st.markdown("**ตัวอย่างการปรับ ROI**")
+        st.code(
+            "กล้อง A : 5 / 50 → 5 / 50\n"
+            "กล้อง B : 1 / 2  → 25 / 50\n"
+            "ดังนั้น B มีพื้นที่ขยะเทียบเท่ามากกว่า → จัดเก็บก่อน",
+            language="text"
+        )
+
+        st.caption(
+            "รถเก็บขยะวิ่งตาม checkpoint จากอันดับ 1 → อันดับสุดท้าย"
+        )
 
 if len(collection_priority) == 0:
     st.info("ยังไม่มีข้อมูลจากกล้องสำหรับจัดลำดับการจัดเก็บขยะ")
@@ -1315,11 +1389,6 @@ else:
         '</div>'
     )
     st.markdown(road_html, unsafe_allow_html=True)
-
-    st.markdown(
-        f'<div class="collection-rule"><b>หลักการจัดลำดับ:</b> พื้นที่ขยะหลังปรับ ROI เป็นตัวหลัก → หากมีค่าใกล้เคียงกันจึงใช้ระดับความหนาแน่นเป็นตัวช่วยตัดสิน<br>พื้นที่ ROI อ้างอิง = <b>{reference_roi_area:,} px</b></div>',
-        unsafe_allow_html=True
-    )
 
     cards = []
     for rank, item in enumerate(collection_priority, start=1):
