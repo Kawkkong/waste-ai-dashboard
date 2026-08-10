@@ -330,133 +330,313 @@ LEVEL_INFO = {
 st.markdown(
 
 """
-
 <style>
-
-
-h1{
-
-font-size:28px !important;
-
-}
-
-
-h2{
-
-font-size:20px !important;
-
-}
-
-
-h3{
-
-font-size:16px !important;
-
-}
-
-
-
-.level-box{
-
-padding:8px;
-
-border-radius:8px;
-
-font-size:14px;
-
-font-weight:bold;
-
-margin-bottom:5px;
-
-}
-
-
-
-.recommend{
-
-background:#eeeeee;
-
-padding:8px;
-
-border-radius:8px;
-
-font-size:13px;
-
-}
-
-
-
-[data-testid="stMetricValue"]{
-
-font-size:20px;
-
-}
-
-
-
-[data-testid="stMetricLabel"]{
-
-font-size:12px;
-
-}
 
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap');
 
-html, body, [class*="css"], [data-testid="stAppViewContainer"],
-[data-testid="stHeader"], [data-testid="stSidebar"],
+:root {
+    --ink: #172033;
+    --muted: #667085;
+    --line: #e5eaf1;
+}
+
+html, body,
+[data-testid="stAppViewContainer"],
+[data-testid="stSidebar"],
 button, input, textarea, select {
     font-family: 'IBM Plex Sans Thai', 'Noto Sans Thai', Tahoma, sans-serif !important;
 }
 
-[data-testid="stAppViewContainer"] { font-size: 14px; }
-[data-testid="stMarkdownContainer"] p, [data-testid="stMarkdownContainer"] li { line-height: 1.55; }
-[data-testid="stMetricValue"] { font-family: 'IBM Plex Sans Thai', 'Noto Sans Thai', Tahoma, sans-serif !important; }
-[data-testid="stMetricLabel"] { font-family: 'IBM Plex Sans Thai', 'Noto Sans Thai', Tahoma, sans-serif !important; }
-
- .collection-section {
-    margin-top: 30px; padding: 22px 18px 26px; border-radius: 18px;
-    background: linear-gradient(180deg,#f8fafc 0%,#eef2f7 100%);
-    border: 1px solid #d9e1ea; overflow:hidden;
+[data-testid="stAppViewContainer"] {
+    background:
+        radial-gradient(circle at 85% 0%, rgba(49,91,138,.05), transparent 30%),
+        #fff;
+    color: var(--ink);
+    font-size: 14px;
 }
-.collection-title { text-align:center; font-size:22px; font-weight:700; color:#26364a; margin-bottom:4px; }
-.collection-subtitle { text-align:center; color:#667085; font-size:13px; margin-bottom:16px; }
-.collection-road { position:relative; height:118px; margin:0 12px 18px; border-radius:20px; background:linear-gradient(180deg,#4b5563 0%,#374151 100%); box-shadow:inset 0 5px 12px rgba(0,0,0,.20); overflow:hidden; }
-.collection-road::before { content:''; position:absolute; left:0; right:0; top:57%; height:5px; transform:translateY(-50%); background:repeating-linear-gradient(90deg,#f8fafc 0 42px,transparent 42px 72px); opacity:.9; }
-.collection-road::after { content:'→  เส้นทางการจัดเก็บขยะ  →'; position:absolute; left:50%; bottom:9px; transform:translateX(-50%); color:rgba(255,255,255,.82); font-size:12px; font-weight:600; white-space:nowrap; }
-.collection-truck { position:absolute; top:26px; left:1.5%; font-size:38px; z-index:5; filter:drop-shadow(0 4px 3px rgba(0,0,0,.28)); animation:collectionDriveOneWay 10s linear infinite; }
-@keyframes collectionDriveOneWay { 0% { left:1.5%; transform:translateX(0); } 100% { left:96%; transform:translateX(-100%); } }
-.collection-checkpoints { position:absolute; left:3%; right:3%; top:35px; height:45px; z-index:2; display:flex; align-items:center; justify-content:space-between; }
-.collection-checkpoint { position:relative; width:28px; height:28px; border-radius:50%; border:4px solid #fff; box-shadow:0 2px 7px rgba(0,0,0,.28); }
-.collection-checkpoint-label { position:absolute; top:32px; left:50%; transform:translateX(-50%); color:#fff; font-size:11px; font-weight:700; white-space:nowrap; text-shadow:0 1px 2px rgba(0,0,0,.65); }
-.collection-arrow { position:absolute; top:47px; left:0; right:0; text-align:center; color:#fff; font-size:22px; opacity:.9; }
-.collection-stops { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:10px; }
-.collection-stop { position:relative; background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:11px 12px; box-shadow:0 2px 8px rgba(15,23,42,.05); }
-.collection-rank { position:absolute; top:9px; right:10px; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-weight:700; font-size:12px; }
-.collection-camera { font-size:14px; font-weight:700; color:#1f2937; padding-right:34px; }
-.collection-war { font-size:20px; font-weight:700; color:#111827; margin-top:5px; }
-.collection-level { font-size:12px; color:#667085; margin-top:2px; }
-.collection-detail { font-size:11px; color:#7a8492; margin-top:6px; line-height:1.5; }
-.collection-note { margin-top:14px; text-align:center; font-size:12px; color:#667085; }
-.info-inline {
-    display:inline-flex;
+
+.block-container {
+    max-width: 1380px !important;
+    padding-top: 1.8rem !important;
+    padding-bottom: 2rem !important;
+}
+
+h1 {
+    font-size: 30px !important;
+    line-height: 1.25 !important;
+    letter-spacing: -.02em;
+    color: var(--ink) !important;
+}
+
+h2 { font-size: 21px !important; color: var(--ink) !important; }
+h3 { font-size: 16px !important; color: var(--ink) !important; }
+
+[data-testid="stMarkdownContainer"] p,
+[data-testid="stMarkdownContainer"] li {
+    line-height: 1.55;
+}
+
+[data-testid="stCaptionContainer"] { color: var(--muted); }
+
+[data-testid="stMetric"] {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 11px 14px;
+    box-shadow: 0 2px 8px rgba(15,23,42,.035);
+}
+
+[data-testid="stMetricValue"] {
+    font-family: 'IBM Plex Sans Thai', 'Noto Sans Thai', Tahoma, sans-serif !important;
+    font-size: 20px !important;
+    font-weight: 700 !important;
+    color: var(--ink) !important;
+}
+
+[data-testid="stMetricLabel"] {
+    font-family: 'IBM Plex Sans Thai', 'Noto Sans Thai', Tahoma, sans-serif !important;
+    font-size: 12px !important;
+    color: var(--muted) !important;
+}
+
+.level-box {
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 7px;
+    box-shadow: 0 2px 8px rgba(15,23,42,.05);
+}
+
+.recommend {
+    background: #f4f6f9;
+    border: 1px solid #e6eaf0;
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 13px;
+    color: #344054;
+}
+
+hr {
+    border: 0 !important;
+    border-top: 1px solid #e7ebf0 !important;
+    margin: 20px 0 !important;
+}
+
+[data-testid="stExpander"] {
+    border: 1px solid var(--line) !important;
+    border-radius: 11px !important;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(15,23,42,.025);
+}
+
+[data-testid="stExpander"] summary { font-size: 12px !important; }
+
+.stButton > button {
+    border-radius: 9px !important;
+    border: 1px solid #d7dee8 !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    min-height: 38px !important;
+}
+
+.stButton > button:hover { border-color: #9eb4cd !important; }
+
+[data-testid="stPopover"] button {
+    border-radius: 9px !important;
+    min-height: 34px !important;
+    width: 34px !important;
+    padding: 0 !important;
+}
+
+[data-testid="stImage"] img { border-radius: 9px; }
+
+section[data-testid="stSidebar"] { border-right: 1px solid #e7ebf0; }
+
+/* Collection */
+.collection-section {
+    margin-top: 10px;
+    padding: 20px 18px 19px;
+    border-radius: 18px;
+    background: linear-gradient(180deg,#f8fafc 0%,#f1f5f9 100%);
+    border: 1px solid #dfe6ee;
+    box-shadow: 0 7px 22px rgba(15,23,42,.045);
+    overflow: hidden;
+}
+
+.collection-title {
+    text-align: center;
+    font-size: 22px;
+    font-weight: 700;
+    color: #23344d;
+    margin-bottom: 3px;
+}
+
+.collection-subtitle {
+    text-align: center;
+    color: #6b7789;
+    font-size: 12px;
+    margin-bottom: 15px;
+}
+
+.collection-road {
+    position: relative;
+    height: 112px;
+    margin: 0 8px 16px;
+    border-radius: 18px;
+    background: linear-gradient(180deg,#4b5563 0%,#364152 100%);
+    box-shadow: inset 0 4px 12px rgba(0,0,0,.18), 0 5px 14px rgba(15,23,42,.08);
+    overflow: hidden;
+}
+
+.collection-road::before {
+    content:'';
+    position:absolute;
+    left:0; right:0; top:54%;
+    height:4px;
+    transform:translateY(-50%);
+    background:repeating-linear-gradient(90deg,#f8fafc 0 40px,transparent 40px 68px);
+    opacity:.92;
+}
+
+.collection-road::after {
+    content:'→  เส้นทางการจัดเก็บขยะ  →';
+    position:absolute;
+    left:50%; bottom:8px;
+    transform:translateX(-50%);
+    color:rgba(255,255,255,.78);
+    font-size:11px;
+    font-weight:600;
+    white-space:nowrap;
+}
+
+.collection-truck {
+    position:absolute;
+    top:24px; left:1.5%;
+    font-size:36px;
+    z-index:5;
+    filter:drop-shadow(0 4px 3px rgba(0,0,0,.28));
+    animation:collectionDriveOneWay 10s linear infinite;
+}
+
+@keyframes collectionDriveOneWay {
+    0% { left:1.5%; transform:translateX(0); }
+    100% { left:96%; transform:translateX(-100%); }
+}
+
+.collection-checkpoints {
+    position:absolute;
+    left:3%; right:3%; top:31px;
+    height:45px;
+    z-index:2;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+}
+
+.collection-checkpoint {
+    position:relative;
+    width:28px; height:28px;
+    border-radius:50%;
+    border:4px solid #fff;
+    box-shadow:0 2px 7px rgba(0,0,0,.28);
+}
+
+.collection-checkpoint-label {
+    position:absolute;
+    top:31px; left:50%;
+    transform:translateX(-50%);
+    color:#fff;
+    font-size:10px;
+    font-weight:700;
+    white-space:nowrap;
+    text-shadow:0 1px 2px rgba(0,0,0,.65);
+}
+
+.collection-arrow {
+    position:absolute;
+    top:43px; left:0; right:0;
+    text-align:center;
+    color:#fff;
+    font-size:20px;
+    opacity:.88;
+}
+
+.collection-stops {
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(205px,1fr));
+    gap:10px;
+}
+
+.collection-stop {
+    position:relative;
+    background:#fff;
+    border:1px solid #e2e8f0;
+    border-radius:12px;
+    padding:11px 12px;
+    box-shadow:0 2px 8px rgba(15,23,42,.045);
+}
+
+.collection-rank {
+    position:absolute;
+    top:9px; right:10px;
+    width:28px; height:28px;
+    border-radius:50%;
+    display:flex;
     align-items:center;
     justify-content:center;
-    width:18px;
-    height:18px;
-    border-radius:50%;
-    background:#e8eef7;
-    color:#315b8a;
-    font-size:11px;
-    font-weight:800;
-    border:1px solid #cbd8e8;
-    margin-left:5px;
-    vertical-align:middle;
+    color:#fff;
+    font-weight:700;
+    font-size:12px;
 }
 
-.collection-rule { margin:10px auto 18px; max-width:720px; text-align:center; font-size:12px; color:#475467; background:#fff; border:1px solid #e4e7ec; border-radius:10px; padding:9px 12px; }
+.collection-camera {
+    font-size:13px;
+    font-weight:700;
+    color:#1f2937;
+    padding-right:34px;
+}
+
+.collection-war {
+    font-size:19px;
+    font-weight:700;
+    color:#111827;
+    margin-top:5px;
+}
+
+.collection-level {
+    font-size:12px;
+    color:#667085;
+    margin-top:2px;
+}
+
+.collection-detail {
+    font-size:11px;
+    color:#7a8492;
+    margin-top:6px;
+    line-height:1.5;
+}
+
+.collection-note {
+    margin-top:13px;
+    text-align:center;
+    font-size:11px;
+    color:#7a8492;
+}
+
+@media (max-width:800px) {
+    .block-container {
+        padding-left:1rem !important;
+        padding-right:1rem !important;
+    }
+    .collection-road {
+        margin-left:0;
+        margin-right:0;
+    }
+    .collection-checkpoint-label { font-size:9px; }
+}
+
 </style>
-
-
 """,
 
 unsafe_allow_html=True
@@ -1348,8 +1528,6 @@ for cam, data in st.session_state.camera_results.items():
 # =====================================================
 # ลำดับการจัดเก็บขยะ
 # =====================================================
-
-st.divider()
 
 LEVEL_ORDER = {
     "Normal": 0,
