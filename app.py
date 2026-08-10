@@ -3,124 +3,12 @@ import cv2
 import numpy as np
 import pandas as pd
 import plotly.express as px
-import base64
-import streamlit.components.v1 as components
 
 from datetime import datetime
 
 from inference import analyze_frame
 from config import CAMERA_CONFIG
 
-
-
-# =====================================================
-# IMAGE VIEWER
-# =====================================================
-
-def show_image_fullscreen(img_bgr, caption="", width=400, key="image"):
-    """แสดงภาพขนาดเล็ก และคลิกปุ่ม/ภาพเพื่อขยายเต็มหน้าจอจริง"""
-
-    ok, encoded = cv2.imencode(".jpg", img_bgr, [int(cv2.IMWRITE_JPEG_QUALITY), 92])
-    if not ok:
-        st.error("ไม่สามารถแสดงภาพได้")
-        return
-
-    image_b64 = base64.b64encode(encoded.tobytes()).decode("utf-8")
-    h, w = img_bgr.shape[:2]
-    ratio = h / w if w else 0.5625
-    height = max(120, int(width * ratio))
-
-    html = f"""
-    <style>
-        html, body {{ margin:0; padding:0; background:transparent; }}
-        .viewer {{
-            position:relative;
-            width:{width}px;
-            max-width:100%;
-            margin:0 auto;
-            border-radius:8px;
-            overflow:hidden;
-            background:#111;
-            line-height:0;
-        }}
-        .viewer img {{
-            display:block;
-            width:100%;
-            height:auto;
-            cursor:zoom-in;
-            object-fit:contain;
-        }}
-        .zoom-btn {{
-            position:absolute;
-            right:8px;
-            top:8px;
-            z-index:10;
-            border:0;
-            border-radius:6px;
-            padding:5px 8px;
-            background:rgba(0,0,0,.65);
-            color:white;
-            font-size:16px;
-            cursor:pointer;
-            line-height:1;
-        }}
-        :fullscreen {{
-            background:#000 !important;
-            width:100vw !important;
-            height:100vh !important;
-            display:flex !important;
-            align-items:center !important;
-            justify-content:center !important;
-        }}
-        :fullscreen .viewer {{
-            width:100vw !important;
-            height:100vh !important;
-            max-width:none !important;
-            max-height:none !important;
-            display:flex !important;
-            align-items:center !important;
-            justify-content:center !important;
-            border-radius:0 !important;
-            background:#000 !important;
-        }}
-        :fullscreen .viewer img {{
-            width:auto !important;
-            max-width:100vw !important;
-            max-height:100vh !important;
-            height:auto !important;
-            object-fit:contain !important;
-            cursor:zoom-out;
-        }}
-        :fullscreen .zoom-btn {{
-            right:18px;
-            top:18px;
-            font-size:20px;
-        }}
-    </style>
-    <div class="viewer" id="viewer-{key}">
-        <button class="zoom-btn" type="button" title="ขยายเต็มหน้าจอ" onclick="toggleFullscreen()">⛶</button>
-        <img src="data:image/jpeg;base64,{image_b64}" alt="{caption}" onclick="toggleFullscreen()">
-    </div>
-    <script>
-        const viewer = document.getElementById("viewer-{key}");
-        function toggleFullscreen() {{
-            if (!document.fullscreenElement) {{
-                if (viewer.requestFullscreen) {{
-                    viewer.requestFullscreen();
-                }} else if (document.documentElement.requestFullscreen) {{
-                    document.documentElement.requestFullscreen();
-                }}
-            }} else {{
-                document.exitFullscreen();
-            }}
-        }}
-    </script>
-    """
-
-    components.html(html, height=height + 10, scrolling=False)
-
-    if caption:
-        st.caption(caption)
 
 
 # =====================================================
@@ -280,6 +168,52 @@ font-size:12px;
 
 }
 
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700&display=swap');
+
+html, body, [class*="css"], [data-testid="stAppViewContainer"],
+[data-testid="stHeader"], [data-testid="stSidebar"] {
+    font-family: 'Noto Sans Thai', 'Sarabun', Tahoma, sans-serif !important;
+}
+
+[data-testid="stAppViewContainer"] { font-size: 14px; }
+[data-testid="stMarkdownContainer"] p, [data-testid="stMarkdownContainer"] li { line-height: 1.55; }
+
+.collection-section {
+    margin-top: 28px; padding: 20px 18px 24px; border-radius: 18px;
+    background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+    border: 1px solid #d9e1ea; overflow: hidden;
+}
+.collection-title { text-align:center; font-size:22px; font-weight:700; color:#26364a; margin-bottom:4px; }
+.collection-subtitle { text-align:center; color:#667085; font-size:13px; margin-bottom:18px; }
+.collection-road {
+    position:relative; height:92px; margin:0 10px 18px; border-radius:18px;
+    background:linear-gradient(180deg,#4b5563 0%,#374151 100%);
+    box-shadow:inset 0 4px 10px rgba(0,0,0,.18); overflow:hidden;
+}
+.collection-road::before {
+    content:''; position:absolute; left:0; right:0; top:50%; height:5px; transform:translateY(-50%);
+    background:repeating-linear-gradient(90deg,#f8fafc 0 42px,transparent 42px 72px); opacity:.85;
+}
+.collection-truck {
+    position:absolute; top:23px; left:2%; font-size:40px; z-index:3;
+    filter:drop-shadow(0 4px 3px rgba(0,0,0,.25)); animation:collectionDrive 8s ease-in-out infinite;
+}
+@keyframes collectionDrive {
+    0% { left:2%; transform:translateX(0); }
+    45% { left:72%; transform:translateX(-50%); }
+    55% { left:72%; transform:translateX(-50%); }
+    100% { left:2%; transform:translateX(0); }
+}
+.collection-stops { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:10px; }
+.collection-stop { position:relative; background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:11px 12px; box-shadow:0 2px 8px rgba(15,23,42,.05); }
+.collection-rank {
+    position:absolute; top:9px; right:10px; width:26px; height:26px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center; color:white; font-weight:700; font-size:12px;
+}
+.collection-camera { font-size:14px; font-weight:700; color:#1f2937; padding-right:30px; }
+.collection-war { font-size:20px; font-weight:700; color:#111827; margin-top:5px; }
+.collection-level { font-size:12px; color:#667085; margin-top:2px; }
+.collection-note { margin-top:14px; text-align:center; font-size:12px; color:#667085; }
 
 </style>
 
@@ -612,11 +546,18 @@ for cam, data in st.session_state.camera_results.items():
         )
 
 
-        show_image_fullscreen(
-            data["original"],
-            caption="",
-            width=400,
-            key=f"{cam}-current-original"
+        st.image(
+
+            cv2.cvtColor(
+
+                data["original"],
+
+                cv2.COLOR_BGR2RGB
+
+            ),
+
+            width=400
+
         )
 
 
@@ -633,11 +574,18 @@ for cam, data in st.session_state.camera_results.items():
         )
 
 
-        show_image_fullscreen(
-            result["image"],
-            caption="",
-            width=400,
-            key=f"{cam}-current-seg"
+        st.image(
+
+            cv2.cvtColor(
+
+                result["image"],
+
+                cv2.COLOR_BGR2RGB
+
+            ),
+
+            width=400
+
         )
 
 
@@ -818,11 +766,20 @@ for cam, data in st.session_state.camera_results.items():
 
 
 
-            show_image_fullscreen(
-                item["ผล"],
+            st.image(
+
+                cv2.cvtColor(
+
+                    item["ผล"],
+
+                    cv2.COLOR_BGR2RGB
+
+                ),
+
                 caption="ผล Segmentation จากข้อมูลที่เลือก",
-                width=400,
-                key=f"{cam}-selected-seg"
+
+                width=400
+
             )
 
 
@@ -950,11 +907,20 @@ for cam, data in st.session_state.camera_results.items():
                 with h1:
 
 
-                    show_image_fullscreen(
-                        item["ภาพ"],
+                    st.image(
+
+                        cv2.cvtColor(
+
+                            item["ภาพ"],
+
+                            cv2.COLOR_BGR2RGB
+
+                        ),
+
                         caption="ภาพต้นฉบับ",
-                        width=320,
-                        key=f"{cam}-history-{item['ID']}-original"
+
+                        width=400
+
                     )
 
 
@@ -964,9 +930,73 @@ for cam, data in st.session_state.camera_results.items():
                 with h2:
 
 
-                    show_image_fullscreen(
-                        item["ผล"],
+                    st.image(
+
+                        cv2.cvtColor(
+
+                            item["ผล"],
+
+                            cv2.COLOR_BGR2RGB
+
+                        ),
+
                         caption="ผล Segmentation",
-                        width=320,
-                        key=f"{cam}-history-{item['ID']}-seg"
+
+                        width=400
+
                     )
+
+# =====================================================
+# ลำดับการจัดเก็บขยะ
+# =====================================================
+
+st.divider()
+
+collection_priority = []
+
+for cam, data in st.session_state.camera_results.items():
+    result = data.get("result", {})
+    if "WAR" in result:
+        collection_priority.append({
+            "camera": cam,
+            "WAR": float(result.get("WAR", 0)),
+            "level": result.get("level", "Normal")
+        })
+
+collection_priority.sort(key=lambda item: item["WAR"], reverse=True)
+
+section_html = """
+<section class="collection-section">
+    <div class="collection-title">🚛 ลำดับการจัดเก็บขยะ</div>
+    <div class="collection-subtitle">เรียงลำดับจากค่า WAR สูงที่สุด → ต่ำที่สุด เพื่อช่วยวางแผนเส้นทางการเก็บขยะ</div>
+    <div class="collection-road"><div class="collection-truck">🚛</div></div>
+</section>
+"""
+
+st.markdown(section_html, unsafe_allow_html=True)
+
+if len(collection_priority) == 0:
+    st.info("ยังไม่มีข้อมูลจากกล้องสำหรับจัดลำดับการจัดเก็บขยะ")
+else:
+    cards = []
+    for rank, item in enumerate(collection_priority, start=1):
+        info = LEVEL_INFO.get(item["level"], LEVEL_INFO["Normal"])
+        cards.append(
+            f'<div class="collection-stop">'
+            f'<div class="collection-rank" style="background:{info["color"]};">{rank}</div>'
+            f'<div class="collection-camera">📷 {item["camera"]}</div>'
+            f'<div class="collection-war">{item["WAR"]:.2f}%</div>'
+            f'<div class="collection-level">{info["name"]}</div>'
+            f'</div>'
+        )
+
+    st.markdown(
+        '<div class="collection-stops">' + ''.join(cards) + '</div>',
+        unsafe_allow_html=True
+    )
+
+    st.markdown(
+        '<div class="collection-note">อันดับ 1 คือจุดที่มีพื้นที่ขยะสูงที่สุดและควรพิจารณาเข้าจัดเก็บก่อน</div>',
+        unsafe_allow_html=True
+    )
+
