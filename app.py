@@ -536,6 +536,34 @@ def save_camera_config(camera, roi, thresholds):
     CAMERA_CONFIG.update(copy.deepcopy(new_config))
 
 
+def restore_camera_default(camera, restore_roi=True, restore_threshold=True):
+    default_cfg = copy.deepcopy(
+        st.session_state.default_camera_config[camera]
+    )
+
+    new_config = copy.deepcopy(
+        st.session_state.runtime_camera_config
+    )
+
+    if camera not in new_config:
+        new_config[camera] = {}
+
+    if restore_roi:
+        new_config[camera]["roi"] = tuple(default_cfg["roi"])
+
+    if restore_threshold:
+        new_config[camera]["threshold"] = copy.deepcopy(
+            default_cfg["threshold"]
+        )
+
+    st.session_state.runtime_camera_config = new_config
+
+    CAMERA_CONFIG.clear()
+    CAMERA_CONFIG.update(
+        copy.deepcopy(new_config)
+    )
+
+
 # =====================================================
 # ปุ่มฟันเฟือง
 # =====================================================
@@ -586,7 +614,57 @@ if st.session_state.show_settings:
         new_high = st.number_input("High ถึง", min_value=0.0, max_value=100.0, value=float(current_threshold["high"]), step=0.1, key=f"threshold_high_{setting_camera}")
 
 
-    apply_current = st.checkbox("วิเคราะห์ภาพล่าสุดของกล้องนี้ใหม่ทันทีหลังบันทึก", value=False, key=f"reanalyze_{setting_camera}")
+    apply_current = st.checkbox(
+        "วิเคราะห์ภาพล่าสุดของกล้องนี้ใหม่ทันทีหลังบันทึก",
+        value=False,
+        key=f"reanalyze_{setting_camera}"
+    )
+
+    reset_roi_col, reset_threshold_col = st.columns(2)
+
+    with reset_roi_col:
+        if st.button(
+            "↩️ ROI กลับค่าเริ่มต้น",
+            use_container_width=True,
+            key=f"reset_roi_{setting_camera}",
+            help="คืนค่า ROI ของกล้องนี้ตาม config.py"
+        ):
+            restore_camera_default(
+                setting_camera,
+                restore_roi=True,
+                restore_threshold=False
+            )
+
+            # คืนค่าของ number_input ใน session state ด้วย
+            default_roi = st.session_state.default_camera_config[setting_camera]["roi"]
+
+            st.session_state[f"roi_x1_{setting_camera}"] = int(default_roi[0])
+            st.session_state[f"roi_y1_{setting_camera}"] = int(default_roi[1])
+            st.session_state[f"roi_x2_{setting_camera}"] = int(default_roi[2])
+            st.session_state[f"roi_y2_{setting_camera}"] = int(default_roi[3])
+
+            st.rerun()
+
+    with reset_threshold_col:
+        if st.button(
+            "↩️ Threshold กลับค่าเริ่มต้น",
+            use_container_width=True,
+            key=f"reset_threshold_{setting_camera}",
+            help="คืนค่า Threshold ของกล้องนี้ตาม config.py"
+        ):
+            restore_camera_default(
+                setting_camera,
+                restore_roi=False,
+                restore_threshold=True
+            )
+
+            default_threshold = st.session_state.default_camera_config[setting_camera]["threshold"]
+
+            st.session_state[f"threshold_low_{setting_camera}"] = float(default_threshold["low"])
+            st.session_state[f"threshold_medium_{setting_camera}"] = float(default_threshold["medium"])
+            st.session_state[f"threshold_high_{setting_camera}"] = float(default_threshold["high"])
+
+            st.rerun()
 
     save_col, close_col = st.columns(2)
     with save_col:
