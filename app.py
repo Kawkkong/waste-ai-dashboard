@@ -133,7 +133,65 @@ def show_image_viewer(img_bgr, title="", display_width=340, viewer_height=300):
                 height: 100vh;
                 object-fit: contain;
             }}
-        </style>
+        
+/* Camera result widgets */
+[data-testid="stExpander"] {
+    border: 1px solid #d9e2ec !important;
+    border-radius: 16px !important;
+    background: #ffffff !important;
+    box-shadow: 0 5px 18px rgba(15,23,42,.055) !important;
+    overflow: hidden !important;
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+[data-testid="stExpander"]:hover {
+    transform: translateY(-1px);
+    border-color: #c7d5e4 !important;
+    box-shadow: 0 10px 26px rgba(15,23,42,.09) !important;
+}
+[data-testid="stExpander"] summary {
+    min-height: 50px !important;
+    padding: 9px 14px !important;
+    background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%) !important;
+}
+[data-testid="stExpander"] summary:hover {
+    background: #f7faff !important;
+}
+[data-testid="stExpander"] summary p {
+    margin: 0 !important;
+    font-size: 13px !important;
+    font-weight: 650 !important;
+    line-height: 1.45 !important;
+    color: #172033 !important;
+}
+.camera-status {
+    padding: 9px 12px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 650;
+    margin: 2px 0 7px;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.18);
+}
+.camera-action {
+    padding: 10px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #f8fafc;
+    color: #344054;
+    font-size: 11px;
+    line-height: 1.55;
+    margin-bottom: 8px;
+}
+.camera-action b { color: #172033; }
+.camera-image-title {
+    font-size: 13px;
+    font-weight: 650;
+    color: #172033;
+    margin: 2px 0 3px;
+}
+[data-testid="stExpander"] [data-testid="stHorizontalBlock"] {
+    gap: 0.7rem !important;
+}
+</style>
     </head>
 
     <body>
@@ -632,18 +690,6 @@ section[data-testid="stSidebar"] [data-testid="stExpander"] {
 
 section[data-testid="stSidebar"] [data-testid="stExpander"] summary:hover {
     background: #f4f8fc !important;
-}
-
-.camera-widget-title {
-    display:flex;
-    align-items:center;
-    gap:7px;
-    margin:0 0 5px;
-    padding-bottom:7px;
-    border-bottom:1px solid #edf1f6;
-    color:#172033;
-    font-size:17px;
-    font-weight:700;
 }
 
 .section-title {
@@ -1404,343 +1450,80 @@ with st.expander("📷  อัปโหลดภาพ CCTV", expanded=False):
 # =====================================================
 
 for cam, data in st.session_state.camera_results.items():
-    with st.container(border=True):
+    result = data["result"]
+    level = result["level"]
+    info = LEVEL_INFO[level]
 
+    # เมื่อย่อ: ยังเห็นชื่อกล้อง + ระดับ + คำแนะนำ
+    camera_summary = (
+        "📷 " + cam + "   ·   " + info["name"] + "   ·   " + info["action"]
+    )
 
-        result = data["result"]
-
-
-        level = result["level"]
-
-
-        info = LEVEL_INFO[level]
-
-
-
-        st.divider()
-        st.markdown(
-            f'<div class="camera-widget-title">📷 {cam}</div>',
-            unsafe_allow_html=True
-        )
-        # =========================
-        # LEVEL
-        # =========================
+    with st.expander(camera_summary, expanded=False):
 
         st.markdown(
-            f'<div style="background-color:{info["color"]}; padding:8px 12px; border-radius:8px; font-size:14px; font-weight:600; margin-bottom:6px;">'
-            f'ระดับความหนาแน่นของขยะ<br>{info["name"]}'
+            f'<div class="camera-status" style="background:{info["color"]};">'
+            f'ระดับความหนาแน่น: {info["name"]}'
             f'</div>',
             unsafe_allow_html=True
         )
 
-
-
-
-
-        # =========================
-        # ACTION
-        # =========================
-
         st.markdown(
-
-            f"""
-
-            <div class="recommend">
-
-            <b>คำแนะนำ:</b>
-
-            {info['action']}
-
-            </div>
-
-
-            """,
-
+            f'<div class="camera-action"><b>คำแนะนำ:</b> {info["action"]}</div>',
             unsafe_allow_html=True
-
         )
 
+        with st.container(border=True):
 
 
+            result = data["result"]
 
 
+            level = result["level"]
 
 
+            info = LEVEL_INFO[level]
         # =========================
-        # IMAGE
-        # =========================
-
-        c1,c2 = st.columns(2)
-
-
-
-        with c1:
-
-
-            st.subheader(
-
-                "ภาพจากกล้อง"
-
-            )
-
-
-            show_image_viewer(
-                data["original"],
-                title="ภาพจากกล้อง",
-                display_width=340
-            )
-
-
-
-
-
-        with c2:
-
-
-            st.subheader(
-
-                "ผล Segmentation"
-
-            )
-
-
-            show_image_viewer(
-                result["image"],
-                title="ผล Segmentation",
-                display_width=340
-            )
-
-
-
-
-
-
-        # =========================
-        # CURRENT RESULT
-        # =========================
-
-        st.subheader(
-
-            "📊 ผลการวิเคราะห์"
-
-        )
-
-
-
-        a,b,c = st.columns(3)
-
-
-
-        a.metric(
-
-            "WAR",
-
-            f'{result["WAR"]}%'
-
-        )
-
-
-        b.metric(
-
-            "เปลี่ยนแปลง",
-
-            f'{result["change"]:+.2f}%'
-
-        )
-
-
-        c.metric(
-
-            "ระดับ",
-
-            info["name"]
-
-        )
-
-
-
-
-
-
-        # =========================
-        # GRAPH
-        # =========================
-
-        war_title_col, war_info_col = st.columns(
-            [0.94, 0.06],
-            vertical_alignment="center"
-        )
-
-        with war_title_col:
-            st.subheader(
-                f"📈 แนวโน้ม WAR : {cam}"
-            )
-
-        with war_info_col:
-            with st.popover("ⓘ"):
-                st.markdown("### WAR คืออะไร?")
-                st.markdown("**WAR = (พิกเซลขยะใน ROI ÷ พื้นที่ ROI) × 100**")
-                st.caption("ตัวอย่าง: ขยะ 25 px จาก ROI 100 px → WAR = 25%")
-                st.caption("ใช้วัดสัดส่วนพื้นที่ขยะภายใน ROI ของกล้องนั้น")
-
-        if len(st.session_state.history[cam]) > 0:
-            graph_data = pd.DataFrame(st.session_state.history[cam]).reset_index(drop=True)
-            graph_data["จุด"] = np.arange(len(graph_data))
-
-            fig = px.line(
-                graph_data,
-                x="จุด",
-                y="WAR",
-                markers=True,
-                custom_data=["เวลา", "ระดับ", "เปลี่ยนแปลง"],
-            )
-            fig.update_traces(
-                line=dict(width=3, color="#315b8a"),
-                marker=dict(size=8, color="#ffffff", line=dict(width=3, color="#315b8a")),
-                hovertemplate=(
-                    "<b>จุดตรวจ %{x}</b><br>"
-                    "WAR: <b>%{y:.2f}%</b><br>"
-                    "เวลา: %{customdata[0]}<br>"
-                    "ระดับ: %{customdata[1]}<br>"
-                    "เปลี่ยนแปลง: %{customdata[2]:+.2f}%<extra></extra>"
-                ),
-            )
-
-            current_thr = CAMERA_CONFIG.get(cam, {}).get("threshold", {})
-            for key, color, label in [
-                ("low", "#4CAF50", "Low"),
-                ("medium", "#FFD600", "Medium"),
-                ("high", "#FF9800", "High"),
-            ]:
-                if key in current_thr:
-                    try:
-                        y_value = float(current_thr[key])
-                        fig.add_hline(
-                            y=y_value,
-                            line_width=1,
-                            line_dash="dot",
-                            line_color=color,
-                            annotation_text=f"{label} {y_value:g}%",
-                            annotation_position="top left",
-                        )
-                    except (TypeError, ValueError):
-                        pass
-
-            fig.update_layout(
-                height=285,
-                margin=dict(l=8, r=12, t=12, b=8),
-                paper_bgcolor="rgba(0,0,0,0)",
-                plot_bgcolor="#fbfcfe",
-                hovermode="x unified",
-                font=dict(family="Prompt, Noto Sans Thai, sans-serif", size=11, color="#172033"),
-                showlegend=False,
-                xaxis=dict(title="ลำดับการบันทึก", tickmode="linear", dtick=1, showgrid=False, zeroline=False),
-                yaxis=dict(title="WAR (%)", ticksuffix="%", showgrid=True, gridcolor="#e8edf3", zeroline=False, rangemode="tozero"),
-            )
-
-            st.markdown(
-                '<div class="chart-tip">💡 คลิกจุดบนกราฟเพื่อดูภาพและข้อมูลของการบันทึกครั้งนั้นด้านล่าง</div>',
-                unsafe_allow_html=True
-            )
-
-            chart_event = st.plotly_chart(
-                fig,
-                use_container_width=True,
-                key=f"war_chart_{cam}",
-                on_select="rerun",
-                selection_mode="points",
-            )
-
-            try:
-                selection = getattr(chart_event, "selection", None)
-                if selection is None and isinstance(chart_event, dict):
-                    selection = chart_event.get("selection")
-                points = getattr(selection, "points", None) if selection is not None else None
-                if points is None and isinstance(selection, dict):
-                    points = selection.get("points", [])
-
-                if points:
-                    first_point = points[0]
-                    point_index = getattr(first_point, "point_index", None)
-                    if point_index is None and isinstance(first_point, dict):
-                        point_index = first_point.get("point_index")
-                    if point_index is None:
-                        point_index = getattr(first_point, "pointNumber", None)
-                    if point_index is None and isinstance(first_point, dict):
-                        point_index = first_point.get("pointNumber")
-
-                    if point_index is not None:
-                        point_index = int(point_index)
-                        if 0 <= point_index < len(st.session_state.history[cam]):
-                            st.session_state.selected_history = st.session_state.history[cam][point_index]
-            except Exception:
-                pass
-
-            # =========================
-            # SELECTED GRAPH DATA
+            # IMAGE
             # =========================
 
-            if st.session_state.selected_history is not None:
+            c1,c2 = st.columns(2)
 
 
-                item = st.session_state.selected_history
+
+            with c1:
 
 
                 st.subheader(
 
-                    "🔎 ข้อมูลที่เลือกจากกราฟ"
+                    "ภาพจากกล้อง"
 
                 )
-
-
-
-                x,y,z = st.columns(3)
-
-
-
-                x.metric(
-
-                    "WAR",
-
-                    f'{item["WAR"]}%'
-
-                )
-
-
-
-                y.metric(
-
-                    "เปลี่ยนแปลง",
-
-                    f'{item["เปลี่ยนแปลง"]:+.2f}%'
-
-                )
-
-
-
-                selected_info = LEVEL_INFO[
-
-                    item["ระดับ"]
-
-                ]
-
-
-
-                z.metric(
-
-                    "ระดับ",
-
-                    selected_info["name"]
-
-                )
-
-
-
 
 
                 show_image_viewer(
-                    item["ผล"],
-                    title="ผล Segmentation จากข้อมูลที่เลือก",
+                    data["original"],
+                    title="ภาพจากกล้อง",
+                    display_width=340
+                )
+
+
+
+
+
+            with c2:
+
+
+                st.subheader(
+
+                    "ผล Segmentation"
+
+                )
+
+
+                show_image_viewer(
+                    result["image"],
+                    title="ผล Segmentation",
                     display_width=340
                 )
 
@@ -1749,75 +1532,190 @@ for cam, data in st.session_state.camera_results.items():
 
 
 
+            # =========================
+            # CURRENT RESULT
+            # =========================
 
-        # =================================================
-        # HISTORY
-        # =================================================
+            st.subheader(
 
-        st.subheader(
+                "📊 ผลการวิเคราะห์"
 
-            f"📋 ประวัติการตรวจสอบ {cam}"
-
-        )
-
-
-
-        histories = st.session_state.history[cam]
+            )
 
 
 
-        if len(histories) == 0:
-            pass
-
-        else:
-
-
-            for item in reversed(histories):
-
-
-                history_info = LEVEL_INFO[
-
-                    item["ระดับ"]
-
-                ]
+            a,b,c = st.columns(3)
 
 
 
-                with st.expander(
+            a.metric(
 
-                    f'#{item["ID"]+1} | '
+                "WAR",
 
-                    f'{item["เวลา"]} | '
+                f'{result["WAR"]}%'
 
-                    f'{history_info["name"]}'
-
-                ):
+            )
 
 
+            b.metric(
 
-                    # -------------------------
-                    # LEVEL MARKER
-                    # -------------------------
-                    # marker นี้ใช้ให้ CSS รู้ว่าหัว History ควรเป็นสีอะไร
-                    # แถบสีจะแสดงที่หัว Expander แทน ไม่แสดงซ้ำในเนื้อหา
-                    st.markdown(
-                        f'<span class="history-level-marker" data-level="{item["ระดับ"]}"></span>',
-                        unsafe_allow_html=True
+                "เปลี่ยนแปลง",
+
+                f'{result["change"]:+.2f}%'
+
+            )
+
+
+            c.metric(
+
+                "ระดับ",
+
+                info["name"]
+
+            )
+
+
+
+
+
+
+            # =========================
+            # GRAPH
+            # =========================
+
+            war_title_col, war_info_col = st.columns(
+                [0.94, 0.06],
+                vertical_alignment="center"
+            )
+
+            with war_title_col:
+                st.subheader(
+                    f"📈 แนวโน้ม WAR : {cam}"
+                )
+
+            with war_info_col:
+                with st.popover("ⓘ"):
+                    st.markdown("### WAR คืออะไร?")
+                    st.markdown("**WAR = (พิกเซลขยะใน ROI ÷ พื้นที่ ROI) × 100**")
+                    st.caption("ตัวอย่าง: ขยะ 25 px จาก ROI 100 px → WAR = 25%")
+                    st.caption("ใช้วัดสัดส่วนพื้นที่ขยะภายใน ROI ของกล้องนั้น")
+
+            if len(st.session_state.history[cam]) > 0:
+                graph_data = pd.DataFrame(st.session_state.history[cam]).reset_index(drop=True)
+                graph_data["จุด"] = np.arange(len(graph_data))
+
+                fig = px.line(
+                    graph_data,
+                    x="จุด",
+                    y="WAR",
+                    markers=True,
+                    custom_data=["เวลา", "ระดับ", "เปลี่ยนแปลง"],
+                )
+                fig.update_traces(
+                    line=dict(width=3, color="#315b8a"),
+                    marker=dict(size=8, color="#ffffff", line=dict(width=3, color="#315b8a")),
+                    hovertemplate=(
+                        "<b>จุดตรวจ %{x}</b><br>"
+                        "WAR: <b>%{y:.2f}%</b><br>"
+                        "เวลา: %{customdata[0]}<br>"
+                        "ระดับ: %{customdata[1]}<br>"
+                        "เปลี่ยนแปลง: %{customdata[2]:+.2f}%<extra></extra>"
+                    ),
+                )
+
+                current_thr = CAMERA_CONFIG.get(cam, {}).get("threshold", {})
+                for key, color, label in [
+                    ("low", "#4CAF50", "Low"),
+                    ("medium", "#FFD600", "Medium"),
+                    ("high", "#FF9800", "High"),
+                ]:
+                    if key in current_thr:
+                        try:
+                            y_value = float(current_thr[key])
+                            fig.add_hline(
+                                y=y_value,
+                                line_width=1,
+                                line_dash="dot",
+                                line_color=color,
+                                annotation_text=f"{label} {y_value:g}%",
+                                annotation_position="top left",
+                            )
+                        except (TypeError, ValueError):
+                            pass
+
+                fig.update_layout(
+                    height=285,
+                    margin=dict(l=8, r=12, t=12, b=8),
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    plot_bgcolor="#fbfcfe",
+                    hovermode="x unified",
+                    font=dict(family="Prompt, Noto Sans Thai, sans-serif", size=11, color="#172033"),
+                    showlegend=False,
+                    xaxis=dict(title="ลำดับการบันทึก", tickmode="linear", dtick=1, showgrid=False, zeroline=False),
+                    yaxis=dict(title="WAR (%)", ticksuffix="%", showgrid=True, gridcolor="#e8edf3", zeroline=False, rangemode="tozero"),
+                )
+
+                st.markdown(
+                    '<div class="chart-tip">💡 คลิกจุดบนกราฟเพื่อดูภาพและข้อมูลของการบันทึกครั้งนั้นด้านล่าง</div>',
+                    unsafe_allow_html=True
+                )
+
+                chart_event = st.plotly_chart(
+                    fig,
+                    use_container_width=True,
+                    key=f"war_chart_{cam}",
+                    on_select="rerun",
+                    selection_mode="points",
+                )
+
+                try:
+                    selection = getattr(chart_event, "selection", None)
+                    if selection is None and isinstance(chart_event, dict):
+                        selection = chart_event.get("selection")
+                    points = getattr(selection, "points", None) if selection is not None else None
+                    if points is None and isinstance(selection, dict):
+                        points = selection.get("points", [])
+
+                    if points:
+                        first_point = points[0]
+                        point_index = getattr(first_point, "point_index", None)
+                        if point_index is None and isinstance(first_point, dict):
+                            point_index = first_point.get("point_index")
+                        if point_index is None:
+                            point_index = getattr(first_point, "pointNumber", None)
+                        if point_index is None and isinstance(first_point, dict):
+                            point_index = first_point.get("pointNumber")
+
+                        if point_index is not None:
+                            point_index = int(point_index)
+                            if 0 <= point_index < len(st.session_state.history[cam]):
+                                st.session_state.selected_history = st.session_state.history[cam][point_index]
+                except Exception:
+                    pass
+
+                # =========================
+                # SELECTED GRAPH DATA
+                # =========================
+
+                if st.session_state.selected_history is not None:
+
+
+                    item = st.session_state.selected_history
+
+
+                    st.subheader(
+
+                        "🔎 ข้อมูลที่เลือกจากกราฟ"
+
                     )
 
 
 
-
-
-                    # -------------------------
-                    # DATA
-                    # -------------------------
-
-                    a,b,c = st.columns(3)
+                    x,y,z = st.columns(3)
 
 
 
-                    a.metric(
+                    x.metric(
 
                         "WAR",
 
@@ -1826,7 +1724,8 @@ for cam, data in st.session_state.camera_results.items():
                     )
 
 
-                    b.metric(
+
+                    y.metric(
 
                         "เปลี่ยนแปลง",
 
@@ -1835,12 +1734,31 @@ for cam, data in st.session_state.camera_results.items():
                     )
 
 
-                    c.metric(
+
+                    selected_info = LEVEL_INFO[
+
+                        item["ระดับ"]
+
+                    ]
+
+
+
+                    z.metric(
 
                         "ระดับ",
 
-                        history_info["name"]
+                        selected_info["name"]
 
+                    )
+
+
+
+
+
+                    show_image_viewer(
+                        item["ผล"],
+                        title="ผล Segmentation จากข้อมูลที่เลือก",
+                        display_width=340
                     )
 
 
@@ -1849,35 +1767,134 @@ for cam, data in st.session_state.camera_results.items():
 
 
 
-                    # -------------------------
-                    # IMAGES
-                    # -------------------------
+            # =================================================
+            # HISTORY
+            # =================================================
 
-                    h1,h2 = st.columns(2)
+            st.subheader(
+
+                f"📋 ประวัติการตรวจสอบ {cam}"
+
+            )
 
 
 
-                    with h1:
+            histories = st.session_state.history[cam]
 
 
-                        show_image_viewer(
-                            item["ภาพ"],
-                            title="ภาพต้นฉบับ",
-                            display_width=330
+
+            if len(histories) == 0:
+                pass
+
+            else:
+
+
+                for item in reversed(histories):
+
+
+                    history_info = LEVEL_INFO[
+
+                        item["ระดับ"]
+
+                    ]
+
+
+
+                    with st.expander(
+
+                        f'#{item["ID"]+1} | '
+
+                        f'{item["เวลา"]} | '
+
+                        f'{history_info["name"]}'
+
+                    ):
+
+
+
+                        # -------------------------
+                        # LEVEL MARKER
+                        # -------------------------
+                        # marker นี้ใช้ให้ CSS รู้ว่าหัว History ควรเป็นสีอะไร
+                        # แถบสีจะแสดงที่หัว Expander แทน ไม่แสดงซ้ำในเนื้อหา
+                        st.markdown(
+                            f'<span class="history-level-marker" data-level="{item["ระดับ"]}"></span>',
+                            unsafe_allow_html=True
                         )
 
 
 
 
 
-                    with h2:
+                        # -------------------------
+                        # DATA
+                        # -------------------------
+
+                        a,b,c = st.columns(3)
 
 
-                        show_image_viewer(
-                            item["ผล"],
-                            title="ผล Segmentation",
-                            display_width=330
+
+                        a.metric(
+
+                            "WAR",
+
+                            f'{item["WAR"]}%'
+
                         )
+
+
+                        b.metric(
+
+                            "เปลี่ยนแปลง",
+
+                            f'{item["เปลี่ยนแปลง"]:+.2f}%'
+
+                        )
+
+
+                        c.metric(
+
+                            "ระดับ",
+
+                            history_info["name"]
+
+                        )
+
+
+
+
+
+
+
+                        # -------------------------
+                        # IMAGES
+                        # -------------------------
+
+                        h1,h2 = st.columns(2)
+
+
+
+                        with h1:
+
+
+                            show_image_viewer(
+                                item["ภาพ"],
+                                title="ภาพต้นฉบับ",
+                                display_width=330
+                            )
+
+
+
+
+
+                        with h2:
+
+
+                            show_image_viewer(
+                                item["ผล"],
+                                title="ผล Segmentation",
+                                display_width=330
+                            )
 
 # =====================================================
 # ลำดับการจัดเก็บขยะ
