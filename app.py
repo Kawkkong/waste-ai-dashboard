@@ -538,14 +538,14 @@ hr {
 
 section[data-testid="stSidebar"] { border-right: 1px solid #e7ebf0; }
 
-/* Camera dropdown */
+/* Camera + history dropdowns */
 [data-testid="stExpander"] {
     border: 1px solid #dce4ed !important;
     border-radius: 15px !important;
     background: #ffffff !important;
     box-shadow: 0 7px 22px rgba(15,23,42,.06) !important;
     overflow: hidden !important;
-    margin: 5px 0 16px !important;
+    margin: 5px 0 14px !important;
 }
 
 [data-testid="stExpander"] summary {
@@ -563,14 +563,34 @@ section[data-testid="stSidebar"] { border-right: 1px solid #e7ebf0; }
 
 [data-testid="stExpander"] summary p {
     margin: 0 !important;
-    font-size: 13px !important;
+    font-size: 12.5px !important;
     font-weight: 650 !important;
     line-height: 1.45 !important;
-    color: #172033 !important;
+}
+
+[data-testid="stExpander"] summary p span {
+    font-weight: 700 !important;
 }
 
 [data-testid="stExpander"] > div {
     padding: 0 12px 12px !important;
+}
+
+.history-detail-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 11px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    margin: 2px 0 10px;
+}
+
+.history-title {
+    margin: 16px 0 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #172033;
 }
 
 .camera-detail-card {
@@ -613,34 +633,6 @@ section[data-testid="stSidebar"] { border-right: 1px solid #e7ebf0; }
 
 .action-text {
     color: #475467;
-}
-
-.camera-image-title {
-    font-size: 12px !important;
-    font-weight: 700 !important;
-    color: #172033 !important;
-    margin: 2px 0 5px !important;
-}
-
-.history-title {
-    margin: 16px 0 8px;
-    font-size: 13px;
-    font-weight: 700;
-    color: #172033;
-}
-
-.history-header {
-    min-height: 40px;
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    padding: 7px 10px;
-    border-radius: 9px;
-    box-sizing: border-box;
-    font-family: 'Prompt', 'Noto Sans Thai', Tahoma, sans-serif;
-    font-size: 11px;
-    line-height: 1.35;
-    box-shadow: 0 2px 8px rgba(15,23,42,.06);
 }
 
 .settings-card {
@@ -1016,8 +1008,10 @@ if "history" not in st.session_state:
 
 
 
-if "selected_history" not in st.session_state:
-    st.session_state.selected_history = None
+# เก็บข้อมูลที่เลือกจากกราฟแยกตามกล้อง
+# เพื่อไม่ให้การคลิกกราฟของ Camera หนึ่งไปแสดงภาพของอีก Camera
+if "selected_history_by_camera" not in st.session_state:
+    st.session_state.selected_history_by_camera = {}
 
 if "selected_history_camera" not in st.session_state:
     st.session_state.selected_history_camera = None
@@ -1427,7 +1421,7 @@ with st.expander("📷  อัปโหลดภาพ CCTV", expanded=False):
 
 
 
-                    st.session_state.selected_history = None
+                    st.session_state.selected_history_by_camera.pop(cam, None)
                     st.session_state.selected_history_camera = cam
 
                     st.session_state.camera_results[cam] = {
@@ -1730,7 +1724,10 @@ def render_camera_details(cam, data):
                 if point_index is not None:
                     point_index = int(point_index)
                     if 0 <= point_index < len(st.session_state.history[cam]):
-                        st.session_state.selected_history = st.session_state.history[cam][point_index]
+                        st.session_state.selected_history_by_camera[cam] = (
+                            st.session_state.history[cam][point_index]
+                        )
+                        st.session_state.selected_history_camera = cam
         except Exception:
             pass
 
@@ -1738,10 +1735,12 @@ def render_camera_details(cam, data):
         # SELECTED GRAPH DATA
         # =========================
 
-        if st.session_state.selected_history is not None:
+        selected_history = st.session_state.selected_history_by_camera.get(cam)
 
+        # แสดงข้อมูลที่เลือกจากกราฟเฉพาะกล้องที่ถูกคลิกเท่านั้น
+        if selected_history is not None and st.session_state.selected_history_camera == cam:
 
-            item = st.session_state.selected_history
+            item = selected_history
 
 
             st.subheader(
@@ -1830,109 +1829,63 @@ def render_camera_details(cam, data):
             history_info = LEVEL_INFO[item["ระดับ"]]
             history_key = f"history_open_{cam}_{item['ID']}"
 
-            if history_key not in st.session_state:
-                st.session_state[history_key] = False
+            # ใช้ expander ของ Streamlit เป็นหัวรายการโดยตรง
+            # ไม่สร้างปุ่มลูกศรแยก
+            history_dot = {
+                "Normal": "🟢",
+                "Low": "🟢",
+                "Medium": "🟡",
+                "High": "🟠",
+                "Critical": "🔴",
+            }.get(item["ระดับ"], "⚪")
 
-            history_open = st.session_state[history_key]
+            history_color_name = streamlit_level_color(item["ระดับ"])
 
-            hc1, hc2 = st.columns([0.94, 0.06], gap="small")
-
-            with hc1:
+            with st.expander(
+                f":{history_color_name}[{history_dot}  #{int(item['ID']) + 1}  ·  {item['เวลา']}  ·  {history_info['name']}]",
+                expanded=False
+            ):
                 st.markdown(
-                    f'<div class="history-header" '
+                    f'<div class="history-detail-status" '
                     f'style="background:{history_info["color"]};'
                     f'color:{"#172033" if item["ระดับ"] == "Medium" else "#ffffff"};">'
-                    f'<b>#{item["ID"] + 1}</b>'
-                    f'<span>{item["เวลา"]}</span>'
-                    f'<span>{history_info["name"]}</span>'
+                    f'{history_info["name"]}'
                     f'</div>',
                     unsafe_allow_html=True
                 )
 
-            with hc2:
-                if st.button(
-                    "⌄" if history_open else "›",
-                    key=f"history_toggle_{cam}_{item['ID']}",
-                    use_container_width=True
-                ):
-                    st.session_state[history_key] = not history_open
-                    st.rerun()
+                hx, hy, hz = st.columns(3)
 
-            if history_open:
-                # -------------------------
-                # DATA
-                # -------------------------
+                hx.metric("WAR", f'{item["WAR"]}%')
+                hy.metric("เปลี่ยนแปลง", f'{item["เปลี่ยนแปลง"]:+.2f}%')
+                hz.metric("ระดับ", history_info["name"])
 
-                a,b,c = st.columns(3)
-
-
-
-                a.metric(
-
-                    "WAR",
-
-                    f'{item["WAR"]}%'
-
+                show_image_viewer(
+                    item["ผล"],
+                    title="ผล Segmentation",
+                    display_width=340
                 )
 
 
-                b.metric(
+# =====================================================
+# =====================================================
+# CAMERA / HISTORY STATUS COLOR
+# =====================================================
 
-                    "เปลี่ยนแปลง",
+def streamlit_level_color(level):
+    return {
+        "Normal": "green",
+        "Low": "green",
+        "Medium": "orange",
+        "High": "orange",
+        "Critical": "red",
+    }.get(level, "gray")
 
-                    f'{item["เปลี่ยนแปลง"]:+.2f}%'
-
-                )
-
-
-                c.metric(
-
-                    "ระดับ",
-
-                    history_info["name"]
-
-                )
-
-
-
-
-
-
-
-                # -------------------------
-                # IMAGES
-                # -------------------------
-
-                h1,h2 = st.columns(2)
-
-
-
-                with h1:
-
-
-                    show_image_viewer(
-                        item["ภาพ"],
-                        title="ภาพต้นฉบับ",
-                        display_width=330
-                    )
-
-
-
-
-
-                with h2:
-
-
-                    show_image_viewer(
-                        item["ผล"],
-                        title="ผล Segmentation",
-                        display_width=330
-                    )
 # =====================================================
 # CAMERA DROPDOWN
 # =====================================================
-# ใช้ st.expander เป็นหัวหลักของแต่ละกล้องโดยตรง
-# ไม่มี checkbox และไม่มีปุ่มลูกศรแยกอีกตัว
+# หัวหลักของแต่ละกล้องเป็น dropdown โดยตรง
+# ใช้จุดสีแสดงระดับความหนาแน่น และไม่ใช้ปุ่ม/checkbox ซ้อน
 
 camera_items = list(st.session_state.camera_results.items())
 
@@ -1944,10 +1897,19 @@ if camera_items:
         level = result["level"]
         info = LEVEL_INFO[level]
 
+        level_dot = {
+            "Normal": "🟢",
+            "Low": "🟢",
+            "Medium": "🟡",
+            "High": "🟠",
+            "Critical": "🔴",
+        }.get(level, "⚪")
+
         with camera_col:
-            # หัวหลัก = dropdown โดยตรง
+            level_color = streamlit_level_color(level)
+
             with st.expander(
-                f"📷 {cam}  ·  {info['name']}  ·  {info['action']}",
+                f":{level_color}[{level_dot}  📷 {cam}  ·  {info['name']}]",
                 expanded=False
             ):
                 render_camera_details(cam, data)
