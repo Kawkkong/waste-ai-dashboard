@@ -469,12 +469,27 @@ hr {
 }
 
 .stButton > button:hover { border-color: #9eb4cd !important; }
+.stButton > button {
+    white-space: nowrap !important;
+    word-break: keep-all !important;
+    overflow-wrap: normal !important;
+}
 
 [data-testid="stPopover"] button {
     border-radius: 9px !important;
-    min-height: 34px !important;
-    padding: 0 10px !important;
+    min-height: 36px !important;
+    min-width: 96px !important;
+    padding: 0 12px !important;
+    white-space: nowrap !important;
+    word-break: keep-all !important;
+    overflow-wrap: normal !important;
     font-family: 'Prompt', 'Noto Sans Thai', Tahoma, sans-serif !important;
+}
+
+[data-testid="stPopover"] button p {
+    white-space: nowrap !important;
+    word-break: keep-all !important;
+    overflow-wrap: normal !important;
 }
 
 [data-testid="stImage"] img { border-radius: 9px; }
@@ -810,6 +825,17 @@ section[data-testid="stSidebar"] [data-testid="stExpander"] summary:hover {
     transform-origin: center;
 }
 
+@media (max-width: 800px) {
+    [data-testid="stHorizontalBlock"] {
+        gap: 0.5rem !important;
+    }
+
+    [data-testid="stPopover"] button {
+        min-width: 88px !important;
+        padding: 0 8px !important;
+    }
+}
+
 </style>
 """,
 
@@ -1096,8 +1122,13 @@ if st.session_state.show_settings:
 # HEADER
 # =====================================================
 
-header_left, header_upload, header_settings, header_help = st.columns(
-    [0.73, 0.09, 0.09, 0.09],
+header_left, header_actions = st.columns(
+    [0.72, 0.28],
+    vertical_alignment="center"
+)
+
+header_upload, header_settings, header_help = header_actions.columns(
+    [1.35, 0.8, 0.8],
     vertical_alignment="center"
 )
 
