@@ -538,48 +538,43 @@ hr {
 
 section[data-testid="stSidebar"] { border-right: 1px solid #e7ebf0; }
 
-/* Camera + history cards */
-.camera-card {
-    border: 1px solid #dce4ed;
-    border-radius: 16px;
-    background: #ffffff;
-    padding: 10px;
-    margin: 5px 0 16px;
-    box-shadow: 0 7px 22px rgba(15,23,42,.06);
+/* Camera dropdown */
+[data-testid="stExpander"] {
+    border: 1px solid #dce4ed !important;
+    border-radius: 15px !important;
+    background: #ffffff !important;
+    box-shadow: 0 7px 22px rgba(15,23,42,.06) !important;
+    overflow: hidden !important;
+    margin: 5px 0 16px !important;
 }
 
-.camera-header {
-    min-height: 46px;
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    padding: 8px 10px;
-    border-radius: 11px;
-    box-sizing: border-box;
-    font-family: 'Prompt', 'Noto Sans Thai', Tahoma, sans-serif;
-    font-size: 12px;
-    font-weight: 650;
-    line-height: 1.35;
+[data-testid="stExpander"] summary {
+    min-height: 48px !important;
+    padding: 8px 13px !important;
+    box-sizing: border-box !important;
+    background: #ffffff !important;
+    border-radius: 15px !important;
+    font-family: "Prompt", "Noto Sans Thai", Tahoma, sans-serif !important;
 }
 
-.camera-arrow {
-    font-size: 15px;
-    opacity: .9;
+[data-testid="stExpander"] summary:hover {
+    background: #f8fafc !important;
 }
 
-.camera-title {
-    font-weight: 700;
-    white-space: nowrap;
+[data-testid="stExpander"] summary p {
+    margin: 0 !important;
+    font-size: 13px !important;
+    font-weight: 650 !important;
+    line-height: 1.45 !important;
+    color: #172033 !important;
 }
 
-.camera-level {
-    margin-left: auto;
-    font-weight: 650;
-    white-space: nowrap;
+[data-testid="stExpander"] > div {
+    padding: 0 12px 12px !important;
 }
 
 .camera-detail-card {
-    margin: 9px 0 2px;
+    margin: 4px 0 2px;
     padding: 12px;
     border: 1px solid #e1e8f0;
     border-radius: 13px;
@@ -1933,7 +1928,12 @@ def render_camera_details(cam, data):
                         title="ผล Segmentation",
                         display_width=330
                     )
-# Render every camera independently in columns.
+# =====================================================
+# CAMERA DROPDOWN
+# =====================================================
+# ใช้ st.expander เป็นหัวหลักของแต่ละกล้องโดยตรง
+# ไม่มี checkbox และไม่มีปุ่มลูกศรแยกอีกตัว
+
 camera_items = list(st.session_state.camera_results.items())
 
 if camera_items:
@@ -1944,43 +1944,16 @@ if camera_items:
         level = result["level"]
         info = LEVEL_INFO[level]
 
-        camera_open_key = f"camera_open_{cam}"
-        if camera_open_key not in st.session_state:
-            st.session_state[camera_open_key] = False
-
         with camera_col:
-            st.markdown('<div class="camera-card">', unsafe_allow_html=True)
-
-            hc1, hc2 = st.columns([0.88, 0.12], gap="small")
-
-            with hc1:
-                arrow = "⌄" if st.session_state[camera_open_key] else "›"
-                st.markdown(
-                    f'<div class="camera-header" '
-                    f'style="background:{info["color"]};'
-                    f'color:{"#172033" if level == "Medium" else "#ffffff"};">'
-                    f'<span class="camera-arrow">{arrow}</span>'
-                    f'<span class="camera-title">📷 {cam}</span>'
-                    f'<span class="camera-level">{info["name"]}</span>'
-                    f'</div>',
-                    unsafe_allow_html=True
-                )
-
-            with hc2:
-                if st.button(
-                    "⌄" if st.session_state[camera_open_key] else "›",
-                    key=f"camera_toggle_{cam}",
-                    use_container_width=True
-                ):
-                    st.session_state[camera_open_key] = not st.session_state[camera_open_key]
-                    st.rerun()
-
-            if st.session_state[camera_open_key]:
+            # หัวหลัก = dropdown โดยตรง
+            with st.expander(
+                f"📷 {cam}  ·  {info['name']}  ·  {info['action']}",
+                expanded=False
+            ):
                 render_camera_details(cam, data)
-
-            st.markdown('</div>', unsafe_allow_html=True)
 else:
     st.info("ยังไม่มีผลการวิเคราะห์จากกล้อง")
+
 
 # =====================================================
 # ลำดับการจัดเก็บขยะ
