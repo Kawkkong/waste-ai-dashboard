@@ -1010,6 +1010,64 @@ h3 { font-size: 1.08rem !important; }
     }
 }
 
+
+/* Final image-title / info-button polish */
+.camera-image-title {
+    display: block !important;
+    position: relative !important;
+    z-index: 2 !important;
+    min-height: 24px !important;
+    margin: 4px 0 9px !important;
+    padding: 0 !important;
+    font-family: "Prompt", "Noto Sans Thai", Tahoma, sans-serif !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    line-height: 1.5 !important;
+    color: #172033 !important;
+}
+
+.camera-image-title + * {
+    margin-top: 0 !important;
+}
+
+[data-testid="stExpander"] [data-testid="stImage"] {
+    margin-top: 0 !important;
+}
+
+[data-testid="stExpander"] [data-testid="stImage"] img {
+    display: block !important;
+    width: 100% !important;
+    margin-top: 0 !important;
+    border-radius: 10px !important;
+}
+
+/* Clean info (i) controls */
+.info-button {
+    width: 32px !important;
+    height: 32px !important;
+    min-height: 32px !important;
+    border: 1px solid #d7dee8 !important;
+    border-radius: 10px !important;
+    background: #ffffff !important;
+    color: #344054 !important;
+    font-family: "Prompt", "Noto Sans Thai", Tahoma, sans-serif !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    line-height: 1 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-shadow: 0 3px 10px rgba(15,23,42,.06) !important;
+    transition: all .16s ease !important;
+}
+
+.info-button:hover {
+    background: #f7faff !important;
+    border-color: #b9c9d9 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 14px rgba(15,23,42,.10) !important;
+}
+
 </style>
 """,
 
@@ -1862,7 +1920,7 @@ def render_camera_details(cam, data):
             # ไม่สร้างปุ่มลูกศรแยก
             history_dot = {
                 "Normal": "🟢",
-                "Low": "🟢",
+                "Low": "#2196F3",
                 "Medium": "🟡",
                 "High": "🟠",
                 "Critical": "🔴",
@@ -1904,7 +1962,7 @@ def render_camera_details(cam, data):
 def streamlit_level_color(level):
     return {
         "Normal": "green",
-        "Low": "green",
+        "Low": "#2196F3",
         "Medium": "orange",
         "High": "orange",
         "Critical": "red",
@@ -1928,7 +1986,7 @@ if camera_items:
 
         level_dot = {
             "Normal": "🟢",
-            "Low": "🟢",
+            "Low": "#2196F3",
             "Medium": "🟡",
             "High": "🟠",
             "Critical": "🔴",
