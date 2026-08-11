@@ -55,6 +55,9 @@ def show_image_viewer(img_bgr, title="", display_width=340, viewer_height=300):
     <html>
     <head>
         <meta charset="UTF-8">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
 
         <style>
             * {{
@@ -79,9 +82,10 @@ def show_image_viewer(img_bgr, title="", display_width=340, viewer_height=300):
 
             .viewer {{
                 position: relative;
-                width: min(100%, {display_width}px);
+                width: 100%;
+                max-width: {display_width}px;
                 aspect-ratio: {w} / {h};
-                margin: 0 auto;
+                margin: 0 auto 2px;
                 overflow: hidden;
                 background: transparent;
                 border-radius: 8px;
@@ -183,14 +187,39 @@ def show_image_viewer(img_bgr, title="", display_width=340, viewer_height=300):
 }}
 .camera-action b {{ color: #172033; }}
 .camera-image-title {{
-    font-size: 13px;
-    font-weight: 650;
-    color: #172033;
-    margin: 2px 0 3px;
+    font-family: "Prompt", "Noto Sans Thai", Tahoma, sans-serif !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: #172033 !important;
+    line-height: 1.45 !important;
+    margin: 0 0 7px !important;
+    padding: 0 !important;
 }}
 [data-testid="stExpander"] [data-testid="stHorizontalBlock"] {{
     gap: 0.7rem !important;
 }}
+
+/* Global Thai typography */
+html, body, [class*="st-"], [data-testid="stMarkdownContainer"],
+[data-testid="stMetric"], [data-testid="stExpander"] {
+    font-family: "Prompt", "Noto Sans Thai", Tahoma, sans-serif !important;
+}
+
+[data-testid="stMetricLabel"] {
+    font-size: 11px !important;
+    line-height: 1.4 !important;
+}
+
+[data-testid="stMetricValue"] {
+    font-size: 22px !important;
+    line-height: 1.15 !important;
+    font-weight: 700 !important;
+}
+
+[data-testid="stMarkdownContainer"] p {
+    line-height: 1.55 !important;
+}
+
 </style>
     </head>
 
@@ -297,7 +326,7 @@ def show_image_viewer(img_bgr, title="", display_width=340, viewer_height=300):
 
     components.html(
         html,
-        height=aspect_height + 12,
+        height=aspect_height + 20,
         scrolling=False
     )
 
