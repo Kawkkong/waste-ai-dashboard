@@ -201,24 +201,24 @@ def show_image_viewer(img_bgr, title="", display_width=340, viewer_height=300):
 
 /* Global Thai typography */
 html, body, [class*="st-"], [data-testid="stMarkdownContainer"],
-[data-testid="stMetric"], [data-testid="stExpander"] {
+[data-testid="stMetric"], [data-testid="stExpander"] {{
     font-family: "Prompt", "Noto Sans Thai", Tahoma, sans-serif !important;
-}
+}}
 
-[data-testid="stMetricLabel"] {
+[data-testid="stMetricLabel"] {{
     font-size: 11px !important;
     line-height: 1.4 !important;
-}
+}}
 
-[data-testid="stMetricValue"] {
+[data-testid="stMetricValue"] {{
     font-size: 22px !important;
     line-height: 1.15 !important;
     font-weight: 700 !important;
-}
+}}
 
-[data-testid="stMarkdownContainer"] p {
+[data-testid="stMarkdownContainer"] p {{
     line-height: 1.55 !important;
-}
+}}
 
 </style>
     </head>
