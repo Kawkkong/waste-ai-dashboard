@@ -314,7 +314,7 @@ LEVEL_INFO = {
 
         "color":"#F44336",
 
-        "action":"แจ้งเตือนด่วนและดำเนินการเก็บขยะทันที"
+        "action":"แจ้งเจ้าหน้าที่และดำเนินการเก็บขยะด่วน"
 
     }
 
@@ -474,18 +474,57 @@ hr {
 
 section[data-testid="stSidebar"] { border-right: 1px solid #e7ebf0; }
 
-.history-level-only {
-    display: flex;
-    align-items: center;
-    min-height: 34px;
-    margin: 2px 0 12px;
-    padding: 7px 11px;
-    border-radius: 8px;
-    color: #fff;
-    font-size: 12px;
-    font-weight: 700;
-    box-sizing: border-box;
-    box-shadow: 0 2px 7px rgba(15,23,42,.08);
+/* History: ใช้สีระดับบนหัว Expander โดยตรง */
+.history-level-marker {
+    display: none !important;
+}
+
+/* Streamlit expander header */
+[data-testid="stExpander"]:has(.history-level-marker[data-level="Normal"]) summary {
+    background: #4CAF50 !important;
+    color: #fff !important;
+    border-radius: 10px !important;
+}
+
+[data-testid="stExpander"]:has(.history-level-marker[data-level="Low"]) summary {
+    background: #2196F3 !important;
+    color: #fff !important;
+    border-radius: 10px !important;
+}
+
+[data-testid="stExpander"]:has(.history-level-marker[data-level="Medium"]) summary {
+    background: #FFD600 !important;
+    color: #172033 !important;
+    border-radius: 10px !important;
+}
+
+[data-testid="stExpander"]:has(.history-level-marker[data-level="High"]) summary {
+    background: #FF9800 !important;
+    color: #fff !important;
+    border-radius: 10px !important;
+}
+
+[data-testid="stExpander"]:has(.history-level-marker[data-level="Critical"]) summary {
+    background: #F44336 !important;
+    color: #fff !important;
+    border-radius: 10px !important;
+}
+
+[data-testid="stExpander"]:has(.history-level-marker) summary {
+    min-height: 40px !important;
+    padding: 8px 12px !important;
+    font-weight: 700 !important;
+    border: 0 !important;
+    transition: filter .18s ease, box-shadow .18s ease;
+}
+
+[data-testid="stExpander"]:has(.history-level-marker) summary:hover {
+    filter: brightness(.96);
+    box-shadow: 0 3px 10px rgba(15,23,42,.08);
+}
+
+[data-testid="stExpander"]:has(.history-level-marker) summary * {
+    color: inherit !important;
 }
 
 .settings-card {
@@ -1672,13 +1711,12 @@ for cam, data in st.session_state.camera_results.items():
 
 
                 # -------------------------
-                # LEVEL
+                # LEVEL MARKER
                 # -------------------------
-
+                # marker นี้ใช้ให้ CSS รู้ว่าหัว History ควรเป็นสีอะไร
+                # แถบสีจะแสดงที่หัว Expander แทน ไม่แสดงซ้ำในเนื้อหา
                 st.markdown(
-                    f'<div class="history-level-only" style="background:{history_info["color"]};">'
-                    f'<span>{history_info["name"]}</span>'
-                    f'</div>',
+                    f'<span class="history-level-marker" data-level="{item["ระดับ"]}"></span>',
                     unsafe_allow_html=True
                 )
 
