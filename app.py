@@ -135,43 +135,43 @@ def show_image_viewer(img_bgr, title="", display_width=340, viewer_height=300):
             }}
         
 /* Camera result widgets */
-[data-testid="stExpander"] {
+[data-testid="stExpander"] {{
     border: 1px solid #d9e2ec !important;
     border-radius: 16px !important;
     background: #ffffff !important;
     box-shadow: 0 5px 18px rgba(15,23,42,.055) !important;
     overflow: hidden !important;
     transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
-}
-[data-testid="stExpander"]:hover {
+}}
+[data-testid="stExpander"]:hover {{
     transform: translateY(-1px);
     border-color: #c7d5e4 !important;
     box-shadow: 0 10px 26px rgba(15,23,42,.09) !important;
-}
-[data-testid="stExpander"] summary {
+}}
+[data-testid="stExpander"] summary {{
     min-height: 50px !important;
     padding: 9px 14px !important;
     background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%) !important;
-}
-[data-testid="stExpander"] summary:hover {
+}}
+[data-testid="stExpander"] summary:hover {{
     background: #f7faff !important;
-}
-[data-testid="stExpander"] summary p {
+}}
+[data-testid="stExpander"] summary p {{
     margin: 0 !important;
     font-size: 13px !important;
     font-weight: 650 !important;
     line-height: 1.45 !important;
     color: #172033 !important;
-}
-.camera-status {
+}}
+.camera-status {{
     padding: 9px 12px;
     border-radius: 10px;
     font-size: 13px;
     font-weight: 650;
     margin: 2px 0 7px;
     box-shadow: inset 0 0 0 1px rgba(255,255,255,.18);
-}
-.camera-action {
+}}
+.camera-action {{
     padding: 10px 12px;
     border: 1px solid #e2e8f0;
     border-radius: 10px;
@@ -180,17 +180,17 @@ def show_image_viewer(img_bgr, title="", display_width=340, viewer_height=300):
     font-size: 11px;
     line-height: 1.55;
     margin-bottom: 8px;
-}
-.camera-action b { color: #172033; }
-.camera-image-title {
+}}
+.camera-action b {{ color: #172033; }}
+.camera-image-title {{
     font-size: 13px;
     font-weight: 650;
     color: #172033;
     margin: 2px 0 3px;
-}
-[data-testid="stExpander"] [data-testid="stHorizontalBlock"] {
+}}
+[data-testid="stExpander"] [data-testid="stHorizontalBlock"] {{
     gap: 0.7rem !important;
-}
+}}
 </style>
     </head>
 
@@ -1494,10 +1494,9 @@ for cam, data in st.session_state.camera_results.items():
             with c1:
 
 
-                st.subheader(
-
-                    "ภาพจากกล้อง"
-
+                st.markdown(
+                    '<div class="camera-image-title">ภาพจากกล้อง</div>',
+                    unsafe_allow_html=True
                 )
 
 
@@ -1514,10 +1513,9 @@ for cam, data in st.session_state.camera_results.items():
             with c2:
 
 
-                st.subheader(
-
-                    "ผล Segmentation"
-
+                st.markdown(
+                    '<div class="camera-image-title">ผล Segmentation</div>',
+                    unsafe_allow_html=True
                 )
 
 
