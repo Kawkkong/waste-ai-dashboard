@@ -1920,16 +1920,14 @@ def render_camera_details(cam, data):
             # ไม่สร้างปุ่มลูกศรแยก
             history_dot = {
                 "Normal": "🟢",
-                "Low": "#2196F3",
+                "Low": "🔵",
                 "Medium": "🟡",
                 "High": "🟠",
                 "Critical": "🔴",
             }.get(item["ระดับ"], "⚪")
 
-            history_color_name = streamlit_level_color(item["ระดับ"])
-
             with st.expander(
-                f":{history_color_name}[{history_dot}  #{int(item['ID']) + 1}  ·  {item['เวลา']}  ·  {history_info['name']}]",
+                f"{history_dot}  📋 #{int(item['ID']) + 1}  ·  {item['เวลา']}  ·  {history_info['name']}",
                 expanded=False
             ):
                 st.markdown(
@@ -1956,19 +1954,6 @@ def render_camera_details(cam, data):
 
 # =====================================================
 # =====================================================
-# CAMERA / HISTORY STATUS COLOR
-# =====================================================
-
-def streamlit_level_color(level):
-    return {
-        "Normal": "green",
-        "Low": "#2196F3",
-        "Medium": "orange",
-        "High": "orange",
-        "Critical": "red",
-    }.get(level, "gray")
-
-# =====================================================
 # CAMERA DROPDOWN
 # =====================================================
 # หัวหลักของแต่ละกล้องเป็น dropdown โดยตรง
@@ -1986,17 +1971,15 @@ if camera_items:
 
         level_dot = {
             "Normal": "🟢",
-            "Low": "#2196F3",
+            "Low": "🔵",
             "Medium": "🟡",
             "High": "🟠",
             "Critical": "🔴",
         }.get(level, "⚪")
 
         with camera_col:
-            level_color = streamlit_level_color(level)
-
             with st.expander(
-                f":{level_color}[{level_dot}  📷 {cam}  ·  {info['name']}]",
+                f"{level_dot}  📷 {cam}  ·  {info['name']}",
                 expanded=False
             ):
                 render_camera_details(cam, data)
