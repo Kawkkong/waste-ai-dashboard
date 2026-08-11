@@ -71,9 +71,9 @@ def show_image_viewer(img_bgr, title="", display_width=400, viewer_height=300):
 
             body {{
                 font-family:
-                    "IBM Plex Sans Thai",
+                    "Prompt",
                     "Noto Sans Thai",
-                    Arial,
+                    Tahoma,
                     sans-serif;
             }}
 
@@ -359,13 +359,20 @@ footer {
     --ink: #172033;
     --muted: #667085;
     --line: #e5eaf1;
+    --accent: #315b8a;
+    --accent-soft: #edf4fb;
 }
+
+@import url('https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&display=swap');
 
 html, body,
 [data-testid="stAppViewContainer"],
 [data-testid="stSidebar"],
-button, input, textarea, select {
-    font-family: 'IBM Plex Sans Thai', 'Noto Sans Thai', Tahoma, sans-serif !important;
+button, input, textarea, select,
+[data-testid="stMarkdownContainer"],
+[data-testid="stMetric"],
+[data-testid="stExpander"] {
+    font-family: 'Prompt', 'Noto Sans Thai', Tahoma, sans-serif !important;
 }
 
 [data-testid="stAppViewContainer"] {
@@ -578,187 +585,143 @@ div[data-testid="stNumberInput"] label {
     color: #667085 !important;
 }
 
-/* Collection */
+/* Modern micro-interactions */
+.stButton > button,
+[data-testid="stFileUploader"],
+[data-testid="stMetric"],
+[data-testid="stExpander"],
+.collection-stop {
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+
+.stButton > button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(49,91,138,.10);
+}
+
+[data-testid="stMetric"]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(15,23,42,.07);
+}
+
+[data-testid="stFileUploader"] {
+    border: 1px solid #dfe6ee !important;
+    border-radius: 14px !important;
+    padding: 10px !important;
+    background: #fbfcfe !important;
+}
+
+[data-testid="stFileUploader"]:hover {
+    border-color: #b8c9dc !important;
+    box-shadow: 0 7px 18px rgba(49,91,138,.08);
+}
+
+[data-testid="stFileUploaderDropzone"] {
+    border-radius: 11px !important;
+    background: linear-gradient(180deg,#ffffff 0%,#f7faff 100%) !important;
+}
+
+.upload-camera-label {
+    display:flex; align-items:center; justify-content:space-between;
+    gap:8px; margin:8px 0 6px; color:var(--ink);
+    font-size:13px; font-weight:600;
+}
+
+.upload-hint {
+    color:var(--muted); font-size:11px; line-height:1.5; margin:0 0 8px;
+}
+
+.upload-panel-title { font-size:16px; font-weight:700; color:var(--ink); margin-bottom:2px; }
+.upload-panel-subtitle { color:var(--muted); font-size:11px; line-height:1.5; margin-bottom:10px; }
+
+.chart-tip {
+    margin:0 4px 8px; padding:7px 10px; border-radius:9px;
+    background:#f6f9fc; color:#667085; font-size:11px;
+}
+
+/* Collection widget */
 .collection-section {
-    margin-top: 10px;
-    padding: 18px 16px 17px;
-    border-radius: 18px;
-    background: linear-gradient(180deg,#f8fafc 0%,#f1f5f9 100%);
+    margin-top: 18px;
+    padding: 18px;
     border: 1px solid #dfe6ee;
-    box-shadow: 0 7px 22px rgba(15,23,42,.045);
+    border-radius: 18px;
+    background: #ffffff;
+    box-shadow: 0 8px 24px rgba(15,23,42,.045);
     overflow: hidden;
 }
-
-.collection-title {
-    text-align: center;
-    font-size: 22px;
-    font-weight: 700;
-    color: #23344d;
-    margin-bottom: 3px;
+.collection-head { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; margin-bottom:14px; }
+.collection-title { font-size:21px; font-weight:700; color:#172033; margin-bottom:2px; }
+.collection-subtitle { color:#667085; font-size:11px; line-height:1.55; }
+.collection-info { position:relative; flex:0 0 auto; }
+.collection-info summary {
+    list-style:none; cursor:pointer; width:34px; height:34px; display:grid; place-items:center;
+    border:1px solid #d7dee8; border-radius:10px; color:#344054; background:#fff;
+    transition:transform .18s ease, box-shadow .18s ease, background .18s ease;
 }
-
-.collection-subtitle {
-    text-align: center;
-    color: #6b7789;
-    font-size: 12px;
-    margin-bottom: 15px;
+.collection-info summary::-webkit-details-marker { display:none; }
+.collection-info summary:hover { transform:translateY(-1px); background:#f7faff; box-shadow:0 5px 14px rgba(49,91,138,.10); }
+.collection-info-pop {
+    position:absolute; right:0; top:40px; z-index:20; width:min(330px,78vw); padding:13px;
+    border:1px solid #dfe6ee; border-radius:12px; background:#fff;
+    box-shadow:0 14px 30px rgba(15,23,42,.13); color:#344054; font-size:11px; line-height:1.6;
 }
+.collection-info-pop ol { margin:7px 0; padding-left:20px; }
+.collection-example { padding:9px 10px; border-radius:9px; background:#f6f9fc; }
 
 .collection-road {
-    position: relative;
-    height: 106px;
-    margin: 0 8px 16px;
-    border-radius: 18px;
-    background: linear-gradient(180deg,#4b5563 0%,#364152 100%);
-    box-shadow: inset 0 4px 12px rgba(0,0,0,.18), 0 5px 14px rgba(15,23,42,.08);
-    overflow: hidden;
+    position:relative; height:122px; margin:0 2px 15px; border-radius:16px;
+    background:linear-gradient(180deg,#4b5563 0%,#364152 100%); overflow:hidden;
+    box-shadow:inset 0 4px 12px rgba(0,0,0,.18);
 }
-
-.collection-road::before {
-    content:'';
-    position:absolute;
-    left:0; right:0; top:54%;
-    height:4px;
-    transform:translateY(-50%);
-    background:repeating-linear-gradient(90deg,#f8fafc 0 40px,transparent 40px 68px);
-    opacity:.92;
+.collection-lane {
+    position:absolute; left:3%; right:3%; top:54%; height:4px; transform:translateY(-50%);
+    background:repeating-linear-gradient(90deg,#f8fafc 0 40px,transparent 40px 68px); opacity:.9;
 }
-
-.collection-road::after {
-    content:'→  เส้นทางการจัดเก็บขยะ  →';
-    position:absolute;
-    left:50%; bottom:8px;
-    transform:translateX(-50%);
-    color:rgba(255,255,255,.78);
-    font-size:11px;
-    font-weight:600;
-    white-space:nowrap;
-}
-
-.collection-truck {
-    position:absolute;
-    top:24px; left:1.5%;
-    font-size:36px;
-    z-index:5;
-    filter:drop-shadow(0 4px 3px rgba(0,0,0,.28));
-    animation:collectionDriveOneWay 10s linear infinite;
-}
-
-@keyframes collectionDriveOneWay {
-    0% { left:1.5%; transform:translateX(0); }
-    100% { left:96%; transform:translateX(-100%); }
-}
-
 .collection-checkpoints {
-    position:absolute;
-    left:3%; right:3%; top:31px;
-    height:45px;
-    z-index:2;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
+    position:absolute; left:3%; right:3%; top:37px; display:flex;
+    justify-content:space-between; align-items:flex-start; z-index:4;
 }
-
+.collection-checkpoint-wrap { min-width:34px; text-align:center; }
 .collection-checkpoint {
-    position:relative;
-    width:28px; height:28px;
-    border-radius:50%;
-    border:4px solid #fff;
-    box-shadow:0 2px 7px rgba(0,0,0,.28);
+    width:30px; height:30px; margin:0 auto; border:4px solid #fff; border-radius:50%;
+    display:grid; place-items:center; box-shadow:0 2px 8px rgba(0,0,0,.28);
+    color:#fff; font-size:10px; font-weight:700;
 }
-
 .collection-checkpoint-label {
-    position:absolute;
-    top:31px; left:50%;
-    transform:translateX(-50%);
-    color:#fff;
-    font-size:10px;
-    font-weight:700;
-    white-space:nowrap;
-    text-shadow:0 1px 2px rgba(0,0,0,.65);
+    margin-top:7px; color:#fff; font-size:10px; font-weight:600; white-space:nowrap;
+    text-shadow:0 1px 2px rgba(0,0,0,.7);
 }
-
-.collection-arrow {
-    position:absolute;
-    top:43px; left:0; right:0;
-    text-align:center;
-    color:#fff;
-    font-size:20px;
-    opacity:.88;
+.collection-truck {
+    position:absolute; left:3%; top:61px; z-index:6; font-size:31px;
+    filter:drop-shadow(0 4px 3px rgba(0,0,0,.28)); transform:scaleX(-1);
+    animation:collectionDriveOneWay 9s linear infinite; pointer-events:none;
 }
-
-.collection-stops {
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(205px,1fr));
-    gap:10px;
+@keyframes collectionDriveOneWay {
+    0% { left:3%; opacity:0; } 6% { opacity:1; } 94% { opacity:1; } 100% { left:96%; opacity:0; }
 }
-
+.collection-road-arrow { position:absolute; right:3%; top:51px; color:rgba(255,255,255,.85); font-size:20px; z-index:5; }
+.collection-road-label { position:absolute; left:50%; bottom:9px; transform:translateX(-50%); color:rgba(255,255,255,.78); font-size:10px; font-weight:600; white-space:nowrap; }
+.collection-stops { display:grid; grid-template-columns:repeat(auto-fit,minmax(205px,1fr)); gap:10px; }
 .collection-stop {
-    position:relative;
-    background:#fff;
-    border:1px solid #e2e8f0;
-    border-radius:12px;
-    padding:11px 12px;
-    box-shadow:0 2px 8px rgba(15,23,42,.045);
+    position:relative; background:#fff; border:1px solid #e2e8f0; border-radius:13px;
+    padding:12px; box-shadow:0 2px 8px rgba(15,23,42,.035);
 }
-
+.collection-stop:hover { transform:translateY(-3px); border-color:#c9d7e6; box-shadow:0 10px 22px rgba(15,23,42,.08); }
 .collection-rank {
-    position:absolute;
-    top:9px; right:10px;
-    width:28px; height:28px;
-    border-radius:50%;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    color:#fff;
-    font-weight:700;
-    font-size:12px;
+    position:absolute; top:10px; right:10px; width:28px; height:28px; border-radius:50%;
+    display:grid; place-items:center; color:#fff; font-weight:700; font-size:12px;
 }
-
-.collection-camera {
-    font-size:13px;
-    font-weight:700;
-    color:#1f2937;
-    padding-right:34px;
-}
-
-.collection-war {
-    font-size:19px;
-    font-weight:700;
-    color:#111827;
-    margin-top:5px;
-}
-
-.collection-level {
-    font-size:12px;
-    color:#667085;
-    margin-top:2px;
-}
-
-.collection-detail {
-    font-size:11px;
-    color:#7a8492;
-    margin-top:6px;
-    line-height:1.5;
-}
-
-.collection-note {
-    margin-top:13px;
-    text-align:center;
-    font-size:11px;
-    color:#7a8492;
-}
-
-@media (max-width:800px) {
-    .block-container {
-        padding-left:1rem !important;
-        padding-right:1rem !important;
-    }
-    .collection-road {
-        margin-left:0;
-        margin-right:0;
-    }
-    .collection-checkpoint-label { font-size:9px; }
+.collection-camera { font-size:13px; font-weight:700; color:#1f2937; padding-right:34px; }
+.collection-war { font-size:18px; font-weight:700; color:#111827; margin-top:5px; }
+.collection-level { font-size:11px; color:#667085; margin-top:2px; }
+.collection-detail { margin-top:8px; padding-top:8px; border-top:1px dashed #e5eaf1; font-size:10px; line-height:1.6; color:#667085; }
+.collection-note { margin-top:11px; text-align:center; color:#667085; font-size:10px; }
+.collection-empty { padding:18px; border-radius:12px; background:#f8fafc; color:#667085; text-align:center; font-size:12px; }
+@media (max-width:700px) {
+    .collection-section { padding:13px; }
+    .collection-title { font-size:18px; }
+    .collection-road { height:112px; }
+    .collection-stops { grid-template-columns:1fr; }
 }
 
 /* Modern dashboard header */
@@ -1178,159 +1141,156 @@ st.markdown(
 # UPLOAD CCTV IMAGE
 # =====================================================
 
-st.sidebar.header(
-    "📷 อัปโหลดภาพจากกล้อง CCTV"
-)
-
-
-
-for cam in CAMERA_CONFIG:
-
-
-    uploaded_file = st.sidebar.file_uploader(
-
-        cam,
-
-        type=[
-
-            "jpg",
-            "jpeg",
-            "png"
-
-        ],
-
-        key=cam
-
+with st.sidebar.container(border=True):
+    st.markdown(
+        '<div class="upload-panel-title">📷 อัปโหลดภาพ CCTV</div>'
+        '<div class="upload-panel-subtitle">เลือกภาพของแต่ละกล้องเพื่อวิเคราะห์ WAR และ Segmentation</div>',
+        unsafe_allow_html=True
     )
 
-
-
-    if uploaded_file is not None:
-
-
-        file_id = (
-
-            uploaded_file.name,
-
-            uploaded_file.size
-
+    for cam in CAMERA_CONFIG:
+        st.markdown(
+            f'<div class="upload-camera-label"><span>📹 {cam}</span><span>JPG / PNG</span></div>',
+            unsafe_allow_html=True
+        )
+        st.markdown(
+            '<div class="upload-hint">ลากไฟล์มาวาง หรือกด Browse เพื่อเลือกภาพ</div>',
+            unsafe_allow_html=True
         )
 
-
-
-        old_file = (
-
-            st.session_state.camera_results
-
-            .get(cam, {})
-
-            .get("file_id")
-
+        uploaded_file = st.file_uploader(
+            "เลือกภาพ",
+            type=["jpg", "jpeg", "png"],
+            key=cam,
+            label_visibility="collapsed"
         )
 
+        if uploaded_file is not None:
 
 
-        if file_id != old_file:
+            file_id = (
 
+                uploaded_file.name,
 
-
-            bytes_data = np.asarray(
-
-                bytearray(
-
-                    uploaded_file.read()
-
-                ),
-
-                dtype=np.uint8
+                uploaded_file.size
 
             )
 
 
 
-            img = cv2.imdecode(
+            old_file = (
 
-                bytes_data,
+                st.session_state.camera_results
 
-                cv2.IMREAD_COLOR
+                .get(cam, {})
 
-            )
-
-
-
-            result = analyze_frame(
-
-                img,
-
-                cam
+                .get("file_id")
 
             )
 
 
 
-
-            st.session_state.camera_results[cam] = {
-                "file_id": file_id,
-                "original": img,
-                "result": result,
-                "config_roi": tuple(CAMERA_CONFIG[cam].get("roi", (0, 0, 0, 0))),
-                "config_threshold": dict(CAMERA_CONFIG[cam].get("threshold", {})),
-            }
+            if file_id != old_file:
 
 
 
+                bytes_data = np.asarray(
 
-            history_id = len(
+                    bytearray(
 
-                st.session_state.history[cam]
+                        uploaded_file.read()
 
-            )
+                    ),
 
+                    dtype=np.uint8
 
-
-
-            st.session_state.history[cam].append({
-
-
-                "ID":
-
-                history_id,
+                )
 
 
-                "เวลา":
 
-                datetime.now().strftime(
+                img = cv2.imdecode(
 
-                    "%Y-%m-%d %H:%M:%S"
+                    bytes_data,
 
-                ),
+                    cv2.IMREAD_COLOR
 
-
-                "ภาพ":
-
-                img.copy(),
+                )
 
 
-                "ผล":
 
-                result["image"].copy(),
+                result = analyze_frame(
 
+                    img,
 
-                "WAR":
+                    cam
 
-                result["WAR"],
-
-
-                "เปลี่ยนแปลง":
-
-                result["change"],
+                )
 
 
-                "ระดับ":
 
-                result["level"]
 
-            })
+                st.session_state.camera_results[cam] = {
+                    "file_id": file_id,
+                    "original": img,
+                    "result": result,
+                    "config_roi": tuple(CAMERA_CONFIG[cam].get("roi", (0, 0, 0, 0))),
+                    "config_threshold": dict(CAMERA_CONFIG[cam].get("threshold", {})),
+                }
+
+
+
+
+                history_id = len(
+
+                    st.session_state.history[cam]
+
+                )
+
+
+
+
+                st.session_state.history[cam].append({
+
+
+                    "ID":
+
+                    history_id,
+
+
+                    "เวลา":
+
+                    datetime.now().strftime(
+
+                        "%Y-%m-%d %H:%M:%S"
+
+                    ),
+
+
+                    "ภาพ":
+
+                    img.copy(),
+
+
+                    "ผล":
+
+                    result["image"].copy(),
+
+
+                    "WAR":
+
+                    result["WAR"],
+
+
+                    "เปลี่ยนแปลง":
+
+                    result["change"],
+
+
+                    "ระดับ":
+
+                    result["level"]
+
+                })
 
 
 
@@ -1543,57 +1503,98 @@ for cam, data in st.session_state.camera_results.items():
 
 
     if len(st.session_state.history[cam]) > 0:
-
-
-        graph_data = pd.DataFrame(
-
-            st.session_state.history[cam]
-
-        )
-
-
+        graph_data = pd.DataFrame(st.session_state.history[cam]).reset_index(drop=True)
+        graph_data["จุด"] = np.arange(len(graph_data))
 
         fig = px.line(
-
             graph_data,
-
-            x="เวลา",
-
+            x="จุด",
             y="WAR",
-
             markers=True,
-
-            title=None
-
+            custom_data=["เวลา", "ระดับ", "เปลี่ยนแปลง"],
+        )
+        fig.update_traces(
+            line=dict(width=3, color="#315b8a"),
+            marker=dict(size=8, color="#ffffff", line=dict(width=3, color="#315b8a")),
+            hovertemplate=(
+                "<b>จุดตรวจ %{x}</b><br>"
+                "WAR: <b>%{y:.2f}%</b><br>"
+                "เวลา: %{customdata[0]}<br>"
+                "ระดับ: %{customdata[1]}<br>"
+                "เปลี่ยนแปลง: %{customdata[2]:+.2f}%<extra></extra>"
+            ),
         )
 
+        current_thr = CAMERA_CONFIG.get(cam, {}).get("threshold", {})
+        for key, color, label in [
+            ("low", "#4CAF50", "Low"),
+            ("medium", "#FFD600", "Medium"),
+            ("high", "#FF9800", "High"),
+        ]:
+            if key in current_thr:
+                try:
+                    y_value = float(current_thr[key])
+                    fig.add_hline(
+                        y=y_value,
+                        line_width=1,
+                        line_dash="dot",
+                        line_color=color,
+                        annotation_text=f"{label} {y_value:g}%",
+                        annotation_position="top left",
+                    )
+                except (TypeError, ValueError):
+                    pass
 
         fig.update_layout(
-
-            height=180,
-
-            margin=dict(
-
-                l=20,
-
-                r=20,
-
-                t=20,
-
-                b=20
-
-            )
-
+            height=285,
+            margin=dict(l=8, r=12, t=12, b=8),
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="#fbfcfe",
+            hovermode="x unified",
+            font=dict(family="Prompt, Noto Sans Thai, sans-serif", size=11, color="#172033"),
+            showlegend=False,
+            xaxis=dict(title="ลำดับการบันทึก", tickmode="linear", dtick=1, showgrid=False, zeroline=False),
+            yaxis=dict(title="WAR (%)", ticksuffix="%", showgrid=True, gridcolor="#e8edf3", zeroline=False, rangemode="tozero"),
         )
 
+        st.markdown(
+            '<div class="chart-tip">💡 คลิกจุดบนกราฟเพื่อดูภาพและข้อมูลของการบันทึกครั้งนั้นด้านล่าง</div>',
+            unsafe_allow_html=True
+        )
 
-        st.plotly_chart(
-
+        chart_event = st.plotly_chart(
             fig,
-
-            use_container_width=True
-
+            use_container_width=True,
+            key=f"war_chart_{cam}",
+            on_select="rerun",
+            selection_mode="points",
         )
+
+        try:
+            selection = getattr(chart_event, "selection", None)
+            if selection is None and isinstance(chart_event, dict):
+                selection = chart_event.get("selection")
+            points = getattr(selection, "points", None) if selection is not None else None
+            if points is None and isinstance(selection, dict):
+                points = selection.get("points", [])
+
+            if points:
+                first_point = points[0]
+                point_index = getattr(first_point, "point_index", None)
+                if point_index is None and isinstance(first_point, dict):
+                    point_index = first_point.get("point_index")
+                if point_index is None:
+                    point_index = getattr(first_point, "pointNumber", None)
+                if point_index is None and isinstance(first_point, dict):
+                    point_index = first_point.get("pointNumber")
+
+                if point_index is not None:
+                    point_index = int(point_index)
+                    if 0 <= point_index < len(st.session_state.history[cam]):
+                        st.session_state.selected_history = st.session_state.history[cam][point_index]
+        except Exception:
+            pass
+
         # =========================
         # SELECTED GRAPH DATA
         # =========================
@@ -1801,13 +1802,7 @@ for cam, data in st.session_state.camera_results.items():
 # ลำดับการจัดเก็บขยะ
 # =====================================================
 
-LEVEL_ORDER = {
-    "Normal": 0,
-    "Low": 1,
-    "Medium": 2,
-    "High": 3,
-    "Critical": 4,
-}
+LEVEL_ORDER = {"Normal": 0, "Low": 1, "Medium": 2, "High": 3, "Critical": 4}
 
 collection_priority = []
 reference_roi_area = 0
@@ -1825,7 +1820,6 @@ for cam, data in st.session_state.camera_results.items():
 
     garbage_mask = result.get("mask")
     garbage_pixels = int(np.sum(np.asarray(garbage_mask) > 0)) if garbage_mask is not None else 0
-
     level = result.get("level", "Normal")
     war = float(result.get("WAR", 0))
     reference_roi_area = max(reference_roi_area, roi_area)
@@ -1850,81 +1844,87 @@ collection_priority.sort(
     reverse=True
 )
 
-collection_title_col, collection_info_col = st.columns(
-    [0.94, 0.06],
-    vertical_alignment="center"
-)
-
-with collection_title_col:
+if len(collection_priority) == 0:
     st.markdown(
-        '<div class="collection-title">🚛 ลำดับการจัดเก็บขยะ</div>'
-        '<div class="collection-subtitle">รถเก็บขยะเดินทางทางเดียวจากจุดที่ควรจัดเก็บก่อน → จุดที่ควรจัดเก็บภายหลัง</div>',
+        '''
+        <section class="collection-section">
+            <div class="collection-title">🚛 ลำดับการจัดเก็บขยะ</div>
+            <div class="collection-subtitle">รอข้อมูลจากกล้องเพื่อสร้างเส้นทางการจัดเก็บ</div>
+            <div class="collection-empty">ยังไม่มีข้อมูลจากกล้องสำหรับจัดลำดับการจัดเก็บขยะ</div>
+        </section>
+        ''',
         unsafe_allow_html=True
     )
-
-with collection_info_col:
-    with st.popover("ⓘ"):
-        st.markdown("### วิธีเรียงลำดับการจัดเก็บ")
-        st.write(
-            "ระบบใช้ **พื้นที่ขยะหลังปรับ ROI ให้เทียบกับพื้นที่อ้างอิง** "
-            "เป็นตัวหลักในการจัดลำดับ"
-        )
-
-        st.markdown("**ลำดับการพิจารณา**")
-        st.markdown(
-            "1. หาพิกเซลขยะที่อยู่ใน ROI ของแต่ละกล้อง\n"
-            "2. ปรับเทียบพื้นที่ ROI ให้มีขนาดอ้างอิงเดียวกัน\n"
-            "3. เปรียบเทียบพื้นที่ขยะหลังปรับ — มากกว่าจัดเก็บก่อน\n"
-            "4. หากพื้นที่ขยะใกล้เคียงกัน จึงใช้ระดับความหนาแน่นเป็นตัวช่วย"
-        )
-
-        st.markdown("**ตัวอย่างการปรับ ROI**")
-        st.code(
-            "กล้อง A : 5 / 50 → 5 / 50\n"
-            "กล้อง B : 1 / 2  → 25 / 50\n"
-            "ดังนั้น B มีพื้นที่ขยะเทียบเท่ามากกว่า → จัดเก็บก่อน",
-            language="text"
-        )
-
-        st.caption(
-            "รถเก็บขยะวิ่งตาม checkpoint จากอันดับ 1 → อันดับสุดท้าย"
-        )
-
-if len(collection_priority) == 0:
-    st.info("ยังไม่มีข้อมูลจากกล้องสำหรับจัดลำดับการจัดเก็บขยะ")
 else:
     checkpoint_html = []
+    cards = []
+
     for rank, item in enumerate(collection_priority, start=1):
         info = LEVEL_INFO.get(item["level"], LEVEL_INFO["Normal"])
         checkpoint_html.append(
-            f'<div class="collection-checkpoint" style="background:{info["color"]};">'
-            f'<span class="collection-checkpoint-label">{rank}. {item["camera"]}</span>'
-            f'</div>'
+            f'''
+            <div class="collection-checkpoint-wrap">
+                <div class="collection-checkpoint" style="background:{info["color"]};">
+                    <span>{rank}</span>
+                </div>
+                <div class="collection-checkpoint-label">{item["camera"]}</div>
+            </div>
+            '''
         )
-
-    road_html = (
-        '<div class="collection-road">'
-        '<div class="collection-checkpoints">' + ''.join(checkpoint_html) + '</div>'
-        '<div class="collection-arrow">→</div>'
-        '<div class="collection-truck"><span>🚛</span></div>'
-        '</div>'
-    )
-    st.markdown(road_html, unsafe_allow_html=True)
-
-    cards = []
-    for rank, item in enumerate(collection_priority, start=1):
-        info = LEVEL_INFO.get(item["level"], LEVEL_INFO["Normal"])
         cards.append(
-            f'<div class="collection-stop">'
-            f'<div class="collection-rank" style="background:{info["color"]};">{rank}</div>'
-            f'<div class="collection-camera">📷 {item["camera"]}</div>'
-            f'<div class="collection-war">WAR {item["WAR"]:.2f}%</div>'
-            f'<div class="collection-level">{info["name"]}</div>'
-            f'<div class="collection-detail">ขยะจริง: {item["garbage_pixels"]:,} px<br>ROI: {item["roi_area"]:,} px<br>ขยะเทียบ ROI อ้างอิง: {item["normalized_garbage_pixels"]:,.1f} px</div>'
-            f'</div>'
+            f'''
+            <div class="collection-stop">
+                <div class="collection-rank" style="background:{info["color"]};">{rank}</div>
+                <div class="collection-camera">📷 {item["camera"]}</div>
+                <div class="collection-war">WAR {item["WAR"]:.2f}%</div>
+                <div class="collection-level">{info["name"]}</div>
+                <div class="collection-detail">
+                    ขยะใน ROI: {item["garbage_pixels"]:,} px<br>
+                    ROI: {item["roi_area"]:,} px<br>
+                    พื้นที่ขยะเทียบ ROI อ้างอิง: {item["normalized_garbage_pixels"]:,.1f} px
+                </div>
+            </div>
+            '''
         )
 
-    st.markdown('<div class="collection-stops">' + ''.join(cards) + '</div>', unsafe_allow_html=True)
-    st.markdown('<div class="collection-note">อันดับ 1 คือ checkpoint แรกของเส้นทาง และรถจะวิ่งต่อไปตามลำดับจนถึง checkpoint สุดท้าย</div>', unsafe_allow_html=True)
+    st.markdown(
+        f'''
+        <section class="collection-section">
+            <div class="collection-head">
+                <div>
+                    <div class="collection-title">🚛 ลำดับการจัดเก็บขยะ</div>
+                    <div class="collection-subtitle">รถเก็บขยะเดินทางทางเดียวจาก checkpoint ที่ควรจัดเก็บก่อน → จุดที่ควรจัดเก็บภายหลัง</div>
+                </div>
+                <details class="collection-info">
+                    <summary>ⓘ</summary>
+                    <div class="collection-info-pop">
+                        <b>ระบบเรียงจากอะไร?</b>
+                        <ol>
+                            <li>หาพิกเซลขยะที่อยู่ใน ROI</li>
+                            <li>ปรับพื้นที่ ROI ให้เทียบกับพื้นที่อ้างอิงเดียวกัน</li>
+                            <li>เปรียบเทียบพื้นที่ขยะหลังปรับ — มากกว่าจัดเก็บก่อน</li>
+                            <li>หากพื้นที่ขยะใกล้เคียงกัน จึงใช้ระดับความหนาแน่นเป็นตัวช่วย</li>
+                        </ol>
+                        <div class="collection-example">
+                            A = 5/50<br>
+                            B = 1/2 → ปรับเป็น 25/50<br>
+                            <b>ดังนั้น B มีพื้นที่ขยะเทียบมากกว่า → มาก่อน</b>
+                        </div>
+                    </div>
+                </details>
+            </div>
 
+            <div class="collection-road">
+                <div class="collection-lane"></div>
+                <div class="collection-checkpoints">{''.join(checkpoint_html)}</div>
+                <div class="collection-truck">🚛</div>
+                <div class="collection-road-arrow">→</div>
+                <div class="collection-road-label">เส้นทางรถเก็บขยะ</div>
+            </div>
 
+            <div class="collection-stops">{''.join(cards)}</div>
+            <div class="collection-note">อันดับ 1 คือ checkpoint แรกของเส้นทาง และรถจะวิ่งต่อไปตามลำดับจนถึง checkpoint สุดท้าย</div>
+        </section>
+        ''',
+        unsafe_allow_html=True
+    )
