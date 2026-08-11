@@ -1068,6 +1068,31 @@ h3 { font-size: 1.08rem !important; }
     box-shadow: 0 6px 14px rgba(15,23,42,.10) !important;
 }
 
+
+/* Modern information icon */
+.collection-info summary {
+    width: 32px !important;
+    height: 32px !important;
+    padding: 0 !important;
+}
+
+.collection-info .info-icon {
+    width: 17px;
+    height: 17px;
+    border: 1.5px solid #667085;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 12px;
+    font-style: italic;
+    font-weight: 700;
+    line-height: 1;
+    color: #475467;
+    background: #fff;
+}
+
 </style>
 """,
 
@@ -1716,7 +1741,7 @@ def render_camera_details(cam, data):
         )
 
     with war_info_col:
-        with st.popover("ⓘ"):
+        with st.popover("i"):
             st.markdown("### WAR คืออะไร?")
             st.markdown("**WAR = (พิกเซลขยะใน ROI ÷ พื้นที่ ROI) × 100**")
             st.caption("ตัวอย่าง: ขยะ 25 px จาก ROI 100 px → WAR = 25%")
@@ -1918,16 +1943,16 @@ def render_camera_details(cam, data):
 
             # ใช้ expander ของ Streamlit เป็นหัวรายการโดยตรง
             # ไม่สร้างปุ่มลูกศรแยก
-            history_dot = {
-                "Normal": "🟢",
-                "Low": "🔵",
-                "Medium": "🟡",
-                "High": "🟠",
-                "Critical": "🔴",
-            }.get(item["ระดับ"], "⚪")
+            history_text_color = {
+                "Normal": "green",
+                "Low": "blue",
+                "Medium": "orange",
+                "High": "orange",
+                "Critical": "red",
+            }.get(item["ระดับ"], "gray")
 
             with st.expander(
-                f"{history_dot}  📋 #{int(item['ID']) + 1}  ·  {item['เวลา']}  ·  {history_info['name']}",
+                f"📋 #{int(item['ID']) + 1}  ·  {item['เวลา']}  ·  :{history_text_color}[{history_info['name']}]",
                 expanded=False
             ):
                 st.markdown(
@@ -1969,17 +1994,17 @@ if camera_items:
         level = result["level"]
         info = LEVEL_INFO[level]
 
-        level_dot = {
-            "Normal": "🟢",
-            "Low": "🔵",
-            "Medium": "🟡",
-            "High": "🟠",
-            "Critical": "🔴",
-        }.get(level, "⚪")
+        level_text_color = {
+            "Normal": "green",
+            "Low": "blue",
+            "Medium": "orange",
+            "High": "orange",
+            "Critical": "red",
+        }.get(level, "gray")
 
         with camera_col:
             with st.expander(
-                f"{level_dot}  📷 {cam}  ·  {info['name']}",
+                f"📷 {cam}  ·  :{level_text_color}[{info['name']}]",
                 expanded=False
             ):
                 render_camera_details(cam, data)
@@ -2084,7 +2109,7 @@ else:
                     <div class="collection-subtitle">รถเก็บขยะเดินทางทางเดียวจาก checkpoint ที่ควรจัดเก็บก่อน → จุดที่ควรจัดเก็บภายหลัง</div>
                 </div>
                 <details class="collection-info">
-                    <summary>ⓘ</summary>
+                    <summary><span class="info-icon">i</span></summary>
                     <div class="collection-info-pop">
                         <b>ระบบเรียงจากอะไร?</b>
                         <ol>
