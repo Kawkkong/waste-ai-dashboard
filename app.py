@@ -478,8 +478,9 @@ hr {
 [data-testid="stPopover"] button {
     border-radius: 9px !important;
     min-height: 36px !important;
-    min-width: 96px !important;
-    padding: 0 12px !important;
+    min-width: 42px !important;
+    width: 42px !important;
+    padding: 0 !important;
     white-space: nowrap !important;
     word-break: keep-all !important;
     overflow-wrap: normal !important;
@@ -662,6 +663,30 @@ section[data-testid="stSidebar"] [data-testid="stExpander"] summary:hover {
 
 .upload-panel-title { font-size:16px; font-weight:700; color:var(--ink); margin-bottom:2px; }
 .upload-panel-subtitle { color:var(--muted); font-size:11px; line-height:1.5; margin-bottom:10px; }
+
+[data-testid="stExpander"] {
+    border: 1px solid #dfe6ee !important;
+    border-radius: 14px !important;
+    background: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(15,23,42,.035);
+    transition: box-shadow .18s ease, border-color .18s ease;
+}
+
+[data-testid="stExpander"]:hover {
+    border-color: #cbd8e6 !important;
+    box-shadow: 0 7px 18px rgba(49,91,138,.07);
+}
+
+[data-testid="stExpander"] summary {
+    min-height: 42px !important;
+    font-family: 'Prompt', 'Noto Sans Thai', Tahoma, sans-serif !important;
+    font-weight: 600 !important;
+    color: #172033 !important;
+}
+
+[data-testid="stExpander"] summary:hover {
+    background: #f7faff !important;
+}
 
 .chart-tip {
     margin:0 4px 8px; padding:7px 10px; border-radius:9px;
@@ -1123,12 +1148,12 @@ if st.session_state.show_settings:
 # =====================================================
 
 header_left, header_actions = st.columns(
-    [0.72, 0.28],
+    [0.74, 0.26],
     vertical_alignment="center"
 )
 
-header_upload, header_settings, header_help = header_actions.columns(
-    [1.35, 0.8, 0.8],
+header_settings, header_help = header_actions.columns(
+    [1, 1],
     vertical_alignment="center"
 )
 
@@ -1144,7 +1169,57 @@ with header_left:
         unsafe_allow_html=True
     )
 
-with header_upload:
+
+with header_settings:
+    if st.button(
+        "⚙️",
+        key="header_settings",
+        help="ตั้งค่า ROI และเกณฑ์ระดับความหนาแน่น"
+    ):
+        st.session_state.show_settings = not st.session_state.show_settings
+        st.rerun()
+
+with header_help:
+    with st.popover("❔", use_container_width=False):
+        st.markdown("### วิธีใช้งานระบบ")
+        st.markdown(
+            "**1. อัปโหลดภาพ**  \n"
+            "กดปุ่ม 📷 อัปโหลดด้านบน แล้วเลือกภาพจากกล้อง CCTV"
+        )
+        st.markdown(
+            "**2. ตรวจผล AI**  \n"
+            "ระบบจะแสดง ROI, Mask, WAR, ระดับขยะ และคำแนะนำ"
+        )
+        st.markdown(
+            "**3. ดูประวัติ**  \n"
+            "เปิดรายการ History เพื่อดูผลของแต่ละครั้ง"
+        )
+        st.markdown(
+            "**4. ดูกราฟ WAR**  \n"
+            "ใช้กราฟติดตามแนวโน้มของแต่ละกล้อง"
+        )
+        st.markdown(
+            "**5. ตั้งค่า**  \n"
+            "กด ⚙️ เพื่อปรับ ROI และ Threshold ได้ตามกล้อง"
+        )
+        st.caption("คำแนะนำ: ตั้ง ROI ให้ครอบคลุมเฉพาะพื้นที่ที่ต้องการวัด")
+
+st.markdown(
+    '<div class="header-divider"></div>',
+    unsafe_allow_html=True
+)
+# =====================================================
+# UPLOAD PANEL
+# =====================================================
+
+with st.expander("📷  อัปโหลดภาพ CCTV", expanded=False):
+    st.markdown(
+        '<div class="upload-panel-title">อัปโหลดภาพ CCTV</div>'
+        '<div class="upload-panel-subtitle">เลือกภาพของแต่ละกล้องเพื่อวิเคราะห์ WAR และ Segmentation '
+        '• ย่อ/ขยายได้โดยไม่ทำให้ไฟล์ที่เลือกหาย</div>',
+        unsafe_allow_html=True
+    )
+
     with st.popover("📷 อัปโหลด", use_container_width=False):
         st.markdown(
             '<div class="upload-panel-subtitle">เลือกภาพของแต่ละกล้องเพื่อวิเคราะห์ WAR และ Segmentation<br>กดหัวข้อด้านบนเพื่อย่อ/ขยายส่วนอัปโหลดได้ตลอด</div>',
@@ -1300,45 +1375,6 @@ with header_upload:
 
 
 
-
-with header_settings:
-    if st.button(
-        "⚙️",
-        key="header_settings",
-        help="ตั้งค่า ROI และเกณฑ์ระดับความหนาแน่น"
-    ):
-        st.session_state.show_settings = not st.session_state.show_settings
-        st.rerun()
-
-with header_help:
-    with st.popover("❔", use_container_width=False):
-        st.markdown("### วิธีใช้งานระบบ")
-        st.markdown(
-            "**1. อัปโหลดภาพ**  \n"
-            "กดปุ่ม 📷 อัปโหลดด้านบน แล้วเลือกภาพจากกล้อง CCTV"
-        )
-        st.markdown(
-            "**2. ตรวจผล AI**  \n"
-            "ระบบจะแสดง ROI, Mask, WAR, ระดับขยะ และคำแนะนำ"
-        )
-        st.markdown(
-            "**3. ดูประวัติ**  \n"
-            "เปิดรายการ History เพื่อดูผลของแต่ละครั้ง"
-        )
-        st.markdown(
-            "**4. ดูกราฟ WAR**  \n"
-            "ใช้กราฟติดตามแนวโน้มของแต่ละกล้อง"
-        )
-        st.markdown(
-            "**5. ตั้งค่า**  \n"
-            "กด ⚙️ เพื่อปรับ ROI และ Threshold ได้ตามกล้อง"
-        )
-        st.caption("คำแนะนำ: ตั้ง ROI ให้ครอบคลุมเฉพาะพื้นที่ที่ต้องการวัด")
-
-st.markdown(
-    '<div class="header-divider"></div>',
-    unsafe_allow_html=True
-)
 # =====================================================
 # UPLOAD CCTV IMAGE
 # =====================================================
@@ -1933,8 +1969,7 @@ else:
             '''
         )
 
-    st.markdown(
-        f'''
+    collection_html = f'''
         <section class="collection-section">
             <div class="collection-head">
                 <div>
@@ -1971,6 +2006,5 @@ else:
             <div class="collection-stops">{''.join(cards)}</div>
             <div class="collection-note">อันดับ 1 คือ checkpoint แรกของเส้นทาง และรถจะวิ่งต่อไปตามลำดับจนถึง checkpoint สุดท้าย</div>
         </section>
-        ''',
-        unsafe_allow_html=True
-    )
+        '''
+    st.html(collection_html)
