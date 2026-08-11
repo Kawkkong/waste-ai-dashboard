@@ -136,7 +136,7 @@ def show_image_viewer(img_bgr, title="", display_width=340, viewer_height=300):
         
 /* Camera dropdown header */
 
-div[data-testid="stButton"] > button[kind="secondary"] {
+div[data-testid="stButton"] > button[kind="secondary"] {{
     min-height: 46px !important;
     border: 1px solid #d9e2ec !important;
     border-radius: 13px !important;
@@ -146,24 +146,24 @@ div[data-testid="stButton"] > button[kind="secondary"] {
     text-align: left !important;
     justify-content: flex-start !important;
     transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease !important;
-}
+}}
 
-div[data-testid="stButton"] > button[kind="secondary"]:hover {
+div[data-testid="stButton"] > button[kind="secondary"]:hover {{
     transform: translateY(-1px);
     border-color: #b9c9d9 !important;
     box-shadow: 0 8px 20px rgba(15,23,42,.09) !important;
-}
+}}
 
-div[data-testid="stButton"] > button[kind="secondary"] p {
+div[data-testid="stButton"] > button[kind="secondary"] p {{
     margin: 0 !important;
     font-size: 13px !important;
     font-weight: 650 !important;
     color: #172033 !important;
     line-height: 1.45 !important;
     text-align: left !important;
-}
+}}
 
-.camera-detail-card {
+.camera-detail-card {{
     margin: -1px 0 14px;
     padding: 14px;
     border: 1px solid #e0e7ef;
@@ -171,7 +171,7 @@ div[data-testid="stButton"] > button[kind="secondary"] p {
     border-radius: 0 0 15px 15px;
     background: #ffffff;
     box-shadow: 0 8px 22px rgba(15,23,42,.055);
-}
+}}
 
 /* Camera result widgets */
 [data-testid="stExpander"] {{
