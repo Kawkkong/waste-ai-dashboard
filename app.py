@@ -473,8 +473,8 @@ hr {
 [data-testid="stPopover"] button {
     border-radius: 9px !important;
     min-height: 34px !important;
-    width: 34px !important;
-    padding: 0 !important;
+    padding: 0 10px !important;
+    font-family: 'Prompt', 'Noto Sans Thai', Tahoma, sans-serif !important;
 }
 
 [data-testid="stImage"] img { border-radius: 9px; }
@@ -1096,8 +1096,8 @@ if st.session_state.show_settings:
 # HEADER
 # =====================================================
 
-header_left, header_settings, header_help = st.columns(
-    [0.82, 0.09, 0.09],
+header_left, header_upload, header_settings, header_help = st.columns(
+    [0.73, 0.09, 0.09, 0.09],
     vertical_alignment="center"
 )
 
@@ -1113,6 +1113,163 @@ with header_left:
         unsafe_allow_html=True
     )
 
+with header_upload:
+    with st.popover("📷 อัปโหลด", use_container_width=False):
+        st.markdown(
+            '<div class="upload-panel-subtitle">เลือกภาพของแต่ละกล้องเพื่อวิเคราะห์ WAR และ Segmentation<br>กดหัวข้อด้านบนเพื่อย่อ/ขยายส่วนอัปโหลดได้ตลอด</div>',
+            unsafe_allow_html=True
+        )
+
+        for cam in CAMERA_CONFIG:
+            st.markdown(
+                f'<div class="upload-camera-label"><span>📹 {cam}</span><span>JPG / PNG</span></div>',
+                unsafe_allow_html=True
+            )
+            st.markdown(
+                '<div class="upload-hint">ลากไฟล์มาวาง หรือกด Browse เพื่อเลือกภาพ</div>',
+                unsafe_allow_html=True
+            )
+
+            uploaded_file = st.file_uploader(
+                "เลือกภาพ",
+                type=["jpg", "jpeg", "png"],
+                key=cam,
+                label_visibility="collapsed"
+            )
+
+            if uploaded_file is not None:
+
+
+                file_id = (
+
+                    uploaded_file.name,
+
+                    uploaded_file.size
+
+                )
+
+
+
+                old_file = (
+
+                    st.session_state.camera_results
+
+                    .get(cam, {})
+
+                    .get("file_id")
+
+                )
+
+
+
+                if file_id != old_file:
+
+
+
+                    bytes_data = np.asarray(
+
+                        bytearray(
+
+                            uploaded_file.read()
+
+                        ),
+
+                        dtype=np.uint8
+
+                    )
+
+
+
+                    img = cv2.imdecode(
+
+                        bytes_data,
+
+                        cv2.IMREAD_COLOR
+
+                    )
+
+
+
+                    result = analyze_frame(
+
+                        img,
+
+                        cam
+
+                    )
+
+
+
+
+                    st.session_state.camera_results[cam] = {
+                        "file_id": file_id,
+                        "original": img,
+                        "result": result,
+                        "config_roi": tuple(CAMERA_CONFIG[cam].get("roi", (0, 0, 0, 0))),
+                        "config_threshold": dict(CAMERA_CONFIG[cam].get("threshold", {})),
+                    }
+
+
+
+
+                    history_id = len(
+
+                        st.session_state.history[cam]
+
+                    )
+
+
+
+
+                    st.session_state.history[cam].append({
+
+
+                        "ID":
+
+                        history_id,
+
+
+                        "เวลา":
+
+                        datetime.now().strftime(
+
+                            "%Y-%m-%d %H:%M:%S"
+
+                        ),
+
+
+                        "ภาพ":
+
+                        img.copy(),
+
+
+                        "ผล":
+
+                        result["image"].copy(),
+
+
+                        "WAR":
+
+                        result["WAR"],
+
+
+                        "เปลี่ยนแปลง":
+
+                        result["change"],
+
+
+                        "ระดับ":
+
+                        result["level"]
+
+                    })
+
+
+
+
+
+
+
 with header_settings:
     if st.button(
         "⚙️",
@@ -1127,7 +1284,7 @@ with header_help:
         st.markdown("### วิธีใช้งานระบบ")
         st.markdown(
             "**1. อัปโหลดภาพ**  \n"
-            "เลือกภาพจากกล้อง CCTV ในแถบด้านซ้าย"
+            "กดปุ่ม 📷 อัปโหลดด้านบน แล้วเลือกภาพจากกล้อง CCTV"
         )
         st.markdown(
             "**2. ตรวจผล AI**  \n"
@@ -1154,161 +1311,6 @@ st.markdown(
 # =====================================================
 # UPLOAD CCTV IMAGE
 # =====================================================
-
-with st.sidebar.expander("📷 อัปโหลดภาพ CCTV", expanded=True):
-    st.markdown(
-        '<div class="upload-panel-subtitle">เลือกภาพของแต่ละกล้องเพื่อวิเคราะห์ WAR และ Segmentation<br>กดหัวข้อด้านบนเพื่อย่อ/ขยายส่วนอัปโหลดได้ตลอด</div>',
-        unsafe_allow_html=True
-    )
-
-    for cam in CAMERA_CONFIG:
-        st.markdown(
-            f'<div class="upload-camera-label"><span>📹 {cam}</span><span>JPG / PNG</span></div>',
-            unsafe_allow_html=True
-        )
-        st.markdown(
-            '<div class="upload-hint">ลากไฟล์มาวาง หรือกด Browse เพื่อเลือกภาพ</div>',
-            unsafe_allow_html=True
-        )
-
-        uploaded_file = st.file_uploader(
-            "เลือกภาพ",
-            type=["jpg", "jpeg", "png"],
-            key=cam,
-            label_visibility="collapsed"
-        )
-
-        if uploaded_file is not None:
-
-
-            file_id = (
-
-                uploaded_file.name,
-
-                uploaded_file.size
-
-            )
-
-
-
-            old_file = (
-
-                st.session_state.camera_results
-
-                .get(cam, {})
-
-                .get("file_id")
-
-            )
-
-
-
-            if file_id != old_file:
-
-
-
-                bytes_data = np.asarray(
-
-                    bytearray(
-
-                        uploaded_file.read()
-
-                    ),
-
-                    dtype=np.uint8
-
-                )
-
-
-
-                img = cv2.imdecode(
-
-                    bytes_data,
-
-                    cv2.IMREAD_COLOR
-
-                )
-
-
-
-                result = analyze_frame(
-
-                    img,
-
-                    cam
-
-                )
-
-
-
-
-                st.session_state.camera_results[cam] = {
-                    "file_id": file_id,
-                    "original": img,
-                    "result": result,
-                    "config_roi": tuple(CAMERA_CONFIG[cam].get("roi", (0, 0, 0, 0))),
-                    "config_threshold": dict(CAMERA_CONFIG[cam].get("threshold", {})),
-                }
-
-
-
-
-                history_id = len(
-
-                    st.session_state.history[cam]
-
-                )
-
-
-
-
-                st.session_state.history[cam].append({
-
-
-                    "ID":
-
-                    history_id,
-
-
-                    "เวลา":
-
-                    datetime.now().strftime(
-
-                        "%Y-%m-%d %H:%M:%S"
-
-                    ),
-
-
-                    "ภาพ":
-
-                    img.copy(),
-
-
-                    "ผล":
-
-                    result["image"].copy(),
-
-
-                    "WAR":
-
-                    result["WAR"],
-
-
-                    "เปลี่ยนแปลง":
-
-                    result["change"],
-
-
-                    "ระดับ":
-
-                    result["level"]
-
-                })
-
-
-
-
-
 
 
 # =====================================================
