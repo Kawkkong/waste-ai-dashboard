@@ -475,23 +475,6 @@ hr {
     overflow-wrap: normal !important;
 }
 
-[data-testid="stPopover"] button {
-    border-radius: 9px !important;
-    min-height: 36px !important;
-    min-width: 42px !important;
-    width: 42px !important;
-    padding: 0 !important;
-    white-space: nowrap !important;
-    word-break: keep-all !important;
-    overflow-wrap: normal !important;
-    font-family: 'Prompt', 'Noto Sans Thai', Tahoma, sans-serif !important;
-}
-
-[data-testid="stPopover"] button p {
-    white-space: nowrap !important;
-    word-break: keep-all !important;
-    overflow-wrap: normal !important;
-}
 
 [data-testid="stImage"] img { border-radius: 9px; }
 
@@ -1216,160 +1199,158 @@ with st.expander("📷  อัปโหลดภาพ CCTV", expanded=False):
     st.markdown(
         '<div class="upload-panel-title">อัปโหลดภาพ CCTV</div>'
         '<div class="upload-panel-subtitle">เลือกภาพของแต่ละกล้องเพื่อวิเคราะห์ WAR และ Segmentation '
-        '• ย่อ/ขยายได้โดยไม่ทำให้ไฟล์ที่เลือกหาย</div>',
+        '• มีเมนูเดียว ไม่ซ้อนกัน • ย่อ/ขยายได้โดยไม่ทำให้ไฟล์ที่เลือกหาย</div>',
         unsafe_allow_html=True
     )
 
-    with st.popover("📷 อัปโหลด", use_container_width=False):
+    st.markdown(
+        '<div class="upload-panel-subtitle">เลือกภาพของแต่ละกล้องเพื่อวิเคราะห์ WAR และ Segmentation<br>กดหัวข้อด้านบนเพื่อย่อ/ขยายส่วนอัปโหลดได้ตลอด</div>',
+        unsafe_allow_html=True
+    )
+
+    for cam in CAMERA_CONFIG:
         st.markdown(
-            '<div class="upload-panel-subtitle">เลือกภาพของแต่ละกล้องเพื่อวิเคราะห์ WAR และ Segmentation<br>กดหัวข้อด้านบนเพื่อย่อ/ขยายส่วนอัปโหลดได้ตลอด</div>',
+            f'<div class="upload-camera-label"><span>📹 {cam}</span><span>JPG / PNG</span></div>',
+            unsafe_allow_html=True
+        )
+        st.markdown(
+            '<div class="upload-hint">ลากไฟล์มาวาง หรือกด Browse เพื่อเลือกภาพ</div>',
             unsafe_allow_html=True
         )
 
-        for cam in CAMERA_CONFIG:
-            st.markdown(
-                f'<div class="upload-camera-label"><span>📹 {cam}</span><span>JPG / PNG</span></div>',
-                unsafe_allow_html=True
+        uploaded_file = st.file_uploader(
+            "เลือกภาพ",
+            type=["jpg", "jpeg", "png"],
+            key=cam,
+            label_visibility="collapsed"
+        )
+
+        if uploaded_file is not None:
+
+
+            file_id = (
+
+                uploaded_file.name,
+
+                uploaded_file.size
+
             )
-            st.markdown(
-                '<div class="upload-hint">ลากไฟล์มาวาง หรือกด Browse เพื่อเลือกภาพ</div>',
-                unsafe_allow_html=True
+
+
+
+            old_file = (
+
+                st.session_state.camera_results
+
+                .get(cam, {})
+
+                .get("file_id")
+
             )
 
-            uploaded_file = st.file_uploader(
-                "เลือกภาพ",
-                type=["jpg", "jpeg", "png"],
-                key=cam,
-                label_visibility="collapsed"
-            )
-
-            if uploaded_file is not None:
 
 
-                file_id = (
+            if file_id != old_file:
 
-                    uploaded_file.name,
 
-                    uploaded_file.size
+
+                bytes_data = np.asarray(
+
+                    bytearray(
+
+                        uploaded_file.read()
+
+                    ),
+
+                    dtype=np.uint8
 
                 )
 
 
 
-                old_file = (
+                img = cv2.imdecode(
 
-                    st.session_state.camera_results
+                    bytes_data,
 
-                    .get(cam, {})
-
-                    .get("file_id")
+                    cv2.IMREAD_COLOR
 
                 )
 
 
 
-                if file_id != old_file:
+                result = analyze_frame(
 
+                    img,
 
+                    cam
 
-                    bytes_data = np.asarray(
-
-                        bytearray(
-
-                            uploaded_file.read()
-
-                        ),
-
-                        dtype=np.uint8
-
-                    )
-
-
-
-                    img = cv2.imdecode(
-
-                        bytes_data,
-
-                        cv2.IMREAD_COLOR
-
-                    )
-
-
-
-                    result = analyze_frame(
-
-                        img,
-
-                        cam
-
-                    )
+                )
 
 
 
 
-                    st.session_state.camera_results[cam] = {
-                        "file_id": file_id,
-                        "original": img,
-                        "result": result,
-                        "config_roi": tuple(CAMERA_CONFIG[cam].get("roi", (0, 0, 0, 0))),
-                        "config_threshold": dict(CAMERA_CONFIG[cam].get("threshold", {})),
-                    }
+                st.session_state.camera_results[cam] = {
+                    "file_id": file_id,
+                    "original": img,
+                    "result": result,
+                    "config_roi": tuple(CAMERA_CONFIG[cam].get("roi", (0, 0, 0, 0))),
+                    "config_threshold": dict(CAMERA_CONFIG[cam].get("threshold", {})),
+                }
 
 
 
 
-                    history_id = len(
+                history_id = len(
 
-                        st.session_state.history[cam]
+                    st.session_state.history[cam]
 
-                    )
-
-
+                )
 
 
-                    st.session_state.history[cam].append({
 
 
-                        "ID":
-
-                        history_id,
+                st.session_state.history[cam].append({
 
 
-                        "เวลา":
+                    "ID":
 
-                        datetime.now().strftime(
-
-                            "%Y-%m-%d %H:%M:%S"
-
-                        ),
+                    history_id,
 
 
-                        "ภาพ":
+                    "เวลา":
 
-                        img.copy(),
+                    datetime.now().strftime(
 
+                        "%Y-%m-%d %H:%M:%S"
 
-                        "ผล":
-
-                        result["image"].copy(),
-
-
-                        "WAR":
-
-                        result["WAR"],
+                    ),
 
 
-                        "เปลี่ยนแปลง":
+                    "ภาพ":
 
-                        result["change"],
+                    img.copy(),
 
 
-                        "ระดับ":
+                    "ผล":
 
-                        result["level"]
+                    result["image"].copy(),
 
-                    })
 
+                    "WAR":
+
+                    result["WAR"],
+
+
+                    "เปลี่ยนแปลง":
+
+                    result["change"],
+
+
+                    "ระดับ":
+
+                    result["level"]
+
+                })
 
 
 
