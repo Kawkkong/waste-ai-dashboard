@@ -620,6 +620,20 @@ div[data-testid="stNumberInput"] label {
     border-radius: 11px !important;
     background: linear-gradient(180deg,#ffffff 0%,#f7faff 100%) !important;
 }
+[data-testid="stExpander"] summary {
+    font-family: 'Prompt', 'Noto Sans Thai', Tahoma, sans-serif !important;
+    font-weight: 700 !important;
+}
+
+section[data-testid="stSidebar"] [data-testid="stExpander"] {
+    border-radius: 14px !important;
+    border: 1px solid #dfe6ee !important;
+    background: #fbfcfe !important;
+}
+
+section[data-testid="stSidebar"] [data-testid="stExpander"] summary:hover {
+    background: #f4f8fc !important;
+}
 
 .upload-camera-label {
     display:flex; align-items:center; justify-content:space-between;
@@ -1141,10 +1155,9 @@ st.markdown(
 # UPLOAD CCTV IMAGE
 # =====================================================
 
-with st.sidebar.container(border=True):
+with st.sidebar.expander("📷 อัปโหลดภาพ CCTV", expanded=True):
     st.markdown(
-        '<div class="upload-panel-title">📷 อัปโหลดภาพ CCTV</div>'
-        '<div class="upload-panel-subtitle">เลือกภาพของแต่ละกล้องเพื่อวิเคราะห์ WAR และ Segmentation</div>',
+        '<div class="upload-panel-subtitle">เลือกภาพของแต่ละกล้องเพื่อวิเคราะห์ WAR และ Segmentation<br>กดหัวข้อด้านบนเพื่อย่อ/ขยายส่วนอัปโหลดได้ตลอด</div>',
         unsafe_allow_html=True
     )
 
