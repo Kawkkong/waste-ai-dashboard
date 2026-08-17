@@ -1423,7 +1423,7 @@ st.markdown(
 # =====================================================
 # ส่วนรับภาพ CCTV จากผู้ใช้งาน
 
-with st.expander("📷  อัปโหลดภาพ CCTV", expanded=False):
+with st.expander(" อัปโหลดภาพ CCTV", expanded=False):
     upload_columns = st.columns(len(CAMERA_CONFIG), gap="small")
 
     for upload_col, cam in zip(upload_columns, CAMERA_CONFIG):
@@ -1653,7 +1653,7 @@ def render_camera_details(cam, data):
 
     st.subheader(
 
-        "📊 ผลการวิเคราะห์"
+        " ผลการวิเคราะห์"
 
     )
 
@@ -1701,7 +1701,7 @@ def render_camera_details(cam, data):
 
     with war_title_col:
         st.subheader(
-            f"📈 แนวโน้ม WAR : {cam}"
+            f" แนวโน้ม WAR : {cam}"
         )
 
     with war_info_col:
@@ -1890,7 +1890,7 @@ def render_camera_details(cam, data):
     # HISTORY
 
     st.markdown(
-        f'<div class="history-title">📋 ประวัติการตรวจสอบ {cam}</div>',
+        f'<div class="history-title"> ประวัติการตรวจสอบ {cam}</div>',
         unsafe_allow_html=True
     )
 
