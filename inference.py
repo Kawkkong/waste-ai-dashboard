@@ -137,10 +137,6 @@ def analyze_frame(img, camera):
         retina_masks=True,
         verbose=False
     )[0]
-    if result.boxes is not None:
-        print(result.boxes.cls.cpu().numpy())
-        print(result.boxes.conf.cpu().numpy())
-
     # ==================================================
     # CREATE FULL IMAGE GARBAGE MASK
     # ==================================================
