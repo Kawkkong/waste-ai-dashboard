@@ -1,3 +1,6 @@
+
+
+# framework หลัก
 import streamlit as st
 import cv2
 import numpy as np
@@ -7,24 +10,14 @@ import streamlit.components.v1 as components
 import base64
 import copy
 import inference as inference_module
-
 from datetime import datetime
 
+# ฟังก์ชันวิเคราะห์ภาพด้วยโมเดล AI
 from inference import analyze_frame
 from config import CAMERA_CONFIG
 
-
-
-
-# =====================================================
-# FULLSCREEN IMAGE VIEWER
-# =====================================================
-
+# ส่วนแสดงภาพแบบเต็มจอ กดขยายดูรายละเอียดได้
 def show_image_viewer(img_bgr, title="", display_width=340, viewer_height=300):
-    """
-    แสดงภาพตามสัดส่วนจริง ไม่มีแถบดำบน-ล่าง
-    และสามารถเปิดภาพเต็มหน้าจอด้วย Fullscreen API
-    """
     if img_bgr is None:
         return
 
@@ -32,13 +25,11 @@ def show_image_viewer(img_bgr, title="", display_width=340, viewer_height=300):
 
     if w <= 0 or h <= 0:
         return
-
     ok, encoded = cv2.imencode(
         ".jpg",
         img_bgr,
         [cv2.IMWRITE_JPEG_QUALITY, 92]
     )
-
     if not ok:
         st.error("ไม่สามารถแสดงภาพได้")
         return
@@ -332,8 +323,7 @@ html, body, [class*="st-"], [data-testid="stMarkdownContainer"],
 
 
 # =====================================================
-# PAGE CONFIG
-# =====================================================
+# ตั้งค่าหน้าตาเริ่มต้นของ Streamlit
 
 st.set_page_config(
 
@@ -346,8 +336,7 @@ st.set_page_config(
 
 
 # =====================================================
-# LEVEL CONFIG
-# =====================================================
+# กำหนดสีและคำอธิบายของระดับความหนาแน่นขยะ
 
 LEVEL_INFO = {
 
@@ -1100,28 +1089,18 @@ unsafe_allow_html=True
 
 )
 
-
-
-
-
 # =====================================================
-# SESSION
-# =====================================================
+# เก็บข้อมูลระหว่างการใช้งานหน้าเว็บ
 
 if "camera_results" not in st.session_state:
 
     st.session_state.camera_results = {}
 
-
-
 if "history" not in st.session_state:
 
     st.session_state.history = {}
 
-
-
 # เก็บข้อมูลที่เลือกจากกราฟแยกตามกล้อง
-# เพื่อไม่ให้การคลิกกราฟของ Camera หนึ่งไปแสดงภาพของอีก Camera
 if "selected_history_by_camera" not in st.session_state:
     st.session_state.selected_history_by_camera = {}
 
@@ -1141,7 +1120,6 @@ for cam in CAMERA_CONFIG:
 
 # =====================================================
 # การตั้งค่า ROI และ Threshold จากหน้าเว็บ
-# =====================================================
 
 if "show_settings" not in st.session_state:
     st.session_state.show_settings = False
@@ -1381,8 +1359,6 @@ if st.session_state.show_settings:
 
 # =====================================================
 # HEADER
-# =====================================================
-
 header_left, header_actions = st.columns(
     [0.74, 0.26],
     vertical_alignment="center"
@@ -1445,8 +1421,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 # =====================================================
-# UPLOAD PANEL
-# =====================================================
+# ส่วนรับภาพ CCTV จากผู้ใช้งาน
 
 with st.expander("📷  อัปโหลดภาพ CCTV", expanded=False):
     upload_columns = st.columns(len(CAMERA_CONFIG), gap="small")
@@ -1605,13 +1580,10 @@ with st.expander("📷  อัปโหลดภาพ CCTV", expanded=False):
 
 # =====================================================
 # UPLOAD CCTV IMAGE
-# =====================================================
 
 
 # =====================================================
-# =====================================================
-# DISPLAY CAMERA
-# =====================================================
+# ส่วนแสดงผลการวิเคราะห์ของแต่ละกล้อง+
 
 def render_camera_details(cam, data):
     result = data["result"]
@@ -1676,12 +1648,8 @@ def render_camera_details(cam, data):
 
 
 
-
-
-
     # =========================
     # CURRENT RESULT
-    # =========================
 
     st.subheader(
 
@@ -1723,12 +1691,8 @@ def render_camera_details(cam, data):
 
 
 
-
-
-
     # =========================
     # GRAPH
-    # =========================
 
     war_title_col, war_info_col = st.columns(
         [0.94, 0.06],
@@ -1845,7 +1809,6 @@ def render_camera_details(cam, data):
 
         # =========================
         # SELECTED GRAPH DATA
-        # =========================
 
         selected_history = st.session_state.selected_history_by_camera.get(cam)
 
@@ -1925,7 +1888,6 @@ def render_camera_details(cam, data):
 
     # =================================================
     # HISTORY
-    # =================================================
 
     st.markdown(
         f'<div class="history-title">📋 ประวัติการตรวจสอบ {cam}</div>',
@@ -1978,11 +1940,8 @@ def render_camera_details(cam, data):
 
 
 # =====================================================
-# =====================================================
 # CAMERA DROPDOWN
 # =====================================================
-# หัวหลักของแต่ละกล้องเป็น dropdown โดยตรง
-# ใช้จุดสีแสดงระดับความหนาแน่น และไม่ใช้ปุ่ม/checkbox ซ้อน
 
 camera_items = list(st.session_state.camera_results.items())
 
@@ -2014,7 +1973,6 @@ else:
 
 # =====================================================
 # ลำดับการจัดเก็บขยะ
-# =====================================================
 
 LEVEL_ORDER = {"Normal": 0, "Low": 1, "Medium": 2, "High": 3, "Critical": 4}
 
