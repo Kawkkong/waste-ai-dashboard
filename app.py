@@ -11,6 +11,7 @@ import base64
 import copy
 import inference as inference_module
 from datetime import datetime
+import time
 
 # ฟังก์ชันวิเคราะห์ภาพด้วยโมเดล AI
 from inference import analyze_frame
@@ -1107,6 +1108,11 @@ if "selected_history_by_camera" not in st.session_state:
 if "selected_history_camera" not in st.session_state:
     st.session_state.selected_history_camera = None
 
+# เก็บข้อมูลแจ้งเตือนล่าสุดไว้ชั่วคราว
+# จะแจ้งเตือนเฉพาะตอนวิเคราะห์ภาพใหม่แล้วได้ระดับ High หรือ Critical
+if "density_alert" not in st.session_state:
+    st.session_state.density_alert = None
+
 
 
 
@@ -1505,6 +1511,15 @@ with st.expander(" อัปโหลดภาพ CCTV", expanded=False):
 
                     )
 
+                    # ถ้าระดับขยะสูง ให้สร้างแจ้งเตือนสำหรับภาพที่เพิ่งวิเคราะห์
+                    if result.get("level") in {"High", "Critical"}:
+                        st.session_state.density_alert = {
+                            "camera": cam,
+                            "level": result["level"],
+                            "war": float(result.get("WAR", 0)),
+                            "created_at": time.monotonic(),
+                        }
+
 
 
 
@@ -1576,6 +1591,179 @@ with st.expander(" อัปโหลดภาพ CCTV", expanded=False):
 
 
 
+
+
+# =====================================================
+# แจ้งเตือนเมื่อพบขยะระดับ High / Critical
+# =====================================================
+
+alert = st.session_state.get("density_alert")
+
+if alert is not None:
+    elapsed = time.monotonic() - float(alert.get("created_at", 0))
+    remaining = max(0.0, 6.0 - elapsed)
+
+    # ครบเวลาแล้วไม่ต้องแสดงแจ้งเตือนต่อ
+    if remaining <= 0:
+        st.session_state.density_alert = None
+    else:
+        alert_camera = str(alert.get("camera", "Camera"))
+        alert_level = str(alert.get("level", "High"))
+        alert_war = float(alert.get("war", 0))
+
+        if alert_level == "Critical":
+            alert_color = "#dc2626"
+            alert_icon = "🚨"
+            alert_title = "แจ้งเตือนระดับวิกฤต"
+            alert_message = "ควรดำเนินการจัดเก็บขยะโดยด่วน"
+        else:
+            alert_color = "#ea580c"
+            alert_icon = "⚠️"
+            alert_title = "แจ้งเตือนระดับสูง"
+            alert_message = "ควรดำเนินการจัดเก็บขยะโดยเร็ว"
+
+        # ใช้ checkbox เป็นปุ่มปิด เพื่อไม่ต้องพึ่ง JavaScript
+        # ส่วน animation จะทำให้แจ้งเตือนหายเองหลังครบ 6 วินาที
+        alert_id = f"density-alert-{abs(hash((alert_camera, alert.get('created_at'))))}"
+
+        st.markdown(
+            f"""
+            <style>
+                #{alert_id} {{
+                    position: fixed;
+                    right: 24px;
+                    bottom: 24px;
+                    z-index: 999999;
+                    width: min(390px, calc(100vw - 32px));
+                    pointer-events: none;
+                }}
+
+                #{alert_id} .alert-toggle {{
+                    position: absolute;
+                    opacity: 0;
+                    pointer-events: none;
+                }}
+
+                #{alert_id} .alert-box {{
+                    position: relative;
+                    display: flex;
+                    align-items: flex-start;
+                    gap: 12px;
+                    padding: 15px 42px 15px 15px;
+                    border: 1px solid rgba(255,255,255,.7);
+                    border-left: 5px solid {alert_color};
+                    border-radius: 14px;
+                    background: rgba(255,255,255,.98);
+                    box-shadow: 0 14px 36px rgba(15,23,42,.20);
+                    color: #172033;
+                    font-family: "Prompt", "Noto Sans Thai", Tahoma, sans-serif;
+                    pointer-events: auto;
+                    animation: densityAlertLife {remaining:.2f}s linear forwards;
+                }}
+
+                #{alert_id} .alert-icon {{
+                    flex: 0 0 auto;
+                    width: 38px;
+                    height: 38px;
+                    display: grid;
+                    place-items: center;
+                    border-radius: 11px;
+                    background: {alert_color};
+                    color: #fff;
+                    font-size: 20px;
+                }}
+
+                #{alert_id} .alert-content {{
+                    min-width: 0;
+                    padding-top: 1px;
+                }}
+
+                #{alert_id} .alert-title {{
+                    margin: 0 0 3px;
+                    font-size: 14px;
+                    font-weight: 700;
+                    color: {alert_color};
+                }}
+
+                #{alert_id} .alert-message {{
+                    margin: 0;
+                    font-size: 12px;
+                    line-height: 1.55;
+                    color: #344054;
+                }}
+
+                #{alert_id} .alert-close {{
+                    position: absolute;
+                    top: 8px;
+                    right: 9px;
+                    width: 30px;
+                    height: 30px;
+                    display: grid;
+                    place-items: center;
+                    border: 0;
+                    border-radius: 8px;
+                    background: transparent;
+                    color: #667085;
+                    font-size: 20px;
+                    line-height: 1;
+                    cursor: pointer;
+                    user-select: none;
+                }}
+
+                #{alert_id} .alert-close:hover {{
+                    background: #f2f4f7;
+                    color: #172033;
+                }}
+
+                #{alert_id} .alert-toggle:checked ~ .alert-box {{
+                    display: none;
+                }}
+
+                @keyframes densityAlertLife {{
+                    0% {{ opacity: 0; transform: translateY(16px); }}
+                    8% {{ opacity: 1; transform: translateY(0); }}
+                    90% {{ opacity: 1; transform: translateY(0); }}
+                    100% {{ opacity: 0; transform: translateY(8px); }}
+                }}
+
+                @media (max-width: 600px) {{
+                    #{alert_id} {{
+                        right: 12px;
+                        bottom: 12px;
+                    }}
+                }}
+            </style>
+
+            <div id="{alert_id}">
+                <input
+                    type="checkbox"
+                    class="alert-toggle"
+                    id="{alert_id}-close"
+                >
+
+                <div class="alert-box">
+                    <div class="alert-icon">{alert_icon}</div>
+
+                    <div class="alert-content">
+                        <p class="alert-title">{alert_title}</p>
+                        <p class="alert-message">
+                            ขยะจาก <b>{alert_camera}</b> อยู่ในระดับ <b>{alert_level}</b>
+                            (WAR {alert_war:.2f}%)<br>
+                            {alert_message}
+                        </p>
+                    </div>
+
+                    <label
+                        class="alert-close"
+                        for="{alert_id}-close"
+                        title="ปิดการแจ้งเตือน"
+                        aria-label="ปิดการแจ้งเตือน"
+                    >×</label>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
 
 # =====================================================
