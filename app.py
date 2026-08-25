@@ -11,6 +11,7 @@ import base64
 import copy
 import inference as inference_module
 from datetime import datetime
+from textwrap import dedent
 import time
 
 # ฟังก์ชันวิเคราะห์ภาพด้วยโมเดล AI
@@ -1627,7 +1628,7 @@ if alert is not None:
         alert_id = f"density-alert-{abs(hash((alert_camera, alert.get('created_at'))))}"
 
         st.markdown(
-            f"""
+            dedent(f"""
             <style>
                 #{alert_id} {{
                     position: fixed;
@@ -1761,7 +1762,7 @@ if alert is not None:
                     >×</label>
                 </div>
             </div>
-            """,
+            """),
             unsafe_allow_html=True
         )
 
