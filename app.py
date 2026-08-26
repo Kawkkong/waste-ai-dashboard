@@ -1607,7 +1607,7 @@ if alert is not None:
 
     remaining = max(
         0.0,
-        6.0 - elapsed
+        10.0 - elapsed
     )
 
     # ครบเวลาแล้วก็ล้างแจ้งเตือนออก
