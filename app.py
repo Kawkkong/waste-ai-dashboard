@@ -2322,4 +2322,4 @@ else:
         </section>
         '''
     st.html(collection_html)
- inject_theme()
+inject_theme()
