@@ -16,6 +16,7 @@ import time
 # ฟังก์ชันวิเคราะห์ภาพด้วยโมเดล AI
 from inference import analyze_frame
 from config import CAMERA_CONFIG
+from theme import inject_theme
 
 # ส่วนแสดงภาพแบบเต็มจอ กดขยายดูรายละเอียดได้
 def show_image_viewer(img_bgr, title="", display_width=340, viewer_height=300):
@@ -2321,3 +2322,4 @@ else:
         </section>
         '''
     st.html(collection_html)
+ inject_theme()
