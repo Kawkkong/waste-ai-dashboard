@@ -374,8 +374,150 @@ section[data-testid="stSidebar"] [data-testid="stExpander"] {
 
 
 def inject_theme() -> None:
-    """ฉีดธีมใหม่ลงในแอป — เรียกหลัง st.set_page_config และหลัง CSS เดิมของ app.py"""
+    """ฉีดธีมใหม่ พร้อมสลับ Light/Dark โดยไม่แตะ logic ของ dashboard"""
+    dark_mode = st.sidebar.toggle("โหมดมืด", value=False, key="theme_dark_mode")
+
+    # Frosted glass refresh: โปร่งใสแบบกระจกจริง ขอบบาง แสงสะท้อนนุ่ม
+    glass_refresh = """
+    <style>
+    :root {
+      --glass: rgba(255,255,255,.42);
+      --glass-strong: rgba(255,255,255,.66);
+      --glass-border: rgba(255,255,255,.76);
+      --shadow-sm: 0 8px 24px rgba(24,64,72,.055);
+      --shadow-md: 0 16px 40px rgba(24,64,72,.095);
+    }
+    [data-testid="stMetric"], [data-testid="stExpander"],
+    .settings-card, .camera-detail-card, .collection-section,
+    .collection-stop, [data-testid="stFileUploader"],
+    [data-testid="stPlotlyChart"], [data-testid="stDataFrame"],
+    .recommend, .camera-action-card, .chart-tip, .collection-example {
+      background: linear-gradient(145deg, rgba(255,255,255,.62), rgba(255,255,255,.30)) !important;
+      border: 1px solid rgba(255,255,255,.78) !important;
+      -webkit-backdrop-filter: blur(26px) saturate(165%) !important;
+      backdrop-filter: blur(26px) saturate(165%) !important;
+      box-shadow: 0 12px 32px rgba(24,64,72,.065),
+                  inset 0 1px 0 rgba(255,255,255,.72),
+                  inset 0 -1px 0 rgba(255,255,255,.18) !important;
+    }
+    .app-brand {
+      background: linear-gradient(120deg, rgba(255,255,255,.74), rgba(255,255,255,.38)) !important;
+      border: 1px solid rgba(255,255,255,.82) !important;
+      -webkit-backdrop-filter: blur(30px) saturate(170%) !important;
+      backdrop-filter: blur(30px) saturate(170%) !important;
+      box-shadow: 0 18px 44px rgba(24,64,72,.085), inset 0 1px 0 rgba(255,255,255,.8) !important;
+    }
+    section[data-testid="stSidebar"] {
+      background: rgba(248,252,251,.58) !important;
+      -webkit-backdrop-filter: blur(30px) saturate(160%) !important;
+      backdrop-filter: blur(30px) saturate(160%) !important;
+    }
+    [data-testid="stMetric"]:hover, [data-testid="stExpander"]:hover,
+    .collection-stop:hover {
+      background: rgba(255,255,255,.72) !important;
+      transform: translateY(-2px);
+      box-shadow: 0 18px 42px rgba(24,64,72,.11) !important;
+    }
+    @media (prefers-reduced-transparency: reduce) {
+      [data-testid="stMetric"], [data-testid="stExpander"],
+      .settings-card, .camera-detail-card, .collection-section,
+      .collection-stop, .app-brand {
+        -webkit-backdrop-filter: none !important;
+        backdrop-filter: none !important;
+        background: rgba(255,255,255,.94) !important;
+      }
+    }
+    </style>
+    """
+
+    dark_css = """
+    <style>
+    :root {
+      --ink: #e8f2f1; --muted: #adc2c1;
+      --line: rgba(220,245,242,.13);
+      --accent: #70d8c9; --accent-2: #8b9cff;
+      --accent-soft: rgba(112,216,201,.13);
+      --glass: rgba(21,39,48,.56);
+      --glass-strong: rgba(27,49,59,.76);
+      --glass-border: rgba(196,226,224,.17);
+      --shadow-sm: 0 8px 24px rgba(0,0,0,.17);
+      --shadow-md: 0 16px 42px rgba(0,0,0,.26);
+    }
+    [data-testid="stApp"], [data-testid="stAppViewContainer"] {
+      background: #101d25 !important; color: var(--ink) !important;
+    }
+    [data-testid="stApp"]::before {
+      background:
+        radial-gradient(60% 55% at 12% 8%, rgba(20,112,100,.34), transparent 70%),
+        radial-gradient(55% 50% at 92% 10%, rgba(57,77,155,.30), transparent 70%),
+        radial-gradient(60% 55% at 85% 95%, rgba(94,63,130,.25), transparent 70%),
+        linear-gradient(135deg, #101d25 0%, #152630 55%, #1b2030 100%) !important;
+      animation: none !important;
+    }
+    h1, h2, h3, h4, p, label, small,
+    [data-testid="stMarkdownContainer"], [data-testid="stCaptionContainer"],
+    [data-testid="stMetricLabel"], [data-testid="stMetricValue"],
+    .collection-title, .settings-title, .section-title, .upload-panel-title,
+    .history-title, .collection-camera, .action-label {
+      color: var(--ink) !important;
+    }
+    [data-testid="stMetric"], [data-testid="stExpander"],
+    .settings-card, .camera-detail-card, .collection-section,
+    .collection-stop, [data-testid="stFileUploader"],
+    [data-testid="stPlotlyChart"], [data-testid="stDataFrame"],
+    .app-brand, .recommend, .camera-action-card, .chart-tip, .collection-example {
+      background: linear-gradient(145deg, rgba(31,54,64,.78), rgba(18,35,44,.62)) !important;
+      border: 1px solid rgba(196,226,224,.16) !important;
+      color: var(--ink) !important;
+      -webkit-backdrop-filter: blur(26px) saturate(145%) !important;
+      backdrop-filter: blur(26px) saturate(145%) !important;
+      box-shadow: 0 14px 34px rgba(0,0,0,.20), inset 0 1px 0 rgba(255,255,255,.055) !important;
+    }
+    section[data-testid="stSidebar"] {
+      background: rgba(13,27,35,.78) !important;
+      border-right: 1px solid rgba(196,226,224,.13) !important;
+      -webkit-backdrop-filter: blur(30px) saturate(150%) !important;
+      backdrop-filter: blur(30px) saturate(150%) !important;
+    }
+    [data-testid="stMetricValue"], .app-title {
+      color: #e8f2f1 !important;
+      -webkit-text-fill-color: #e8f2f1 !important;
+    }
+    [data-testid="stTextInput"] input, [data-testid="stNumberInput"] input,
+    [data-testid="stTextArea"] textarea, [data-baseweb="select"] > div {
+      background: rgba(10,23,30,.76) !important;
+      color: var(--ink) !important;
+      border-color: rgba(196,226,224,.20) !important;
+    }
+    [data-testid="stFileUploaderDropzone"] {
+      background: rgba(10,23,30,.48) !important;
+      border-color: rgba(112,216,201,.38) !important;
+    }
+    .stButton > button, [data-testid="stDownloadButton"] > button,
+    [data-testid="stPopover"] > button {
+      background: rgba(29,51,61,.88) !important;
+      color: var(--ink) !important;
+      border-color: rgba(196,226,224,.18) !important;
+    }
+    .stButton > button[kind="primary"], [data-testid="stBaseButton-primary"] {
+      background: linear-gradient(135deg, #147f7a, #596bd0) !important;
+      color: #fff !important;
+    }
+    [data-testid="stAlert"] {
+      background: rgba(25,48,58,.82) !important;
+      color: var(--ink) !important;
+      border-color: rgba(196,226,224,.17) !important;
+    }
+    .collection-info summary { background: rgba(27,49,59,.92) !important; }
+    .collection-info-pop { background: rgba(20,38,47,.97) !important; color: var(--ink) !important; }
+    [data-testid="stDataFrame"] * { color: var(--ink) !important; }
+    </style>
+    """
+
     st.markdown(THEME_CSS, unsafe_allow_html=True)
+    st.markdown(glass_refresh, unsafe_allow_html=True)
+    if dark_mode:
+        st.markdown(dark_css, unsafe_allow_html=True)
 
 
 # ---------------------------------------------------------------------------
