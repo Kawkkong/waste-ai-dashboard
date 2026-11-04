@@ -374,16 +374,14 @@ section[data-testid="stSidebar"] [data-testid="stExpander"] {
 
 
 def inject_theme() -> None:
-    """Apply the selected glass theme after the dashboard's original CSS."""
+    """Apply glass theme without disturbing Streamlit's internal icon/layout fonts."""
     dark_mode = bool(st.session_state.get("theme_dark_mode", False))
 
     common_css = """
     <style>
-    /* Soft glass surfaces: no hard outlines, consistent rounded geometry */
-    :root {
-      --glass-radius: 24px;
-      --glass-shadow: 0 14px 36px rgba(28, 72, 78, .075);
-    }
+    :root { --glass-radius: 24px; }
+
+    /* Rounded, soft glass surfaces */
     [data-testid="stMetric"],
     [data-testid="stExpander"],
     .settings-card, .camera-detail-card, .collection-section,
@@ -391,327 +389,309 @@ def inject_theme() -> None:
     .chart-tip, .collection-example {
       border: 0 !important;
       border-radius: var(--glass-radius) !important;
-      box-shadow: var(--glass-shadow) !important;
+      box-shadow: 0 14px 36px rgba(28,72,78,.075) !important;
       -webkit-backdrop-filter: blur(26px) saturate(165%) !important;
       backdrop-filter: blur(26px) saturate(165%) !important;
-      overflow: hidden;
     }
-    [data-testid="stExpander"] > details,
-    [data-testid="stExpander"] details,
-    [data-testid="stExpander"] summary {
-      border: 0 !important;
-      border-radius: var(--glass-radius) !important;
-      outline: 0 !important;
+
+    /* Preserve Streamlit's native Material Symbols font and ligatures */
+    .material-icons, .material-icons-outlined, .material-symbols-rounded,
+    .material-symbols-outlined, [data-testid="stExpander"] summary svg,
+    [data-testid="stExpander"] summary [data-testid="stIconMaterial"] {
+      font-family: "Material Symbols Rounded", "Material Icons" !important;
+      font-feature-settings: "liga" !important;
+      font-weight: normal !important;
+      letter-spacing: normal !important;
+      text-transform: none !important;
+      white-space: nowrap !important;
+      word-wrap: normal !important;
+      direction: ltr !important;
     }
-    [data-testid="stExpander"] summary {
+
+    /* Set typeface on control roots only; never force fonts on every child */
+    button, [role="button"], input, textarea, select,
+    [data-testid="stWidgetLabel"], [data-testid="stExpander"] summary,
+    [data-testid="stPopover"] {
       font-family: 'Prompt', 'Noto Sans Thai', Tahoma, sans-serif !important;
+    }
+    button span:not(.material-icons):not(.material-icons-outlined):not(.material-symbols-rounded):not(.material-symbols-outlined),
+    [role="button"] span:not(.material-icons):not(.material-symbols-rounded) {
+      font-family: 'Prompt', 'Noto Sans Thai', Tahoma, sans-serif !important;
+    }
+
+    /* Expander geometry and typography without changing its internal layout */
+    [data-testid="stExpander"],
+    [data-testid="stExpander"] details {
+      border: 0 !important;
+      border-radius: 24px !important;
+      outline: 0 !important;
+      overflow: hidden !important;
+    }
+    [data-testid="stExpander"] summary {
+      display: flex !important;
+      align-items: center !important;
+      gap: .5rem !important;
       font-weight: 600 !important;
     }
-    /* Streamlit uploader has nested shells; keep only ONE visible glass surface */
-    [data-testid="stFileUploader"],
-    [data-testid="stFileUploader"] > section,
-    [data-testid="stFileUploaderDropzone"] {
-      border: 0 !important;
-      outline: 0 !important;
-      box-shadow: none !important;
+    [data-testid="stExpander"] summary svg {
+      flex: 0 0 auto !important;
+      display: inline-block !important;
     }
+
+    /* Uploader: a single rounded dropzone, transparent wrapper */
     [data-testid="stFileUploader"] {
+      background: transparent !important;
+      border: 0 !important;
+      box-shadow: none !important;
       padding: 0 !important;
       margin: 0 !important;
-      background: transparent !important;
-      border-radius: 22px !important;
-      overflow: visible !important;
+      min-width: 0 !important;
     }
     [data-testid="stFileUploader"] > section {
-      padding: 0 !important;
       background: transparent !important;
-      border-radius: 22px !important;
+      border: 0 !important;
+      box-shadow: none !important;
+      padding: 0 !important;
+      min-width: 0 !important;
     }
     [data-testid="stFileUploaderDropzone"] {
-      min-height: 66px !important;
+      display: flex !important;
+      align-items: center !important;
+      flex-wrap: wrap !important;
+      gap: 10px !important;
+      box-sizing: border-box !important;
+      min-height: 68px !important;
       padding: 12px 14px !important;
+      border: 0 !important;
+      outline: 0 !important;
       border-radius: 20px !important;
-      overflow: hidden !important;
-      transition: background .25s ease, transform .25s ease, box-shadow .25s ease !important;
+      box-shadow: none !important;
+      transition: background .25s ease, transform .25s ease !important;
     }
-    [data-testid="stFileUploaderDropzone"]:hover {
-      transform: translateY(-1px);
+    [data-testid="stFileUploaderDropzone"] > div {
+      min-width: 0 !important;
+      flex: 1 1 180px !important;
     }
     [data-testid="stFileUploaderDropzone"] button {
+      flex: 0 0 auto !important;
       border: 0 !important;
       border-radius: 12px !important;
       box-shadow: none !important;
       font-family: 'Prompt', 'Noto Sans Thai', Tahoma, sans-serif !important;
+      white-space: nowrap !important;
     }
-    .camera-detail-card { border-radius: 20px !important; }
-    .collection-section { border-radius: 26px !important; }
-    .collection-stop { border-radius: 19px !important; }
+    [data-testid="stFileUploaderDropzoneInstructions"] {
+      min-width: 0 !important;
+      line-height: 1.45 !important;
+    }
 
-    /* Interactive controls: apply font consistently to labels and nested text */
-    button, button *, [role="button"], [role="button"] *,
-    [data-testid="stWidgetLabel"], [data-testid="stWidgetLabel"] *,
-    [data-testid="stExpander"] summary,
-    [data-testid="stPopover"] *, [data-baseweb="popover"] *,
-    [data-testid="stNumberInput"] label,
-    [data-testid="stTextInput"] label,
-    [data-testid="stSelectbox"] label,
-    [data-testid="stMultiSelect"] label,
-    [data-testid="stToggle"] label,
-    [data-testid="stCheckbox"] label {
-      font-family: 'Prompt', 'Noto Sans Thai', Tahoma, sans-serif !important;
-    }
+    /* Smooth hover; don't let browser defaults flash white */
     .stButton > button, [data-testid="stDownloadButton"] button,
     [data-testid="stPopover"] > button {
       border-radius: 13px !important;
-      transition: transform .2s ease, box-shadow .2s ease, background .2s ease !important;
+      transition: transform .2s ease, box-shadow .2s ease, background .2s ease, color .2s ease !important;
     }
     .stButton > button:hover, [data-testid="stDownloadButton"] button:hover,
     [data-testid="stPopover"] > button:hover {
-      transform: translateY(-2px);
+      transform: translateY(-1px);
     }
 
-    /* Animated aurora background in both themes */
+    /* Animated aurora background */
     [data-testid="stApp"]::before {
-      background-size: 180% 180%, 180% 180%, 180% 180%, 180% 180%, 160% 160% !important;
+      background-size: 180% 180%,180% 180%,180% 180%,180% 180%,160% 160% !important;
       animation: auroraDrift 30s ease-in-out infinite alternate !important;
       will-change: background-position;
     }
     @keyframes auroraDrift {
-      0% { background-position: 0% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%; }
-      50% { background-position: 12% 18%, 88% 8%, 80% 88%, 18% 82%, 50% 50%; }
-      100% { background-position: 20% 8%, 78% 18%, 88% 78%, 8% 92%, 100% 100%; }
+      0% { background-position:0% 0%,100% 0%,100% 100%,0% 100%,0% 0%; }
+      50% { background-position:12% 18%,88% 8%,80% 88%,18% 82%,50% 50%; }
+      100% { background-position:20% 8%,78% 18%,88% 78%,8% 92%,100% 100%; }
     }
     @media (prefers-reduced-motion: reduce) {
-      [data-testid="stApp"]::before { animation: none !important; }
-      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+      [data-testid="stApp"]::before { animation:none !important; }
+      *,*::before,*::after { transition-duration:.01ms !important; }
     }
     </style>
     """
 
     light_css = """
     <style>
-    :root {
-      --ink: #17383b; --muted: #60797b;
-      --glass-shadow: 0 14px 36px rgba(28,72,78,.07);
-    }
-    [data-testid="stApp"], [data-testid="stAppViewContainer"] {
-      color: var(--ink) !important;
-    }
+    :root { --ink:#17383b; --muted:#60797b; }
+    [data-testid="stApp"],[data-testid="stAppViewContainer"] { color:var(--ink) !important; }
     [data-testid="stApp"]::before {
       background:
-        radial-gradient(60% 55% at 12% 8%, rgba(171,235,213,.88), transparent 70%),
-        radial-gradient(55% 50% at 92% 10%, rgba(184,207,255,.82), transparent 70%),
-        radial-gradient(60% 55% at 85% 95%, rgba(218,196,255,.76), transparent 70%),
-        radial-gradient(50% 45% at 8% 92%, rgba(255,220,195,.72), transparent 70%),
+        radial-gradient(60% 55% at 12% 8%,rgba(171,235,213,.88),transparent 70%),
+        radial-gradient(55% 50% at 92% 10%,rgba(184,207,255,.82),transparent 70%),
+        radial-gradient(60% 55% at 85% 95%,rgba(218,196,255,.76),transparent 70%),
+        radial-gradient(50% 45% at 8% 92%,rgba(255,220,195,.72),transparent 70%),
         linear-gradient(135deg,#f2fbf7 0%,#eff4ff 55%,#f8f2ff 100%) !important;
     }
-    [data-testid="stMetric"], [data-testid="stExpander"],
-    .settings-card, .camera-detail-card, .collection-section,
-    .collection-stop, .app-brand, .recommend, .camera-action-card,
-    .chart-tip, .collection-example {
-      background: linear-gradient(145deg,rgba(255,255,255,.70),rgba(255,255,255,.38)) !important;
+    [data-testid="stMetric"],[data-testid="stExpander"],
+    .settings-card,.camera-detail-card,.collection-section,
+    .collection-stop,.app-brand,.recommend,.camera-action-card,
+    .chart-tip,.collection-example {
+      background:linear-gradient(145deg,rgba(255,255,255,.70),rgba(255,255,255,.38)) !important;
     }
-    [data-testid="stFileUploaderDropzone"] {
-      background: rgba(255,255,255,.48) !important;
-    }
-    [data-testid="stFileUploaderDropzone"] button {
-      background: #e2f5ef !important;
-      color: #155b59 !important;
-    }
+    [data-testid="stFileUploaderDropzone"] { background:rgba(255,255,255,.48) !important; }
+    [data-testid="stFileUploaderDropzone"] button { background:#e2f5ef !important; color:#155b59 !important; }
     [data-testid="stFileUploaderDropzone"] button *,
     [data-testid="stFileUploaderDropzoneInstructions"],
     [data-testid="stFileUploaderDropzoneInstructions"] * {
-      color: #49696a !important;
-      -webkit-text-fill-color: #49696a !important;
+      color:#49696a !important; -webkit-text-fill-color:#49696a !important;
     }
     [data-testid="stExpander"] summary,
-    [data-testid="stWidgetLabel"], [data-testid="stWidgetLabel"] *,
-    .settings-title, .settings-section-label, .section-title,
-    .collection-title, .collection-camera, .upload-panel-title {
-      color: #17383b !important;
-      -webkit-text-fill-color: #17383b !important;
+    [data-testid="stWidgetLabel"],[data-testid="stWidgetLabel"] *,
+    .settings-title,.settings-section-label,.section-title,
+    .collection-title,.collection-camera,.upload-panel-title {
+      color:#17383b !important; -webkit-text-fill-color:#17383b !important;
     }
     </style>
     """
 
     dark_css = """
     <style>
-    :root {
-      --ink: #eff8f6; --muted: #b8cecb;
-      --accent: #75dfcf; --accent-2: #9aaaff;
-    }
-    [data-testid="stApp"], [data-testid="stAppViewContainer"],
-    [data-testid="stMain"], [data-testid="stMainBlockContainer"] {
-      background: transparent !important;
-      color: var(--ink) !important;
+    :root { --ink:#eff8f6; --muted:#b8cecb; --accent:#75dfcf; --accent-2:#9aaaff; }
+    [data-testid="stApp"],[data-testid="stAppViewContainer"],
+    [data-testid="stMain"],[data-testid="stMainBlockContainer"] {
+      background:transparent !important; color:var(--ink) !important;
     }
     [data-testid="stApp"]::before {
       background:
-        radial-gradient(60% 55% at 12% 8%, rgba(22,133,116,.48), transparent 70%),
-        radial-gradient(55% 50% at 92% 10%, rgba(70,91,177,.43), transparent 70%),
-        radial-gradient(60% 55% at 85% 95%, rgba(116,73,157,.38), transparent 70%),
-        radial-gradient(50% 45% at 8% 92%, rgba(145,91,70,.22), transparent 70%),
+        radial-gradient(60% 55% at 12% 8%,rgba(22,133,116,.48),transparent 70%),
+        radial-gradient(55% 50% at 92% 10%,rgba(70,91,177,.43),transparent 70%),
+        radial-gradient(60% 55% at 85% 95%,rgba(116,73,157,.38),transparent 70%),
+        radial-gradient(50% 45% at 8% 92%,rgba(145,91,70,.22),transparent 70%),
         linear-gradient(135deg,#0d1b23 0%,#142832 55%,#1b2031 100%) !important;
     }
 
-    /* All text in Streamlit widgets, expanding panels and settings */
-    [data-testid="stMarkdownContainer"],
-    [data-testid="stMarkdownContainer"] *,
-    [data-testid="stCaptionContainer"],
-    [data-testid="stCaptionContainer"] *,
-    [data-testid="stWidgetLabel"],
-    [data-testid="stWidgetLabel"] *,
-    [data-testid="stExpander"] summary,
-    [data-testid="stExpander"] summary *,
-    [data-testid="stPopover"] *,
-    [data-baseweb="popover"] *,
-    [data-testid="stNumberInput"] label,
-    [data-testid="stTextInput"] label,
-    [data-testid="stSelectbox"] label,
-    [data-testid="stMultiSelect"] label,
-    [data-testid="stToggle"] label,
-    [data-testid="stCheckbox"] label,
-    .settings-card, .settings-card *,
-    .camera-detail-card, .camera-detail-card *,
-    .collection-section, .collection-section *,
-    .collection-stop, .collection-stop *,
-    .app-brand, .app-brand *,
-    .recommend, .recommend *,
-    .camera-action-card, .camera-action-card *,
-    .chart-tip, .chart-tip *, .collection-example, .collection-example * {
-      color: #eff8f6 !important;
-      -webkit-text-fill-color: #eff8f6 !important;
+    /* Readable text, excluding icons and SVGs */
+    [data-testid="stMarkdownContainer"],[data-testid="stMarkdownContainer"] p,
+    [data-testid="stMarkdownContainer"] li,[data-testid="stCaptionContainer"],
+    [data-testid="stWidgetLabel"],[data-testid="stExpander"] summary,
+    [data-testid="stPopover"],[data-testid="stNumberInput"] label,
+    [data-testid="stTextInput"] label,[data-testid="stSelectbox"] label,
+    [data-testid="stMultiSelect"] label,[data-testid="stToggle"] label,
+    [data-testid="stCheckbox"] label,.settings-card,.camera-detail-card,
+    .collection-section,.collection-stop,.app-brand,.recommend,
+    .camera-action-card,.chart-tip,.collection-example {
+      color:#eff8f6 !important; -webkit-text-fill-color:#eff8f6 !important;
     }
-    [data-testid="stCaptionContainer"] *,
-    .app-subtitle, .upload-panel-subtitle, .upload-hint,
-    .settings-subtitle, .collection-subtitle {
-      color: #b8cecb !important;
-      -webkit-text-fill-color: #b8cecb !important;
+    [data-testid="stCaptionContainer"],.app-subtitle,.upload-panel-subtitle,
+    .upload-hint,.settings-subtitle,.collection-subtitle {
+      color:#b8cecb !important; -webkit-text-fill-color:#b8cecb !important;
     }
 
-    /* Soft dark glass, with no sharp borders */
-    [data-testid="stMetric"], [data-testid="stExpander"],
-    .settings-card, .camera-detail-card, .collection-section,
-    .collection-stop, .app-brand, .recommend, .camera-action-card,
-    .chart-tip, .collection-example {
-      background: linear-gradient(145deg,rgba(35,65,75,.86),rgba(19,39,49,.78)) !important;
-      border: 0 !important;
-      box-shadow: 0 16px 40px rgba(0,0,0,.20), inset 0 1px 0 rgba(255,255,255,.055) !important;
+    [data-testid="stMetric"],[data-testid="stExpander"],
+    .settings-card,.camera-detail-card,.collection-section,
+    .collection-stop,.app-brand,.recommend,.camera-action-card,
+    .chart-tip,.collection-example {
+      background:linear-gradient(145deg,rgba(35,65,75,.86),rgba(19,39,49,.78)) !important;
+      border:0 !important;
+      box-shadow:0 16px 40px rgba(0,0,0,.20),inset 0 1px 0 rgba(255,255,255,.055) !important;
     }
-    [data-testid="stExpander"] > details,
-    [data-testid="stExpander"] details,
-    [data-testid="stExpander"] summary {
-      background: transparent !important;
-      border: 0 !important;
-      color: #eff8f6 !important;
-      -webkit-text-fill-color: #eff8f6 !important;
+    [data-testid="stExpander"] summary,
+    [data-testid="stExpander"] details {
+      background:transparent !important; border:0 !important;
+      color:#eff8f6 !important; -webkit-text-fill-color:#eff8f6 !important;
     }
     [data-testid="stExpander"] summary:hover {
-      background: rgba(255,255,255,.045) !important;
+      background:rgba(117,223,207,.10) !important;
+      color:#ffffff !important; -webkit-text-fill-color:#ffffff !important;
     }
 
-    /* Uploader: remove the extra outer card; keep one rounded drop area */
-    [data-testid="stFileUploader"],
-    [data-testid="stFileUploader"] > section,
-    [data-testid="stFileUploaderDropzone"] {
-      border: 0 !important;
-      outline: 0 !important;
-      box-shadow: none !important;
-    }
-    [data-testid="stFileUploader"] {
-      background: transparent !important;
-    }
-    [data-testid="stFileUploader"] > section {
-      background: transparent !important;
+    /* Single dark dropzone; uploader wrapper stays transparent */
+    [data-testid="stFileUploader"],[data-testid="stFileUploader"] > section {
+      background:transparent !important; border:0 !important; box-shadow:none !important;
     }
     [data-testid="stFileUploaderDropzone"] {
-      background: rgba(15,32,41,.66) !important;
-      border-radius: 20px !important;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.055) !important;
+      background:rgba(15,32,41,.66) !important; border:0 !important;
+      border-radius:20px !important; box-shadow:none !important;
     }
     [data-testid="stFileUploaderDropzone"] button {
-      background: #d8f4ed !important;
-      color: #164e4d !important;
-      border: 0 !important;
+      background:#d8f4ed !important; color:#164e4d !important;
+      border:0 !important;
     }
     [data-testid="stFileUploaderDropzone"] button *,
     [data-testid="stFileUploaderDropzone"] button span {
-      color: #164e4d !important;
-      fill: #164e4d !important;
-      -webkit-text-fill-color: #164e4d !important;
+      color:#164e4d !important; fill:#164e4d !important;
+      -webkit-text-fill-color:#164e4d !important;
     }
     [data-testid="stFileUploaderDropzoneInstructions"],
     [data-testid="stFileUploaderDropzoneInstructions"] * {
-      color: #c6ddda !important;
-      -webkit-text-fill-color: #c6ddda !important;
+      color:#c6ddda !important; -webkit-text-fill-color:#c6ddda !important;
     }
 
-    /* Buttons, popovers and controls including their inner SVG/icon text */
-    .stButton > button, [data-testid="stDownloadButton"] button,
-    [data-testid="stPopover"] > button,
-    [data-testid="stFormSubmitButton"] button,
-    [data-testid="stBaseButton-secondary"],
-    [data-testid="stBaseButton-primary"] {
-      background: rgba(39,70,81,.96) !important;
-      color: #eff8f6 !important;
-      border: 0 !important;
-      border-radius: 13px !important;
-      box-shadow: 0 6px 18px rgba(0,0,0,.18) !important;
+    /* Explicit dark hover/focus states to prevent white flashes */
+    .stButton > button,[data-testid="stDownloadButton"] button,
+    [data-testid="stPopover"] > button,[data-testid="stFormSubmitButton"] button,
+    [data-testid="stBaseButton-secondary"],[data-testid="stBaseButton-primary"] {
+      background:#274653 !important; color:#eff8f6 !important;
+      border:0 !important; border-radius:13px !important;
+      box-shadow:0 6px 18px rgba(0,0,0,.18) !important;
     }
-    .stButton > button *, [data-testid="stDownloadButton"] button *,
-    [data-testid="stPopover"] > button *,
-    [data-testid="stFormSubmitButton"] button *,
-    [data-testid="stBaseButton-secondary"] *,
-    [data-testid="stBaseButton-primary"] * {
-      color: #eff8f6 !important;
-      fill: #eff8f6 !important;
-      -webkit-text-fill-color: #eff8f6 !important;
+    .stButton > button:hover,[data-testid="stDownloadButton"] button:hover,
+    [data-testid="stPopover"] > button:hover,
+    [data-testid="stFormSubmitButton"] button:hover,
+    [data-testid="stBaseButton-secondary"]:hover,
+    [data-testid="stBaseButton-primary"]:hover {
+      background:#356273 !important; color:#ffffff !important;
+      -webkit-text-fill-color:#ffffff !important;
+      box-shadow:0 8px 22px rgba(0,0,0,.24) !important;
     }
-    .stButton > button[kind="primary"],
-    [data-testid="stBaseButton-primary"] {
-      background: linear-gradient(135deg,#137f78,#596ed0) !important;
+    .stButton > button:focus-visible,[data-testid="stDownloadButton"] button:focus-visible,
+    [data-testid="stPopover"] > button:focus-visible {
+      outline:2px solid #75dfcf !important; outline-offset:2px !important;
     }
-    [data-testid="stPopover"],
-    [data-testid="stPopover"] > div,
-    [data-baseweb="popover"],
-    [data-baseweb="popover"] > div {
-      background: #1b3540 !important;
-      color: #eff8f6 !important;
-      border: 0 !important;
-      border-radius: 18px !important;
+    .stButton > button span:not(.material-icons):not(.material-symbols-rounded),
+    [data-testid="stDownloadButton"] button span:not(.material-icons):not(.material-symbols-rounded),
+    [data-testid="stPopover"] > button span:not(.material-icons):not(.material-symbols-rounded) {
+      color:inherit !important; -webkit-text-fill-color:currentColor !important;
+    }
+    .stButton > button svg,[data-testid="stPopover"] > button svg {
+      fill:currentColor !important; color:currentColor !important;
+    }
+    .stButton > button[kind="primary"],[data-testid="stBaseButton-primary"] {
+      background:linear-gradient(135deg,#137f78,#596ed0) !important;
+    }
+    .stButton > button[kind="primary"]:hover,[data-testid="stBaseButton-primary"]:hover {
+      background:linear-gradient(135deg,#19998f,#6b7fe0) !important;
     }
 
-    /* Settings inputs */
-    [data-testid="stTextInput"] input,
-    [data-testid="stNumberInput"] input,
-    [data-testid="stTextArea"] textarea,
-    [data-baseweb="select"] > div {
-      background: rgba(10,24,31,.82) !important;
-      color: #eff8f6 !important;
-      border-color: rgba(180,220,215,.16) !important;
-      -webkit-text-fill-color: #eff8f6 !important;
+    /* Popover menu surfaces and their content */
+    [data-baseweb="popover"],[data-baseweb="popover"] > div,
+    [data-testid="stPopover"] [data-baseweb="popover"] {
+      background:#1b3540 !important; color:#eff8f6 !important;
+      border:0 !important; border-radius:18px !important;
+    }
+    [data-baseweb="popover"] [role="option"],
+    [data-baseweb="popover"] [role="menuitem"] {
+      color:#eff8f6 !important;
+    }
+    [data-baseweb="popover"] [role="option"]:hover,
+    [data-baseweb="popover"] [role="menuitem"]:hover {
+      background:#315765 !important; color:#ffffff !important;
+    }
+
+    [data-testid="stTextInput"] input,[data-testid="stNumberInput"] input,
+    [data-testid="stTextArea"] textarea,[data-baseweb="select"] > div {
+      background:rgba(10,24,31,.82) !important; color:#eff8f6 !important;
+      border-color:rgba(180,220,215,.16) !important;
+      -webkit-text-fill-color:#eff8f6 !important;
     }
     [data-testid="stTextInput"] input::placeholder,
     [data-testid="stTextArea"] textarea::placeholder {
-      color: #91aaa9 !important;
-      -webkit-text-fill-color: #91aaa9 !important;
+      color:#91aaa9 !important; -webkit-text-fill-color:#91aaa9 !important;
     }
     [data-testid="stAlert"] {
-      background: rgba(25,48,58,.88) !important;
-      color: #eff8f6 !important;
-      border: 0 !important;
-      border-radius: 16px !important;
+      background:rgba(25,48,58,.88) !important; color:#eff8f6 !important;
+      border:0 !important; border-radius:16px !important;
     }
     .collection-info summary {
-      background: rgba(37,63,73,.90) !important;
-      color: #eff8f6 !important;
-      border: 0 !important;
+      background:rgba(37,63,73,.90) !important; color:#eff8f6 !important; border:0 !important;
     }
     .collection-info-pop {
-      background: rgba(20,38,47,.98) !important;
-      color: #eff8f6 !important;
-      border: 0 !important;
-      border-radius: 16px !important;
+      background:rgba(20,38,47,.98) !important; color:#eff8f6 !important;
+      border:0 !important; border-radius:16px !important;
     }
     </style>
     """
