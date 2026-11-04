@@ -374,217 +374,322 @@ section[data-testid="stSidebar"] [data-testid="stExpander"] {
 
 
 def inject_theme() -> None:
-    """ฉีดธีมตามสถานะสวิตช์บน Header โดยไม่เปลี่ยน logic ของ dashboard."""
+    """Apply the selected glass theme after the dashboard's original CSS."""
     dark_mode = bool(st.session_state.get("theme_dark_mode", False))
 
-    glass_refresh = """
+    common_css = """
+    <style>
+    /* Soft glass surfaces: no hard outlines, consistent rounded geometry */
+    :root {
+      --glass-radius: 24px;
+      --glass-shadow: 0 14px 36px rgba(28, 72, 78, .075);
+    }
+    [data-testid="stMetric"],
+    [data-testid="stExpander"],
+    .settings-card, .camera-detail-card, .collection-section,
+    .collection-stop, .app-brand, .recommend, .camera-action-card,
+    .chart-tip, .collection-example {
+      border: 0 !important;
+      border-radius: var(--glass-radius) !important;
+      box-shadow: var(--glass-shadow) !important;
+      -webkit-backdrop-filter: blur(26px) saturate(165%) !important;
+      backdrop-filter: blur(26px) saturate(165%) !important;
+      overflow: hidden;
+    }
+    [data-testid="stExpander"] > details,
+    [data-testid="stExpander"] details,
+    [data-testid="stExpander"] summary {
+      border: 0 !important;
+      border-radius: var(--glass-radius) !important;
+      outline: 0 !important;
+    }
+    [data-testid="stExpander"] summary {
+      font-family: 'Prompt', 'Noto Sans Thai', Tahoma, sans-serif !important;
+      font-weight: 600 !important;
+    }
+    /* Streamlit uploader has nested shells; keep only ONE visible glass surface */
+    [data-testid="stFileUploader"],
+    [data-testid="stFileUploader"] > section,
+    [data-testid="stFileUploaderDropzone"] {
+      border: 0 !important;
+      outline: 0 !important;
+      box-shadow: none !important;
+    }
+    [data-testid="stFileUploader"] {
+      padding: 0 !important;
+      margin: 0 !important;
+      background: transparent !important;
+      border-radius: 22px !important;
+      overflow: visible !important;
+    }
+    [data-testid="stFileUploader"] > section {
+      padding: 0 !important;
+      background: transparent !important;
+      border-radius: 22px !important;
+    }
+    [data-testid="stFileUploaderDropzone"] {
+      min-height: 66px !important;
+      padding: 12px 14px !important;
+      border-radius: 20px !important;
+      overflow: hidden !important;
+      transition: background .25s ease, transform .25s ease, box-shadow .25s ease !important;
+    }
+    [data-testid="stFileUploaderDropzone"]:hover {
+      transform: translateY(-1px);
+    }
+    [data-testid="stFileUploaderDropzone"] button {
+      border: 0 !important;
+      border-radius: 12px !important;
+      box-shadow: none !important;
+      font-family: 'Prompt', 'Noto Sans Thai', Tahoma, sans-serif !important;
+    }
+    .camera-detail-card { border-radius: 20px !important; }
+    .collection-section { border-radius: 26px !important; }
+    .collection-stop { border-radius: 19px !important; }
+
+    /* Interactive controls: apply font consistently to labels and nested text */
+    button, button *, [role="button"], [role="button"] *,
+    [data-testid="stWidgetLabel"], [data-testid="stWidgetLabel"] *,
+    [data-testid="stExpander"] summary,
+    [data-testid="stPopover"] *, [data-baseweb="popover"] *,
+    [data-testid="stNumberInput"] label,
+    [data-testid="stTextInput"] label,
+    [data-testid="stSelectbox"] label,
+    [data-testid="stMultiSelect"] label,
+    [data-testid="stToggle"] label,
+    [data-testid="stCheckbox"] label {
+      font-family: 'Prompt', 'Noto Sans Thai', Tahoma, sans-serif !important;
+    }
+    .stButton > button, [data-testid="stDownloadButton"] button,
+    [data-testid="stPopover"] > button {
+      border-radius: 13px !important;
+      transition: transform .2s ease, box-shadow .2s ease, background .2s ease !important;
+    }
+    .stButton > button:hover, [data-testid="stDownloadButton"] button:hover,
+    [data-testid="stPopover"] > button:hover {
+      transform: translateY(-2px);
+    }
+
+    /* Animated aurora background in both themes */
+    [data-testid="stApp"]::before {
+      background-size: 180% 180%, 180% 180%, 180% 180%, 180% 180%, 160% 160% !important;
+      animation: auroraDrift 30s ease-in-out infinite alternate !important;
+      will-change: background-position;
+    }
+    @keyframes auroraDrift {
+      0% { background-position: 0% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%; }
+      50% { background-position: 12% 18%, 88% 8%, 80% 88%, 18% 82%, 50% 50%; }
+      100% { background-position: 20% 8%, 78% 18%, 88% 78%, 8% 92%, 100% 100%; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      [data-testid="stApp"]::before { animation: none !important; }
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    }
+    </style>
+    """
+
+    light_css = """
     <style>
     :root {
-      --glass: rgba(255,255,255,.46);
-      --glass-strong: rgba(255,255,255,.76);
-      --glass-border: rgba(255,255,255,.82);
-      --shadow-sm: 0 8px 24px rgba(24,64,72,.055);
-      --shadow-md: 0 16px 40px rgba(24,64,72,.095);
+      --ink: #17383b; --muted: #60797b;
+      --glass-shadow: 0 14px 36px rgba(28,72,78,.07);
+    }
+    [data-testid="stApp"], [data-testid="stAppViewContainer"] {
+      color: var(--ink) !important;
+    }
+    [data-testid="stApp"]::before {
+      background:
+        radial-gradient(60% 55% at 12% 8%, rgba(171,235,213,.88), transparent 70%),
+        radial-gradient(55% 50% at 92% 10%, rgba(184,207,255,.82), transparent 70%),
+        radial-gradient(60% 55% at 85% 95%, rgba(218,196,255,.76), transparent 70%),
+        radial-gradient(50% 45% at 8% 92%, rgba(255,220,195,.72), transparent 70%),
+        linear-gradient(135deg,#f2fbf7 0%,#eff4ff 55%,#f8f2ff 100%) !important;
     }
     [data-testid="stMetric"], [data-testid="stExpander"],
     .settings-card, .camera-detail-card, .collection-section,
-    .collection-stop, [data-testid="stFileUploader"],
-    [data-testid="stPlotlyChart"], [data-testid="stDataFrame"],
-    .recommend, .camera-action-card, .chart-tip, .collection-example {
-      background: linear-gradient(145deg, rgba(255,255,255,.66), rgba(255,255,255,.34)) !important;
-      border: 1px solid rgba(255,255,255,.82) !important;
-      -webkit-backdrop-filter: blur(24px) saturate(160%) !important;
-      backdrop-filter: blur(24px) saturate(160%) !important;
-      box-shadow: 0 12px 30px rgba(24,64,72,.06), inset 0 1px 0 rgba(255,255,255,.78) !important;
-    }
-    .app-brand {
-      background: linear-gradient(120deg, rgba(255,255,255,.78), rgba(255,255,255,.44)) !important;
-      border: 1px solid rgba(255,255,255,.86) !important;
-      -webkit-backdrop-filter: blur(28px) saturate(165%) !important;
-      backdrop-filter: blur(28px) saturate(165%) !important;
-      box-shadow: 0 16px 40px rgba(24,64,72,.075), inset 0 1px 0 rgba(255,255,255,.85) !important;
-    }
-    section[data-testid="stSidebar"] {
-      background: rgba(248,252,251,.64) !important;
-      -webkit-backdrop-filter: blur(26px) saturate(155%) !important;
-      backdrop-filter: blur(26px) saturate(155%) !important;
+    .collection-stop, .app-brand, .recommend, .camera-action-card,
+    .chart-tip, .collection-example {
+      background: linear-gradient(145deg,rgba(255,255,255,.70),rgba(255,255,255,.38)) !important;
     }
     [data-testid="stFileUploaderDropzone"] {
       background: rgba(255,255,255,.48) !important;
-      border: 1px dashed rgba(14,124,134,.34) !important;
     }
     [data-testid="stFileUploaderDropzone"] button {
-      background: #e4f5f2 !important;
-      color: #145b5d !important;
-      border: 1px solid rgba(14,124,134,.20) !important;
+      background: #e2f5ef !important;
+      color: #155b59 !important;
     }
-    [data-testid="stFileUploaderDropzone"] button * {
-      color: #145b5d !important;
-      fill: #145b5d !important;
-    }
+    [data-testid="stFileUploaderDropzone"] button *,
     [data-testid="stFileUploaderDropzoneInstructions"],
     [data-testid="stFileUploaderDropzoneInstructions"] * {
-      color: #526b70 !important;
+      color: #49696a !important;
+      -webkit-text-fill-color: #49696a !important;
     }
-    [data-testid="stExpander"] {
-      border: 0 !important;
-      border-radius: 22px !important;
-      background: rgba(255,255,255,.34) !important;
-      box-shadow: 0 10px 28px rgba(24,64,72,.045) !important;
-      overflow: hidden !important;
+    [data-testid="stExpander"] summary,
+    [data-testid="stWidgetLabel"], [data-testid="stWidgetLabel"] *,
+    .settings-title, .settings-section-label, .section-title,
+    .collection-title, .collection-camera, .upload-panel-title {
+      color: #17383b !important;
+      -webkit-text-fill-color: #17383b !important;
     }
-    [data-testid="stFileUploader"],
-    [data-testid="stFileUploaderDropzone"] {
-      border: 0 !important;
-      border-radius: 22px !important;
-      overflow: hidden !important;
-    }
-    [data-testid="stFileUploaderDropzone"] {
-      background: rgba(255,255,255,.38) !important;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.65) !important;
-    }
-    .collection-section {
-      border: 0 !important;
-      border-radius: 24px !important;
-      background: rgba(255,255,255,.48) !important;
-      box-shadow: 0 12px 32px rgba(24,64,72,.055), inset 0 1px 0 rgba(255,255,255,.65) !important;
-    }
-    .collection-stop {
-      border: 0 !important;
-      border-radius: 18px !important;
-    }
-    
     </style>
     """
 
     dark_css = """
     <style>
     :root {
-      --ink: #edf7f5; --muted: #b5c9c8;
-      --line: rgba(220,245,242,.14);
-      --accent: #72ddce; --accent-2: #91a3ff;
-      --accent-soft: rgba(114,221,206,.14);
-      --glass: rgba(22,42,51,.62);
-      --glass-strong: rgba(28,53,64,.84);
-      --glass-border: rgba(190,226,224,.20);
-      --shadow-sm: 0 8px 24px rgba(0,0,0,.18);
-      --shadow-md: 0 16px 42px rgba(0,0,0,.28);
+      --ink: #eff8f6; --muted: #b8cecb;
+      --accent: #75dfcf; --accent-2: #9aaaff;
     }
     [data-testid="stApp"], [data-testid="stAppViewContainer"],
     [data-testid="stMain"], [data-testid="stMainBlockContainer"] {
-      background-color: #101d25 !important;
+      background: transparent !important;
       color: var(--ink) !important;
     }
     [data-testid="stApp"]::before {
       background:
-        radial-gradient(60% 55% at 12% 8%, rgba(20,112,100,.34), transparent 70%),
-        radial-gradient(55% 50% at 92% 10%, rgba(57,77,155,.30), transparent 70%),
-        radial-gradient(60% 55% at 85% 95%, rgba(94,63,130,.25), transparent 70%),
-        linear-gradient(135deg, #101d25 0%, #152630 55%, #1b2030 100%) !important;
-      animation: none !important;
+        radial-gradient(60% 55% at 12% 8%, rgba(22,133,116,.48), transparent 70%),
+        radial-gradient(55% 50% at 92% 10%, rgba(70,91,177,.43), transparent 70%),
+        radial-gradient(60% 55% at 85% 95%, rgba(116,73,157,.38), transparent 70%),
+        radial-gradient(50% 45% at 8% 92%, rgba(145,91,70,.22), transparent 70%),
+        linear-gradient(135deg,#0d1b23 0%,#142832 55%,#1b2031 100%) !important;
     }
 
+    /* All text in Streamlit widgets, expanding panels and settings */
     [data-testid="stMarkdownContainer"],
-    [data-testid="stMarkdownContainer"] p,
-    [data-testid="stMarkdownContainer"] li,
+    [data-testid="stMarkdownContainer"] *,
     [data-testid="stCaptionContainer"],
     [data-testid="stCaptionContainer"] *,
     [data-testid="stWidgetLabel"],
     [data-testid="stWidgetLabel"] *,
-    [data-testid="stMetricLabel"], [data-testid="stMetricValue"],
     [data-testid="stExpander"] summary,
-    .app-title, .app-subtitle, .section-title, .settings-title,
-    .collection-title, .collection-camera, .collection-subtitle,
-    .upload-panel-title, .upload-panel-subtitle, .upload-hint,
-    .history-title, .settings-subtitle, .action-label,
-    .settings-section-label, .camera-detail-card,
-    .recommend, .camera-action-card, .chart-tip, .collection-example {
-      color: var(--ink) !important;
-      -webkit-text-fill-color: var(--ink) !important;
+    [data-testid="stExpander"] summary *,
+    [data-testid="stPopover"] *,
+    [data-baseweb="popover"] *,
+    [data-testid="stNumberInput"] label,
+    [data-testid="stTextInput"] label,
+    [data-testid="stSelectbox"] label,
+    [data-testid="stMultiSelect"] label,
+    [data-testid="stToggle"] label,
+    [data-testid="stCheckbox"] label,
+    .settings-card, .settings-card *,
+    .camera-detail-card, .camera-detail-card *,
+    .collection-section, .collection-section *,
+    .collection-stop, .collection-stop *,
+    .app-brand, .app-brand *,
+    .recommend, .recommend *,
+    .camera-action-card, .camera-action-card *,
+    .chart-tip, .chart-tip *, .collection-example, .collection-example * {
+      color: #eff8f6 !important;
+      -webkit-text-fill-color: #eff8f6 !important;
     }
-    [data-testid="stCaptionContainer"], .app-subtitle,
-    .collection-subtitle, .upload-panel-subtitle,
-    .upload-hint, .settings-subtitle {
-      color: var(--muted) !important;
-      -webkit-text-fill-color: var(--muted) !important;
+    [data-testid="stCaptionContainer"] *,
+    .app-subtitle, .upload-panel-subtitle, .upload-hint,
+    .settings-subtitle, .collection-subtitle {
+      color: #b8cecb !important;
+      -webkit-text-fill-color: #b8cecb !important;
     }
 
+    /* Soft dark glass, with no sharp borders */
     [data-testid="stMetric"], [data-testid="stExpander"],
     .settings-card, .camera-detail-card, .collection-section,
-    .collection-stop, [data-testid="stFileUploader"],
-    [data-testid="stPlotlyChart"], [data-testid="stDataFrame"],
-    .app-brand, .recommend, .camera-action-card, .chart-tip, .collection-example {
-      background: linear-gradient(145deg, rgba(34,59,69,.88), rgba(18,37,46,.78)) !important;
-      border: 1px solid rgba(190,226,224,.19) !important;
-      color: var(--ink) !important;
-      -webkit-backdrop-filter: blur(24px) saturate(145%) !important;
-      backdrop-filter: blur(24px) saturate(145%) !important;
-      box-shadow: 0 14px 34px rgba(0,0,0,.20), inset 0 1px 0 rgba(255,255,255,.07) !important;
+    .collection-stop, .app-brand, .recommend, .camera-action-card,
+    .chart-tip, .collection-example {
+      background: linear-gradient(145deg,rgba(35,65,75,.86),rgba(19,39,49,.78)) !important;
+      border: 0 !important;
+      box-shadow: 0 16px 40px rgba(0,0,0,.20), inset 0 1px 0 rgba(255,255,255,.055) !important;
     }
-    section[data-testid="stSidebar"] {
-      background: rgba(13,27,35,.84) !important;
-      border-right: 1px solid rgba(190,226,224,.14) !important;
-      -webkit-backdrop-filter: blur(28px) saturate(150%) !important;
-      backdrop-filter: blur(28px) saturate(150%) !important;
+    [data-testid="stExpander"] > details,
+    [data-testid="stExpander"] details,
+    [data-testid="stExpander"] summary {
+      background: transparent !important;
+      border: 0 !important;
+      color: #eff8f6 !important;
+      -webkit-text-fill-color: #eff8f6 !important;
     }
-
-    .stButton > button, [data-testid="stDownloadButton"] button,
-    [data-testid="stPopover"] > button,
-    [data-testid="stFileUploaderDropzone"] button,
-    [data-testid="stFormSubmitButton"] button {
-      background: rgba(37,67,78,.96) !important;
-      color: #f0fbf9 !important;
-      border: 1px solid rgba(160,215,210,.30) !important;
-      box-shadow: 0 5px 14px rgba(0,0,0,.16) !important;
-    }
-    .stButton > button *, [data-testid="stDownloadButton"] button *,
-    [data-testid="stPopover"] > button *,
-    [data-testid="stFileUploaderDropzone"] button *,
-    [data-testid="stFormSubmitButton"] button * {
-      color: #f0fbf9 !important;
-      fill: #f0fbf9 !important;
-      -webkit-text-fill-color: #f0fbf9 !important;
-    }
-    .stButton > button:hover, [data-testid="stDownloadButton"] button:hover,
-    [data-testid="stPopover"] > button:hover,
-    [data-testid="stFileUploaderDropzone"] button:hover {
-      background: #315c68 !important;
-      border-color: #72ddce !important;
-    }
-    .stButton > button[kind="primary"],
-    [data-testid="stBaseButton-primary"],
-    [data-testid="stBaseButton-primary"] * {
-      background: linear-gradient(135deg, #117f78, #586ed0) !important;
-      color: #fff !important;
-      -webkit-text-fill-color: #fff !important;
+    [data-testid="stExpander"] summary:hover {
+      background: rgba(255,255,255,.045) !important;
     }
 
+    /* Uploader: remove the extra outer card; keep one rounded drop area */
+    [data-testid="stFileUploader"],
+    [data-testid="stFileUploader"] > section,
     [data-testid="stFileUploaderDropzone"] {
-      background: rgba(12,27,35,.62) !important;
-      border: 1px dashed rgba(114,221,206,.48) !important;
+      border: 0 !important;
+      outline: 0 !important;
+      box-shadow: none !important;
+    }
+    [data-testid="stFileUploader"] {
+      background: transparent !important;
+    }
+    [data-testid="stFileUploader"] > section {
+      background: transparent !important;
+    }
+    [data-testid="stFileUploaderDropzone"] {
+      background: rgba(15,32,41,.66) !important;
+      border-radius: 20px !important;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.055) !important;
     }
     [data-testid="stFileUploaderDropzone"] button {
-      background: #d9f3ee !important;
-      color: #124f50 !important;
-      border: 1px solid rgba(114,221,206,.38) !important;
+      background: #d8f4ed !important;
+      color: #164e4d !important;
+      border: 0 !important;
+    }
+    [data-testid="stFileUploaderDropzone"] button *,
+    [data-testid="stFileUploaderDropzone"] button span {
+      color: #164e4d !important;
+      fill: #164e4d !important;
+      -webkit-text-fill-color: #164e4d !important;
     }
     [data-testid="stFileUploaderDropzoneInstructions"],
     [data-testid="stFileUploaderDropzoneInstructions"] * {
-      color: #dcecea !important;
-      -webkit-text-fill-color: #dcecea !important;
-    }
-    [data-testid="stFileUploaderDropzone"] button,
-    [data-testid="stFileUploaderDropzone"] button * {
-      color: #124f50 !important;
-      fill: #124f50 !important;
-      -webkit-text-fill-color: #124f50 !important;
+      color: #c6ddda !important;
+      -webkit-text-fill-color: #c6ddda !important;
     }
 
-    [data-testid="stTextInput"] input, [data-testid="stNumberInput"] input,
-    [data-testid="stTextArea"] textarea, [data-baseweb="select"] > div {
-      background: rgba(10,23,30,.82) !important;
-      color: var(--ink) !important;
-      border-color: rgba(190,226,224,.25) !important;
+    /* Buttons, popovers and controls including their inner SVG/icon text */
+    .stButton > button, [data-testid="stDownloadButton"] button,
+    [data-testid="stPopover"] > button,
+    [data-testid="stFormSubmitButton"] button,
+    [data-testid="stBaseButton-secondary"],
+    [data-testid="stBaseButton-primary"] {
+      background: rgba(39,70,81,.96) !important;
+      color: #eff8f6 !important;
+      border: 0 !important;
+      border-radius: 13px !important;
+      box-shadow: 0 6px 18px rgba(0,0,0,.18) !important;
+    }
+    .stButton > button *, [data-testid="stDownloadButton"] button *,
+    [data-testid="stPopover"] > button *,
+    [data-testid="stFormSubmitButton"] button *,
+    [data-testid="stBaseButton-secondary"] *,
+    [data-testid="stBaseButton-primary"] * {
+      color: #eff8f6 !important;
+      fill: #eff8f6 !important;
+      -webkit-text-fill-color: #eff8f6 !important;
+    }
+    .stButton > button[kind="primary"],
+    [data-testid="stBaseButton-primary"] {
+      background: linear-gradient(135deg,#137f78,#596ed0) !important;
+    }
+    [data-testid="stPopover"],
+    [data-testid="stPopover"] > div,
+    [data-baseweb="popover"],
+    [data-baseweb="popover"] > div {
+      background: #1b3540 !important;
+      color: #eff8f6 !important;
+      border: 0 !important;
+      border-radius: 18px !important;
+    }
+
+    /* Settings inputs */
+    [data-testid="stTextInput"] input,
+    [data-testid="stNumberInput"] input,
+    [data-testid="stTextArea"] textarea,
+    [data-baseweb="select"] > div {
+      background: rgba(10,24,31,.82) !important;
+      color: #eff8f6 !important;
+      border-color: rgba(180,220,215,.16) !important;
+      -webkit-text-fill-color: #eff8f6 !important;
     }
     [data-testid="stTextInput"] input::placeholder,
     [data-testid="stTextArea"] textarea::placeholder {
@@ -593,110 +698,30 @@ def inject_theme() -> None:
     }
     [data-testid="stAlert"] {
       background: rgba(25,48,58,.88) !important;
-      color: var(--ink) !important;
-      border-color: rgba(190,226,224,.18) !important;
+      color: #eff8f6 !important;
+      border: 0 !important;
+      border-radius: 16px !important;
     }
-    [data-testid="stMetricValue"], .app-title {
-      color: #edf7f5 !important;
-      -webkit-text-fill-color: #edf7f5 !important;
+    .collection-info summary {
+      background: rgba(37,63,73,.90) !important;
+      color: #eff8f6 !important;
+      border: 0 !important;
     }
-    .collection-info summary { background: rgba(27,49,59,.94) !important; color: var(--ink) !important; }
-    .collection-info-pop { background: rgba(20,38,47,.98) !important; color: var(--ink) !important; }
-    [data-testid="stDataFrame"] * { color: var(--ink) !important; }
-
-    /* Rounded camera upload and expander surfaces */
-    [data-testid="stExpander"] {
-      border: 1px solid rgba(190,226,224,.12) !important;
-      border-radius: 22px !important;
-      background: rgba(24,46,56,.58) !important;
-      box-shadow: 0 12px 30px rgba(0,0,0,.12) !important;
-      overflow: hidden !important;
-    }
-    [data-testid="stFileUploader"],
-    [data-testid="stFileUploaderDropzone"] {
-      border-radius: 20px !important;
-      overflow: hidden !important;
-    }
-    [data-testid="stFileUploader"] {
-      border: 1px solid rgba(190,226,224,.13) !important;
-      background: rgba(20,39,48,.55) !important;
-    }
-    [data-testid="stFileUploaderDropzone"] {
-      border: 1px dashed rgba(114,221,206,.38) !important;
-      background: rgba(12,27,35,.48) !important;
-    }
-
-    /* Entire waste-collection section: explicitly color every custom HTML text node */
-    .collection-section {
-      background: linear-gradient(145deg, rgba(34,59,69,.88), rgba(18,37,46,.82)) !important;
-      border: 1px solid rgba(190,226,224,.16) !important;
-      border-radius: 24px !important;
-      color: #edf7f5 !important;
-    }
-    .collection-section .collection-title,
-    .collection-section .collection-camera,
-    .collection-section .collection-war,
-    .collection-section .collection-level,
-    .collection-section .collection-detail,
-    .collection-section .collection-note,
-    .collection-section .collection-subtitle,
-    .collection-section .collection-empty,
-    .collection-section .collection-info-pop,
-    .collection-section .collection-example,
-    .collection-section .collection-info summary {
-      color: #edf7f5 !important;
-      -webkit-text-fill-color: #edf7f5 !important;
-    }
-    .collection-section .collection-subtitle,
-    .collection-section .collection-level,
-    .collection-section .collection-detail,
-    .collection-section .collection-note {
-      color: #b9cecc !important;
-      -webkit-text-fill-color: #b9cecc !important;
-    }
-    .collection-section .collection-stop {
-      background: rgba(37,63,73,.88) !important;
-      border: 1px solid rgba(190,226,224,.14) !important;
-      border-radius: 18px !important;
-      box-shadow: 0 8px 22px rgba(0,0,0,.13) !important;
-    }
-    .collection-section .collection-empty,
-    .collection-section .collection-example {
-      background: rgba(12,27,35,.62) !important;
-      border: 1px solid rgba(190,226,224,.10) !important;
-      border-radius: 14px !important;
-    }
-    .collection-section .collection-info-pop {
+    .collection-info-pop {
       background: rgba(20,38,47,.98) !important;
-      border: 1px solid rgba(190,226,224,.18) !important;
+      color: #eff8f6 !important;
+      border: 0 !important;
+      border-radius: 16px !important;
     }
-    .collection-section .collection-info summary {
-      background: rgba(37,63,73,.9) !important;
-      border-color: rgba(190,226,224,.20) !important;
-    }
-    .collection-section .collection-detail {
-      border-top-color: rgba(190,226,224,.18) !important;
-    }
-
-    /* Full-width theme switch label; avoid the clipped "โหมดม..." text */
-    [data-testid="stCheckbox"], [data-testid="stToggle"] {
-      min-width: max-content !important;
-    }
-    [data-testid="stToggle"] label,
-    [data-testid="stToggle"] label p,
-    [data-testid="stToggle"] [data-testid="stWidgetLabel"] {
-      white-space: nowrap !important;
-      color: #edf7f5 !important;
-      -webkit-text-fill-color: #edf7f5 !important;
-    }
-
     </style>
     """
 
     st.markdown(THEME_CSS, unsafe_allow_html=True)
-    st.markdown(glass_refresh, unsafe_allow_html=True)
+    st.markdown(common_css, unsafe_allow_html=True)
     if dark_mode:
         st.markdown(dark_css, unsafe_allow_html=True)
+    else:
+        st.markdown(light_css, unsafe_allow_html=True)
 
 
 # ---------------------------------------------------------------------------
