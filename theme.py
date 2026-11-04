@@ -704,6 +704,107 @@ def inject_theme() -> None:
         st.markdown(light_css, unsafe_allow_html=True)
 
 
+    final_overrides = """
+    <style>
+    [data-testid="stFileUploader"] {
+      display:block !important; background:transparent !important;
+      border:0 !important; padding:0 !important; box-shadow:none !important;
+    }
+    [data-testid="stFileUploader"] > section {
+      display:block !important; background:transparent !important;
+      border:0 !important; padding:0 !important; box-shadow:none !important;
+    }
+    [data-testid="stFileUploaderDropzone"] {
+      display:revert !important; box-sizing:border-box !important;
+      min-height:76px !important; padding:14px 16px !important;
+      border:0 !important; outline:0 !important;
+      border-radius:22px !important; box-shadow:none !important; overflow:hidden !important;
+    }
+    [data-testid="stFileUploaderDropzone"] > div {
+      display:revert !important; flex:initial !important; min-width:0 !important;
+    }
+    [data-testid="stFileUploaderDropzoneInstructions"] {
+      display:inline-block !important; max-width:100% !important;
+      line-height:1.5 !important; white-space:normal !important;
+    }
+    span[data-testid="stIconMaterial"], [data-testid="stIconMaterial"],
+    .material-icons, .material-icons-outlined,
+    .material-symbols-rounded, .material-symbols-outlined {
+      font-family:"Material Symbols Rounded","Material Icons" !important;
+      font-feature-settings:"liga" !important; font-weight:normal !important;
+      letter-spacing:normal !important; text-transform:none !important;
+      white-space:nowrap !important; line-height:1 !important;
+    }
+    button span[data-testid="stIconMaterial"],
+    [role="button"] span[data-testid="stIconMaterial"] {
+      display:inline-flex !important; align-items:center !important;
+      justify-content:center !important; flex:0 0 1.25em !important;
+      width:1.25em !important; height:1.25em !important; overflow:hidden !important;
+    }
+    ${dark_mode ? `
+    [data-testid="stApp"] button:hover, [data-testid="stApp"] [role="button"]:hover,
+    [data-testid="stApp"] [data-baseweb="select"] > div:hover,
+    [data-testid="stApp"] [data-testid="stExpander"] summary:hover {
+      background-color:#294b57 !important; color:#f2fbf9 !important;
+      border-color:rgba(139,220,207,.34) !important;
+      -webkit-text-fill-color:#f2fbf9 !important;
+    }
+    [data-testid="stApp"] button:hover *, [data-testid="stApp"] [role="button"]:hover *,
+    [data-testid="stApp"] [data-testid="stExpander"] summary:hover * {
+      color:#f2fbf9 !important; -webkit-text-fill-color:#f2fbf9 !important;
+    }
+    [data-testid="stApp"] button[kind="primary"]:hover,
+    [data-testid="stApp"] [data-testid="stBaseButton-primary"]:hover {
+      background:linear-gradient(135deg,#19998f,#6b7fe0) !important;
+    }
+    [data-testid="stFileUploaderDropzone"], [data-testid="stFileUploaderDropzone"] * {
+      color:#eaf6f3 !important; -webkit-text-fill-color:#eaf6f3 !important;
+    }
+    [data-testid="stFileUploaderDropzone"] { background:rgba(18,39,48,.82) !important; }
+    [data-testid="stFileUploaderDropzone"]:hover { background:rgba(39,75,86,.92) !important; }
+    [data-testid="stFileUploader"] [data-testid="stFileUploaderFile"],
+    [data-testid="stFileUploader"] [data-testid="stFileUploaderFile"] *,
+    [data-testid="stFileUploader"] [data-testid="stFileUploaderFileName"],
+    [data-testid="stFileUploader"] [data-testid="stFileUploaderFileName"] * {
+      color:#edf8f5 !important; -webkit-text-fill-color:#edf8f5 !important;
+    }
+` : `
+    [data-testid="stFileUploaderDropzone"] {
+      background:rgba(255,255,255,.52) !important; color:#17383b !important;
+    }
+    [data-testid="stFileUploaderDropzone"] * {
+      color:#17383b !important; -webkit-text-fill-color:#17383b !important;
+    }
+    [data-testid="stFileUploaderDropzone"]:hover { background:rgba(220,246,239,.82) !important; }
+    [data-testid="stFileUploader"] [data-testid="stFileUploaderFile"],
+    [data-testid="stFileUploader"] [data-testid="stFileUploaderFile"] * {
+      color:#17383b !important; -webkit-text-fill-color:#17383b !important;
+    }
+`}
+    [data-testid="stPopover"] > button, [data-testid="stToolbar"] button,
+    button[aria-label] {
+      display:inline-flex !important; align-items:center !important;
+      justify-content:center !important; gap:.45rem !important;
+    }
+    [data-testid="stApp"]::before {
+      background-size:240% 240%,240% 240%,240% 240%,240% 240%,180% 180% !important;
+      animation:auroraFlow 17s ease-in-out infinite alternate !important;
+      will-change:background-position;
+    }
+    @keyframes auroraFlow {
+      0% { background-position:0% 12%,100% 0%,90% 100%,0% 88%,0% 0%; }
+      35% { background-position:28% 42%,70% 18%,62% 72%,32% 60%,40% 35%; }
+      70% { background-position:12% 82%,88% 56%,100% 22%,10% 20%,80% 70%; }
+      100% { background-position:65% 15%,18% 78%,35% 8%,75% 92%,100% 100%; }
+    }
+    @media (prefers-reduced-motion:reduce) {
+      [data-testid="stApp"]::before { animation:none !important; }
+    }
+    </style>
+    """
+    st.markdown(final_overrides, unsafe_allow_html=True)
+
+
 # ---------------------------------------------------------------------------
 # (ทางเลือก) ตั้งค่ากราฟ Plotly ให้เข้ากับธีม
 #   fig = style_plotly(fig)
