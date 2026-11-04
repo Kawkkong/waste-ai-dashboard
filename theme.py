@@ -426,6 +426,34 @@ def inject_theme() -> None:
     [data-testid="stFileUploaderDropzoneInstructions"] * {
       color: #526b70 !important;
     }
+    [data-testid="stExpander"] {
+      border: 0 !important;
+      border-radius: 22px !important;
+      background: rgba(255,255,255,.34) !important;
+      box-shadow: 0 10px 28px rgba(24,64,72,.045) !important;
+      overflow: hidden !important;
+    }
+    [data-testid="stFileUploader"],
+    [data-testid="stFileUploaderDropzone"] {
+      border: 0 !important;
+      border-radius: 22px !important;
+      overflow: hidden !important;
+    }
+    [data-testid="stFileUploaderDropzone"] {
+      background: rgba(255,255,255,.38) !important;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.65) !important;
+    }
+    .collection-section {
+      border: 0 !important;
+      border-radius: 24px !important;
+      background: rgba(255,255,255,.48) !important;
+      box-shadow: 0 12px 32px rgba(24,64,72,.055), inset 0 1px 0 rgba(255,255,255,.65) !important;
+    }
+    .collection-stop {
+      border: 0 !important;
+      border-radius: 18px !important;
+    }
+    
     </style>
     """
 
@@ -575,6 +603,93 @@ def inject_theme() -> None:
     .collection-info summary { background: rgba(27,49,59,.94) !important; color: var(--ink) !important; }
     .collection-info-pop { background: rgba(20,38,47,.98) !important; color: var(--ink) !important; }
     [data-testid="stDataFrame"] * { color: var(--ink) !important; }
+
+    /* Rounded camera upload and expander surfaces */
+    [data-testid="stExpander"] {
+      border: 1px solid rgba(190,226,224,.12) !important;
+      border-radius: 22px !important;
+      background: rgba(24,46,56,.58) !important;
+      box-shadow: 0 12px 30px rgba(0,0,0,.12) !important;
+      overflow: hidden !important;
+    }
+    [data-testid="stFileUploader"],
+    [data-testid="stFileUploaderDropzone"] {
+      border-radius: 20px !important;
+      overflow: hidden !important;
+    }
+    [data-testid="stFileUploader"] {
+      border: 1px solid rgba(190,226,224,.13) !important;
+      background: rgba(20,39,48,.55) !important;
+    }
+    [data-testid="stFileUploaderDropzone"] {
+      border: 1px dashed rgba(114,221,206,.38) !important;
+      background: rgba(12,27,35,.48) !important;
+    }
+
+    /* Entire waste-collection section: explicitly color every custom HTML text node */
+    .collection-section {
+      background: linear-gradient(145deg, rgba(34,59,69,.88), rgba(18,37,46,.82)) !important;
+      border: 1px solid rgba(190,226,224,.16) !important;
+      border-radius: 24px !important;
+      color: #edf7f5 !important;
+    }
+    .collection-section .collection-title,
+    .collection-section .collection-camera,
+    .collection-section .collection-war,
+    .collection-section .collection-level,
+    .collection-section .collection-detail,
+    .collection-section .collection-note,
+    .collection-section .collection-subtitle,
+    .collection-section .collection-empty,
+    .collection-section .collection-info-pop,
+    .collection-section .collection-example,
+    .collection-section .collection-info summary {
+      color: #edf7f5 !important;
+      -webkit-text-fill-color: #edf7f5 !important;
+    }
+    .collection-section .collection-subtitle,
+    .collection-section .collection-level,
+    .collection-section .collection-detail,
+    .collection-section .collection-note {
+      color: #b9cecc !important;
+      -webkit-text-fill-color: #b9cecc !important;
+    }
+    .collection-section .collection-stop {
+      background: rgba(37,63,73,.88) !important;
+      border: 1px solid rgba(190,226,224,.14) !important;
+      border-radius: 18px !important;
+      box-shadow: 0 8px 22px rgba(0,0,0,.13) !important;
+    }
+    .collection-section .collection-empty,
+    .collection-section .collection-example {
+      background: rgba(12,27,35,.62) !important;
+      border: 1px solid rgba(190,226,224,.10) !important;
+      border-radius: 14px !important;
+    }
+    .collection-section .collection-info-pop {
+      background: rgba(20,38,47,.98) !important;
+      border: 1px solid rgba(190,226,224,.18) !important;
+    }
+    .collection-section .collection-info summary {
+      background: rgba(37,63,73,.9) !important;
+      border-color: rgba(190,226,224,.20) !important;
+    }
+    .collection-section .collection-detail {
+      border-top-color: rgba(190,226,224,.18) !important;
+    }
+
+    /* Full-width theme switch label; avoid the clipped "โหมดม..." text */
+    [data-testid="stCheckbox"], [data-testid="stToggle"] {
+      min-width: max-content !important;
+    }
+    [data-testid="stToggle"] label,
+    [data-testid="stToggle"] label p,
+    [data-testid="stToggle"] [data-testid="stWidgetLabel"] {
+      white-space: nowrap !important;
+      color: #edf7f5 !important;
+      -webkit-text-fill-color: #edf7f5 !important;
+    }
+
     </style>
     """
 
