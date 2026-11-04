@@ -1371,8 +1371,8 @@ header_left, header_actions = st.columns(
     vertical_alignment="center"
 )
 
-header_settings, header_help = header_actions.columns(
-    [1, 1],
+header_settings, header_theme, header_help = header_actions.columns(
+    [1, 1.45, 1],
     vertical_alignment="center"
 )
 
@@ -1397,6 +1397,13 @@ with header_settings:
     ):
         st.session_state.show_settings = not st.session_state.show_settings
         st.rerun()
+
+with header_theme:
+    st.toggle(
+        "โหมดมืด",
+        key="theme_dark_mode",
+        help="สลับระหว่างโหมดสว่างและโหมดมืด"
+    )
 
 with header_help:
     with st.popover("❔", use_container_width=False):
