@@ -1367,12 +1367,12 @@ if st.session_state.show_settings:
 # =====================================================
 # HEADER
 header_left, header_actions = st.columns(
-    [0.74, 0.26],
+    [0.68, 0.32],
     vertical_alignment="center"
 )
 
 header_settings, header_theme, header_help = header_actions.columns(
-    [1, 1.45, 1],
+    [0.85, 2.7, 0.85],
     vertical_alignment="center"
 )
 
@@ -1400,9 +1400,10 @@ with header_settings:
 
 with header_theme:
     st.toggle(
-        "โหมดมืด",
+        "🌙 โหมดมืด",
         key="theme_dark_mode",
-        help="สลับระหว่างโหมดสว่างและโหมดมืด"
+        help="สลับระหว่างโหมดสว่างและโหมดมืด",
+        label_visibility="visible"
     )
 
 with header_help:
