@@ -374,16 +374,15 @@ section[data-testid="stSidebar"] [data-testid="stExpander"] {
 
 
 def inject_theme() -> None:
-    """ฉีดธีมใหม่ พร้อมสลับ Light/Dark โดยไม่แตะ logic ของ dashboard"""
-    dark_mode = st.sidebar.toggle("โหมดมืด", value=False, key="theme_dark_mode")
+    """ฉีดธีมตามสถานะสวิตช์บน Header โดยไม่เปลี่ยน logic ของ dashboard."""
+    dark_mode = bool(st.session_state.get("theme_dark_mode", False))
 
-    # Frosted glass refresh: โปร่งใสแบบกระจกจริง ขอบบาง แสงสะท้อนนุ่ม
     glass_refresh = """
     <style>
     :root {
-      --glass: rgba(255,255,255,.42);
-      --glass-strong: rgba(255,255,255,.66);
-      --glass-border: rgba(255,255,255,.76);
+      --glass: rgba(255,255,255,.46);
+      --glass-strong: rgba(255,255,255,.76);
+      --glass-border: rgba(255,255,255,.82);
       --shadow-sm: 0 8px 24px rgba(24,64,72,.055);
       --shadow-md: 0 16px 40px rgba(24,64,72,.095);
     }
@@ -392,40 +391,40 @@ def inject_theme() -> None:
     .collection-stop, [data-testid="stFileUploader"],
     [data-testid="stPlotlyChart"], [data-testid="stDataFrame"],
     .recommend, .camera-action-card, .chart-tip, .collection-example {
-      background: linear-gradient(145deg, rgba(255,255,255,.62), rgba(255,255,255,.30)) !important;
-      border: 1px solid rgba(255,255,255,.78) !important;
-      -webkit-backdrop-filter: blur(26px) saturate(165%) !important;
-      backdrop-filter: blur(26px) saturate(165%) !important;
-      box-shadow: 0 12px 32px rgba(24,64,72,.065),
-                  inset 0 1px 0 rgba(255,255,255,.72),
-                  inset 0 -1px 0 rgba(255,255,255,.18) !important;
+      background: linear-gradient(145deg, rgba(255,255,255,.66), rgba(255,255,255,.34)) !important;
+      border: 1px solid rgba(255,255,255,.82) !important;
+      -webkit-backdrop-filter: blur(24px) saturate(160%) !important;
+      backdrop-filter: blur(24px) saturate(160%) !important;
+      box-shadow: 0 12px 30px rgba(24,64,72,.06), inset 0 1px 0 rgba(255,255,255,.78) !important;
     }
     .app-brand {
-      background: linear-gradient(120deg, rgba(255,255,255,.74), rgba(255,255,255,.38)) !important;
-      border: 1px solid rgba(255,255,255,.82) !important;
-      -webkit-backdrop-filter: blur(30px) saturate(170%) !important;
-      backdrop-filter: blur(30px) saturate(170%) !important;
-      box-shadow: 0 18px 44px rgba(24,64,72,.085), inset 0 1px 0 rgba(255,255,255,.8) !important;
+      background: linear-gradient(120deg, rgba(255,255,255,.78), rgba(255,255,255,.44)) !important;
+      border: 1px solid rgba(255,255,255,.86) !important;
+      -webkit-backdrop-filter: blur(28px) saturate(165%) !important;
+      backdrop-filter: blur(28px) saturate(165%) !important;
+      box-shadow: 0 16px 40px rgba(24,64,72,.075), inset 0 1px 0 rgba(255,255,255,.85) !important;
     }
     section[data-testid="stSidebar"] {
-      background: rgba(248,252,251,.58) !important;
-      -webkit-backdrop-filter: blur(30px) saturate(160%) !important;
-      backdrop-filter: blur(30px) saturate(160%) !important;
+      background: rgba(248,252,251,.64) !important;
+      -webkit-backdrop-filter: blur(26px) saturate(155%) !important;
+      backdrop-filter: blur(26px) saturate(155%) !important;
     }
-    [data-testid="stMetric"]:hover, [data-testid="stExpander"]:hover,
-    .collection-stop:hover {
-      background: rgba(255,255,255,.72) !important;
-      transform: translateY(-2px);
-      box-shadow: 0 18px 42px rgba(24,64,72,.11) !important;
+    [data-testid="stFileUploaderDropzone"] {
+      background: rgba(255,255,255,.48) !important;
+      border: 1px dashed rgba(14,124,134,.34) !important;
     }
-    @media (prefers-reduced-transparency: reduce) {
-      [data-testid="stMetric"], [data-testid="stExpander"],
-      .settings-card, .camera-detail-card, .collection-section,
-      .collection-stop, .app-brand {
-        -webkit-backdrop-filter: none !important;
-        backdrop-filter: none !important;
-        background: rgba(255,255,255,.94) !important;
-      }
+    [data-testid="stFileUploaderDropzone"] button {
+      background: #e4f5f2 !important;
+      color: #145b5d !important;
+      border: 1px solid rgba(14,124,134,.20) !important;
+    }
+    [data-testid="stFileUploaderDropzone"] button * {
+      color: #145b5d !important;
+      fill: #145b5d !important;
+    }
+    [data-testid="stFileUploaderDropzoneInstructions"],
+    [data-testid="stFileUploaderDropzoneInstructions"] * {
+      color: #526b70 !important;
     }
     </style>
     """
@@ -433,18 +432,20 @@ def inject_theme() -> None:
     dark_css = """
     <style>
     :root {
-      --ink: #e8f2f1; --muted: #adc2c1;
-      --line: rgba(220,245,242,.13);
-      --accent: #70d8c9; --accent-2: #8b9cff;
-      --accent-soft: rgba(112,216,201,.13);
-      --glass: rgba(21,39,48,.56);
-      --glass-strong: rgba(27,49,59,.76);
-      --glass-border: rgba(196,226,224,.17);
-      --shadow-sm: 0 8px 24px rgba(0,0,0,.17);
-      --shadow-md: 0 16px 42px rgba(0,0,0,.26);
+      --ink: #edf7f5; --muted: #b5c9c8;
+      --line: rgba(220,245,242,.14);
+      --accent: #72ddce; --accent-2: #91a3ff;
+      --accent-soft: rgba(114,221,206,.14);
+      --glass: rgba(22,42,51,.62);
+      --glass-strong: rgba(28,53,64,.84);
+      --glass-border: rgba(190,226,224,.20);
+      --shadow-sm: 0 8px 24px rgba(0,0,0,.18);
+      --shadow-md: 0 16px 42px rgba(0,0,0,.28);
     }
-    [data-testid="stApp"], [data-testid="stAppViewContainer"] {
-      background: #101d25 !important; color: var(--ink) !important;
+    [data-testid="stApp"], [data-testid="stAppViewContainer"],
+    [data-testid="stMain"], [data-testid="stMainBlockContainer"] {
+      background-color: #101d25 !important;
+      color: var(--ink) !important;
     }
     [data-testid="stApp"]::before {
       background:
@@ -454,62 +455,125 @@ def inject_theme() -> None:
         linear-gradient(135deg, #101d25 0%, #152630 55%, #1b2030 100%) !important;
       animation: none !important;
     }
-    h1, h2, h3, h4, p, label, small,
-    [data-testid="stMarkdownContainer"], [data-testid="stCaptionContainer"],
+
+    [data-testid="stMarkdownContainer"],
+    [data-testid="stMarkdownContainer"] p,
+    [data-testid="stMarkdownContainer"] li,
+    [data-testid="stCaptionContainer"],
+    [data-testid="stCaptionContainer"] *,
+    [data-testid="stWidgetLabel"],
+    [data-testid="stWidgetLabel"] *,
     [data-testid="stMetricLabel"], [data-testid="stMetricValue"],
-    .collection-title, .settings-title, .section-title, .upload-panel-title,
-    .history-title, .collection-camera, .action-label {
+    [data-testid="stExpander"] summary,
+    .app-title, .app-subtitle, .section-title, .settings-title,
+    .collection-title, .collection-camera, .collection-subtitle,
+    .upload-panel-title, .upload-panel-subtitle, .upload-hint,
+    .history-title, .settings-subtitle, .action-label,
+    .settings-section-label, .camera-detail-card,
+    .recommend, .camera-action-card, .chart-tip, .collection-example {
       color: var(--ink) !important;
+      -webkit-text-fill-color: var(--ink) !important;
     }
+    [data-testid="stCaptionContainer"], .app-subtitle,
+    .collection-subtitle, .upload-panel-subtitle,
+    .upload-hint, .settings-subtitle {
+      color: var(--muted) !important;
+      -webkit-text-fill-color: var(--muted) !important;
+    }
+
     [data-testid="stMetric"], [data-testid="stExpander"],
     .settings-card, .camera-detail-card, .collection-section,
     .collection-stop, [data-testid="stFileUploader"],
     [data-testid="stPlotlyChart"], [data-testid="stDataFrame"],
     .app-brand, .recommend, .camera-action-card, .chart-tip, .collection-example {
-      background: linear-gradient(145deg, rgba(31,54,64,.78), rgba(18,35,44,.62)) !important;
-      border: 1px solid rgba(196,226,224,.16) !important;
+      background: linear-gradient(145deg, rgba(34,59,69,.88), rgba(18,37,46,.78)) !important;
+      border: 1px solid rgba(190,226,224,.19) !important;
       color: var(--ink) !important;
-      -webkit-backdrop-filter: blur(26px) saturate(145%) !important;
-      backdrop-filter: blur(26px) saturate(145%) !important;
-      box-shadow: 0 14px 34px rgba(0,0,0,.20), inset 0 1px 0 rgba(255,255,255,.055) !important;
+      -webkit-backdrop-filter: blur(24px) saturate(145%) !important;
+      backdrop-filter: blur(24px) saturate(145%) !important;
+      box-shadow: 0 14px 34px rgba(0,0,0,.20), inset 0 1px 0 rgba(255,255,255,.07) !important;
     }
     section[data-testid="stSidebar"] {
-      background: rgba(13,27,35,.78) !important;
-      border-right: 1px solid rgba(196,226,224,.13) !important;
-      -webkit-backdrop-filter: blur(30px) saturate(150%) !important;
-      backdrop-filter: blur(30px) saturate(150%) !important;
+      background: rgba(13,27,35,.84) !important;
+      border-right: 1px solid rgba(190,226,224,.14) !important;
+      -webkit-backdrop-filter: blur(28px) saturate(150%) !important;
+      backdrop-filter: blur(28px) saturate(150%) !important;
     }
-    [data-testid="stMetricValue"], .app-title {
-      color: #e8f2f1 !important;
-      -webkit-text-fill-color: #e8f2f1 !important;
+
+    .stButton > button, [data-testid="stDownloadButton"] button,
+    [data-testid="stPopover"] > button,
+    [data-testid="stFileUploaderDropzone"] button,
+    [data-testid="stFormSubmitButton"] button {
+      background: rgba(37,67,78,.96) !important;
+      color: #f0fbf9 !important;
+      border: 1px solid rgba(160,215,210,.30) !important;
+      box-shadow: 0 5px 14px rgba(0,0,0,.16) !important;
     }
+    .stButton > button *, [data-testid="stDownloadButton"] button *,
+    [data-testid="stPopover"] > button *,
+    [data-testid="stFileUploaderDropzone"] button *,
+    [data-testid="stFormSubmitButton"] button * {
+      color: #f0fbf9 !important;
+      fill: #f0fbf9 !important;
+      -webkit-text-fill-color: #f0fbf9 !important;
+    }
+    .stButton > button:hover, [data-testid="stDownloadButton"] button:hover,
+    [data-testid="stPopover"] > button:hover,
+    [data-testid="stFileUploaderDropzone"] button:hover {
+      background: #315c68 !important;
+      border-color: #72ddce !important;
+    }
+    .stButton > button[kind="primary"],
+    [data-testid="stBaseButton-primary"],
+    [data-testid="stBaseButton-primary"] * {
+      background: linear-gradient(135deg, #117f78, #586ed0) !important;
+      color: #fff !important;
+      -webkit-text-fill-color: #fff !important;
+    }
+
+    [data-testid="stFileUploaderDropzone"] {
+      background: rgba(12,27,35,.62) !important;
+      border: 1px dashed rgba(114,221,206,.48) !important;
+    }
+    [data-testid="stFileUploaderDropzone"] button {
+      background: #d9f3ee !important;
+      color: #124f50 !important;
+      border: 1px solid rgba(114,221,206,.38) !important;
+    }
+    [data-testid="stFileUploaderDropzoneInstructions"],
+    [data-testid="stFileUploaderDropzoneInstructions"] * {
+      color: #dcecea !important;
+      -webkit-text-fill-color: #dcecea !important;
+    }
+    [data-testid="stFileUploaderDropzone"] button,
+    [data-testid="stFileUploaderDropzone"] button * {
+      color: #124f50 !important;
+      fill: #124f50 !important;
+      -webkit-text-fill-color: #124f50 !important;
+    }
+
     [data-testid="stTextInput"] input, [data-testid="stNumberInput"] input,
     [data-testid="stTextArea"] textarea, [data-baseweb="select"] > div {
-      background: rgba(10,23,30,.76) !important;
+      background: rgba(10,23,30,.82) !important;
       color: var(--ink) !important;
-      border-color: rgba(196,226,224,.20) !important;
+      border-color: rgba(190,226,224,.25) !important;
     }
-    [data-testid="stFileUploaderDropzone"] {
-      background: rgba(10,23,30,.48) !important;
-      border-color: rgba(112,216,201,.38) !important;
-    }
-    .stButton > button, [data-testid="stDownloadButton"] > button,
-    [data-testid="stPopover"] > button {
-      background: rgba(29,51,61,.88) !important;
-      color: var(--ink) !important;
-      border-color: rgba(196,226,224,.18) !important;
-    }
-    .stButton > button[kind="primary"], [data-testid="stBaseButton-primary"] {
-      background: linear-gradient(135deg, #147f7a, #596bd0) !important;
-      color: #fff !important;
+    [data-testid="stTextInput"] input::placeholder,
+    [data-testid="stTextArea"] textarea::placeholder {
+      color: #91aaa9 !important;
+      -webkit-text-fill-color: #91aaa9 !important;
     }
     [data-testid="stAlert"] {
-      background: rgba(25,48,58,.82) !important;
+      background: rgba(25,48,58,.88) !important;
       color: var(--ink) !important;
-      border-color: rgba(196,226,224,.17) !important;
+      border-color: rgba(190,226,224,.18) !important;
     }
-    .collection-info summary { background: rgba(27,49,59,.92) !important; }
-    .collection-info-pop { background: rgba(20,38,47,.97) !important; color: var(--ink) !important; }
+    [data-testid="stMetricValue"], .app-title {
+      color: #edf7f5 !important;
+      -webkit-text-fill-color: #edf7f5 !important;
+    }
+    .collection-info summary { background: rgba(27,49,59,.94) !important; color: var(--ink) !important; }
+    .collection-info-pop { background: rgba(20,38,47,.98) !important; color: var(--ink) !important; }
     [data-testid="stDataFrame"] * { color: var(--ink) !important; }
     </style>
     """
