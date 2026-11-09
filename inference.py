@@ -97,18 +97,12 @@ def analyze_frame(img, camera):
     roi_pixels = int(np.count_nonzero(roi_mask))
     total_mask_pixels = int(np.count_nonzero(combined_mask))
 
-    if roi_pixels > 0:
-        WAR = (garbage_pixels / roi_pixels) * 100
-    else:
-        WAR = 0
+    WAR = round(float((garbage_pixels / roi_pixels) * 100), 2) if roi_pixels > 0 else 0.0
 
-    WAR = round(float(WAR), 2)
-
-    change = 0
+    change = 0.0
     if camera in previous_WAR:
-        change = WAR - previous_WAR[camera]
+        change = round(float(WAR - previous_WAR[camera]), 2)
     previous_WAR[camera] = WAR
-    change = round(float(change), 2)
 
     level = density_level(WAR, cfg["threshold"])
 
@@ -128,24 +122,8 @@ def analyze_frame(img, camera):
     if x2 > x1 and y2 > y1:
         cv2.rectangle(output, (x1, y1), (x2, y2), (0, 255, 255), 4)
 
-    cv2.putText(
-        output,
-        f"WAR {WAR}%",
-        (40, 60),
-        cv2.FONT_HERSHEY_SIMPLEX,
-        1.5,
-        (255, 255, 255),
-        3,
-    )
-    cv2.putText(
-        output,
-        level,
-        (40, 120),
-        cv2.FONT_HERSHEY_SIMPLEX,
-        1.5,
-        (0, 255, 255),
-        3,
-    )
+    cv2.putText(output, f"WAR {WAR}%", (40, 60), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (255, 255, 255), 3)
+    cv2.putText(output, level, (40, 120), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 255, 255), 3)
 
     return {
         "image": output,
@@ -155,4 +133,9 @@ def analyze_frame(img, camera):
         "level": level,
         "action": recommendation(level),
         "camera": camera,
-  
+        "detected": detected,
+        "garbage_pixels": garbage_pixels,
+        "roi_pixels": roi_pixels,
+        "total_mask_pixels": total_mask_pixels,
+        "roi": (x1, y1, x2, y2),
+    }
