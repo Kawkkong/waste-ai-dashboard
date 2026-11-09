@@ -137,6 +137,7 @@ def analyze_frame(img, camera):
         retina_masks=True,
         verbose=False
     )[0]
+
     # ==================================================
     # CREATE FULL IMAGE GARBAGE MASK
     # ==================================================
@@ -159,10 +160,10 @@ def analyze_frame(img, camera):
         for mask in masks:
 
             if mask.shape != (h, w):
-
-                raise ValueError(
-                    "ขนาด Segmentation Mask ไม่ตรงกับภาพต้นฉบับ: "
-                    f"mask={mask.shape}, image={(h, w)}"
+                mask = cv2.resize(
+                    mask.astype(np.float32),
+                    (w, h),
+                    interpolation=cv2.INTER_LINEAR
                 )
 
 
@@ -448,7 +449,6 @@ def analyze_frame(img, camera):
 
         "detected":
         detected,
-
 
         "garbage_pixels":
         garbage_pixels,
