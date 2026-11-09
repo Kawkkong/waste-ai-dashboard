@@ -1,5 +1,4 @@
 
-
 # framework หลัก
 import streamlit as st
 import cv2
@@ -98,15 +97,11 @@ def show_image_viewer(img_bgr, title="", display_width=340, viewer_height=300):
                 top: 8px;
                 right: 8px;
                 z-index: 10;
-
                 border: 0;
                 border-radius: 7px;
-
                 padding: 6px 9px;
-
                 background: rgba(0, 0, 0, 0.65);
                 color: white;
-
                 font-size: 13px;
                 cursor: pointer;
             }}
@@ -130,189 +125,48 @@ def show_image_viewer(img_bgr, title="", display_width=340, viewer_height=300):
                 height: 100vh;
                 object-fit: contain;
             }}
-        
-/* Camera result widgets */
-[data-testid="stExpander"] {{
-    border: 1px solid #d9e2ec !important;
-    border-radius: 16px !important;
-    background: #ffffff !important;
-    box-shadow: 0 5px 18px rgba(15,23,42,.055) !important;
-    overflow: hidden !important;
-    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
-}}
-[data-testid="stExpander"]:hover {{
-    transform: translateY(-1px);
-    border-color: #c7d5e4 !important;
-    box-shadow: 0 10px 26px rgba(15,23,42,.09) !important;
-}}
-[data-testid="stExpander"] summary {{
-    min-height: 50px !important;
-    padding: 9px 14px !important;
-    background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%) !important;
-}}
-[data-testid="stExpander"] summary:hover {{
-    background: #f7faff !important;
-}}
-[data-testid="stExpander"] summary p {{
-    margin: 0 !important;
-    font-size: 13px !important;
-    font-weight: 650 !important;
-    line-height: 1.45 !important;
-    color: #172033 !important;
-}}
-.camera-status {{
-    padding: 9px 12px;
-    border-radius: 10px;
-    font-size: 13px;
-    font-weight: 650;
-    margin: 2px 0 7px;
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,.18);
-}}
-.camera-action {{
-    padding: 10px 12px;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    background: #f8fafc;
-    color: #344054;
-    font-size: 11px;
-    line-height: 1.55;
-    margin-bottom: 8px;
-}}
-.camera-action b {{ color: #172033; }}
-.camera-image-title {{
-    font-family: "Prompt", "Noto Sans Thai", Tahoma, sans-serif !important;
-    font-size: 12px !important;
-    font-weight: 600 !important;
-    color: #172033 !important;
-    line-height: 1.45 !important;
-    margin: 0 0 7px !important;
-    padding: 0 !important;
-}}
-[data-testid="stExpander"] [data-testid="stHorizontalBlock"] {{
-    gap: 0.7rem !important;
-}}
-
-/* Global Thai typography */
-html, body, [class*="st-"], [data-testid="stMarkdownContainer"],
-[data-testid="stMetric"], [data-testid="stExpander"] {{
-    font-family: "Prompt", "Noto Sans Thai", Tahoma, sans-serif !important;
-}}
-
-[data-testid="stMetricLabel"] {{
-    font-size: 11px !important;
-    line-height: 1.4 !important;
-}}
-
-[data-testid="stMetricValue"] {{
-    font-size: 22px !important;
-    line-height: 1.15 !important;
-    font-weight: 700 !important;
-}}
-
-[data-testid="stMarkdownContainer"] p {{
-    line-height: 1.55 !important;
-}}
-
-</style>
+        </style>
     </head>
 
     <body>
-
-        <div
-            class="viewer"
-            id="viewer"
-            title="ดับเบิลคลิกเพื่อขยายภาพ"
-        >
-
-            <button
-                class="zoom-btn"
-                id="zoom"
-            >
-                ⛶ ขยายภาพ
-            </button>
-
-            <img
-                src="data:image/jpeg;base64,{image_b64}"
-                alt="{title}"
-            >
-
+        <div class="viewer" id="viewer" title="ดับเบิลคลิกเพื่อขยายภาพ">
+            <button class="zoom-btn" id="zoom">⛶ ขยายภาพ</button>
+            <img src="data:image/jpeg;base64,{image_b64}" alt="{title}">
         </div>
 
         <script>
-
-            const viewer =
-                document.getElementById("viewer");
-
-            const zoom =
-                document.getElementById("zoom");
-
+            const viewer = document.getElementById("viewer");
+            const zoom = document.getElementById("zoom");
 
             async function toggleFullscreen() {{
-
                 try {{
-
                     if (!document.fullscreenElement) {{
-
                         await viewer.requestFullscreen();
-
                     }} else {{
-
                         await document.exitFullscreen();
-
                     }}
-
                 }} catch (error) {{
-
-                    console.log(
-                        "Fullscreen unavailable:",
-                        error
-                    );
-
+                    console.log("Fullscreen unavailable:", error);
                 }}
-
             }}
 
+            zoom.addEventListener("click", function(event) {{
+                event.stopPropagation();
+                toggleFullscreen();
+            }});
 
-            zoom.addEventListener(
-                "click",
-                function(event) {{
-
-                    event.stopPropagation();
-
+            viewer.addEventListener("dblclick", function(event) {{
+                if (event.target !== zoom) {{
                     toggleFullscreen();
-
                 }}
-            );
+            }});
 
-
-            viewer.addEventListener(
-                "dblclick",
-                function(event) {{
-
-                    if (event.target !== zoom) {{
-
-                        toggleFullscreen();
-
-                    }}
-
-                }}
-            );
-
-
-            document.addEventListener(
-                "fullscreenchange",
-                function() {{
-
-                    zoom.textContent =
-                        document.fullscreenElement
-                        ? "⛶ ออกจากเต็มหน้าจอ"
-                        : "⛶ ขยายภาพ";
-
-                }}
-            );
-
+            document.addEventListener("fullscreenchange", function() {{
+                zoom.textContent = document.fullscreenElement
+                    ? "⛶ ออกจากเต็มหน้าจอ"
+                    : "⛶ ขยายภาพ";
+            }});
         </script>
-
     </body>
     </html>
     """
@@ -328,77 +182,41 @@ html, body, [class*="st-"], [data-testid="stMarkdownContainer"],
 # ตั้งค่าหน้าตาเริ่มต้นของ Streamlit
 
 st.set_page_config(
-
     page_title="ระบบตรวจสอบขยะด้วย AI",
-
     layout="wide"
-
 )
-
 
 
 # =====================================================
 # กำหนดสีและคำอธิบายของระดับความหนาแน่นขยะ
 
 LEVEL_INFO = {
-
     "Normal": {
-
-        "name":"Normal (ไม่มีขยะ)",
-
-        "color":"#4CAF50",
-
-        "action":"ไม่พบขยะ"
-
+        "name": "Normal (ไม่มีขยะ)",
+        "color": "#4CAF50",
+        "action": "ไม่พบขยะ"
     },
-
-
     "Low": {
-
-        "name":"Low (ต่ำ)",
-
-        "color":"#2196F3",
-
-        "action":"เฝ้าระวังพื้นที่"
-
+        "name": "Low (ต่ำ)",
+        "color": "#2196F3",
+        "action": "เฝ้าระวังพื้นที่"
     },
-
-
     "Medium": {
-
-        "name":"Medium (ปานกลาง)",
-
-        "color":"#FFD600",
-
-        "action":"เตรียมวางแผนเก็บขยะ"
-
+        "name": "Medium (ปานกลาง)",
+        "color": "#FFD600",
+        "action": "เตรียมวางแผนเก็บขยะ"
     },
-
-
     "High": {
-
-        "name":"High (สูง)",
-
-        "color":"#FF9800",
-
-        "action":"แจ้งเตือนเจ้าหน้าที่"
-
+        "name": "High (สูง)",
+        "color": "#FF9800",
+        "action": "แจ้งเตือนเจ้าหน้าที่"
     },
-
-
     "Critical": {
-
-        "name":"Critical (วิกฤต)",
-
-        "color":"#F44336",
-
-        "action":"แจ้งเจ้าหน้าที่และดำเนินการเก็บขยะด่วน"
-
+        "name": "Critical (วิกฤต)",
+        "color": "#F44336",
+        "action": "แจ้งเจ้าหน้าที่และดำเนินการเก็บขยะด่วน"
     }
-
 }
-
-
 
 
 # =====================================================
@@ -406,31 +224,20 @@ LEVEL_INFO = {
 # =====================================================
 
 st.markdown(
-
 """
 <style>
-
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&display=swap');
 
 /* Hide Streamlit top chrome / toolbar */
-[data-testid="stHeader"] {
-    display: none !important;
-}
-
-[data-testid="stToolbar"] {
-    display: none !important;
-}
-
-#MainMenu {
-    visibility: hidden !important;
-}
-
-footer {
-    visibility: hidden !important;
-}
-
+[data-testid="stHeader"],
+[data-testid="stToolbar"],
 [data-testid="stDecoration"] {
     display: none !important;
+}
+
+#MainMenu, footer {
+    visibility: hidden !important;
 }
 
 :root {
@@ -441,41 +248,29 @@ footer {
     --accent-soft: #edf4fb;
 }
 
-@import url('https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&display=swap');
-
 html, body,
 [data-testid="stAppViewContainer"],
 [data-testid="stSidebar"],
 button, input, textarea, select,
 [data-testid="stMarkdownContainer"],
-[data-testid="stMetric"],
-[data-testid="stExpander"] {
+[data-testid="stMetric"] {
     font-family: 'Prompt', 'Noto Sans Thai', Tahoma, sans-serif !important;
 }
 
-[data-testid="stAppViewContainer"] {
-    background:
-        radial-gradient(circle at 85% 0%, rgba(49,91,138,.05), transparent 30%),
-        #fff;
-    color: var(--ink);
-    font-size: 14px;
-}
-
 .block-container {
-    max-width: 1380px !important;
-    padding-top: 1.2rem !important;
-    padding-bottom: 2rem !important;
+    max-width: 1180px !important;
+    padding-top: 1.15rem !important;
+    padding-bottom: 1.8rem !important;
 }
 
-h1 {
-    font-size: 30px !important;
-    line-height: 1.25 !important;
-    letter-spacing: -.02em;
-    color: var(--ink) !important;
-}
+[data-testid="stVerticalBlock"] { gap: 0.5rem; }
 
-h2 { font-size: 21px !important; color: var(--ink) !important; }
-h3 { font-size: 16px !important; color: var(--ink) !important; }
+h1, h2, h3, h4, p, label {
+    font-family: 'Prompt', 'Noto Sans Thai', Tahoma, sans-serif !important;
+}
+h1 { font-size: 1.55rem !important; line-height: 1.25 !important; letter-spacing: -.02em; color: var(--ink) !important; }
+h2 { font-size: 1.28rem !important; color: var(--ink) !important; }
+h3 { font-size: 1.08rem !important; color: var(--ink) !important; }
 
 [data-testid="stMarkdownContainer"] p,
 [data-testid="stMarkdownContainer"] li {
@@ -490,18 +285,24 @@ h3 { font-size: 16px !important; color: var(--ink) !important; }
     border-radius: 12px;
     padding: 11px 14px;
     box-shadow: 0 2px 8px rgba(15,23,42,.035);
+    transition: transform .18s ease, box-shadow .18s ease;
+}
+
+[data-testid="stMetric"]:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(15,23,42,.07);
 }
 
 [data-testid="stMetricValue"] {
     font-family: 'Prompt', 'Noto Sans Thai', Tahoma, sans-serif !important;
-    font-size: 20px !important;
+    font-size: 1.35rem !important;
     font-weight: 700 !important;
     color: var(--ink) !important;
 }
 
 [data-testid="stMetricLabel"] {
     font-family: 'Prompt', 'Noto Sans Thai', Tahoma, sans-serif !important;
-    font-size: 12px !important;
+    font-size: 11px !important;
     color: var(--muted) !important;
 }
 
@@ -529,56 +330,49 @@ hr {
     margin: 20px 0 !important;
 }
 
-[data-testid="stExpander"] {
-    border: 1px solid var(--line) !important;
-    border-radius: 11px !important;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(15,23,42,.025);
-}
-
-[data-testid="stExpander"] summary { font-size: 12px !important; }
-
 .stButton > button {
     border-radius: 9px !important;
     border: 1px solid #d7dee8 !important;
     font-size: 13px !important;
     font-weight: 600 !important;
     min-height: 38px !important;
-}
-
-.stButton > button:hover { border-color: #9eb4cd !important; }
-.stButton > button {
     white-space: nowrap !important;
     word-break: keep-all !important;
     overflow-wrap: normal !important;
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
 }
 
+.stButton > button:hover {
+    border-color: #9eb4cd !important;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(49,91,138,.10);
+}
 
 [data-testid="stImage"] img { border-radius: 9px; }
 
-section[data-testid="stSidebar"] { border-right: 1px solid #e7ebf0; }
-
 /* Camera + history dropdowns */
 [data-testid="stExpander"] {
-    border: 1px solid #dce4ed !important;
-    border-radius: 15px !important;
+    border: 1px solid #dfe6ee !important;
+    border-radius: 14px !important;
     background: #ffffff !important;
-    box-shadow: 0 7px 22px rgba(15,23,42,.06) !important;
+    box-shadow: 0 4px 14px rgba(15,23,42,.035);
     overflow: hidden !important;
     margin: 5px 0 14px !important;
+    transition: box-shadow .18s ease, border-color .18s ease;
+}
+
+[data-testid="stExpander"]:hover {
+    border-color: #cbd8e6 !important;
+    box-shadow: 0 7px 18px rgba(49,91,138,.07);
 }
 
 [data-testid="stExpander"] summary {
-    min-height: 48px !important;
+    min-height: 44px !important;
     padding: 8px 13px !important;
     box-sizing: border-box !important;
-    background: #ffffff !important;
-    border-radius: 15px !important;
     font-family: "Prompt", "Noto Sans Thai", Tahoma, sans-serif !important;
-}
-
-[data-testid="stExpander"] summary:hover {
-    background: #f8fafc !important;
+    font-weight: 600 !important;
+    color: #172033 !important;
 }
 
 [data-testid="stExpander"] summary p {
@@ -586,10 +380,6 @@ section[data-testid="stSidebar"] { border-right: 1px solid #e7ebf0; }
     font-size: 12.5px !important;
     font-weight: 650 !important;
     line-height: 1.45 !important;
-}
-
-[data-testid="stExpander"] summary p span {
-    font-weight: 700 !important;
 }
 
 [data-testid="stExpander"] > div {
@@ -614,7 +404,7 @@ section[data-testid="stSidebar"] { border-right: 1px solid #e7ebf0; }
 }
 
 .camera-detail-card {
-    margin: 4px 0 2px;
+    margin: 4px 0 10px;
     padding: 12px;
     border: 1px solid #e1e8f0;
     border-radius: 13px;
@@ -640,7 +430,7 @@ section[data-testid="stSidebar"] { border-right: 1px solid #e7ebf0; }
     border: 1px solid #e5eaf0;
     border-radius: 9px;
     background: #f8fafc;
-    margin-bottom: 10px;
+    margin-bottom: 2px;
     font-size: 11px;
     line-height: 1.5;
 }
@@ -695,74 +485,6 @@ section[data-testid="stSidebar"] { border-right: 1px solid #e7ebf0; }
     background: #8da9c7;
 }
 
-div[data-testid="stNumberInput"] input {
-    border-radius: 9px !important;
-    border: 1px solid #dce3ec !important;
-    background: #fff !important;
-}
-
-div[data-testid="stNumberInput"] label {
-    font-size: 11px !important;
-    color: #667085 !important;
-}
-
-/* Modern micro-interactions */
-.stButton > button,
-[data-testid="stFileUploader"],
-[data-testid="stMetric"],
-[data-testid="stExpander"],
-.collection-stop {
-    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
-}
-
-.stButton > button:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(49,91,138,.10);
-}
-
-[data-testid="stMetric"]:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(15,23,42,.07);
-}
-
-[data-testid="stFileUploader"] {
-    border: 1px solid #dfe6ee !important;
-    border-radius: 14px !important;
-    padding: 10px !important;
-    background: #fbfcfe !important;
-}
-
-[data-testid="stFileUploader"]:hover {
-    border-color: #b8c9dc !important;
-    box-shadow: 0 7px 18px rgba(49,91,138,.08);
-}
-
-[data-testid="stFileUploaderDropzone"] {
-    border-radius: 11px !important;
-    background: linear-gradient(180deg,#ffffff 0%,#f7faff 100%) !important;
-}
-[data-testid="stExpander"] summary {
-    font-family: 'Prompt', 'Noto Sans Thai', Tahoma, sans-serif !important;
-    font-weight: 700 !important;
-}
-
-section[data-testid="stSidebar"] [data-testid="stExpander"] {
-    border-radius: 14px !important;
-    border: 1px solid #dfe6ee !important;
-    background: #fbfcfe !important;
-}
-
-section[data-testid="stSidebar"] [data-testid="stExpander"] summary:hover {
-    background: #f4f8fc !important;
-}
-
-.section-title {
-    font-size:16px;
-    font-weight:700;
-    color:#172033;
-    margin:3px 0 4px;
-}
-
 .upload-camera-label {
     display:flex; align-items:center; justify-content:space-between;
     gap:8px; margin:8px 0 6px; color:var(--ink);
@@ -771,33 +493,6 @@ section[data-testid="stSidebar"] [data-testid="stExpander"] summary:hover {
 
 .upload-hint {
     color:var(--muted); font-size:11px; line-height:1.5; margin:0 0 8px;
-}
-
-.upload-panel-title { font-size:16px; font-weight:700; color:var(--ink); margin-bottom:2px; }
-.upload-panel-subtitle { color:var(--muted); font-size:11px; line-height:1.5; margin-bottom:10px; }
-
-[data-testid="stExpander"] {
-    border: 1px solid #dfe6ee !important;
-    border-radius: 14px !important;
-    background: #ffffff !important;
-    box-shadow: 0 4px 14px rgba(15,23,42,.035);
-    transition: box-shadow .18s ease, border-color .18s ease;
-}
-
-[data-testid="stExpander"]:hover {
-    border-color: #cbd8e6 !important;
-    box-shadow: 0 7px 18px rgba(49,91,138,.07);
-}
-
-[data-testid="stExpander"] summary {
-    min-height: 42px !important;
-    font-family: 'Prompt', 'Noto Sans Thai', Tahoma, sans-serif !important;
-    font-weight: 600 !important;
-    color: #172033 !important;
-}
-
-[data-testid="stExpander"] summary:hover {
-    background: #f7faff !important;
 }
 
 .chart-tip {
@@ -820,12 +515,29 @@ section[data-testid="stSidebar"] [data-testid="stExpander"] summary:hover {
 .collection-subtitle { color:#667085; font-size:11px; line-height:1.55; }
 .collection-info { position:relative; flex:0 0 auto; }
 .collection-info summary {
-    list-style:none; cursor:pointer; width:34px; height:34px; display:grid; place-items:center;
+    list-style:none; cursor:pointer; width:32px !important; height:32px !important; padding:0 !important;
+    display:grid; place-items:center;
     border:1px solid #d7dee8; border-radius:10px; color:#344054; background:#fff;
     transition:transform .18s ease, box-shadow .18s ease, background .18s ease;
 }
 .collection-info summary::-webkit-details-marker { display:none; }
 .collection-info summary:hover { transform:translateY(-1px); background:#f7faff; box-shadow:0 5px 14px rgba(49,91,138,.10); }
+.collection-info .info-icon {
+    width: 17px;
+    height: 17px;
+    border: 1.5px solid #667085;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 12px;
+    font-style: italic;
+    font-weight: 700;
+    line-height: 1;
+    color: #475467;
+    background: #fff;
+}
 .collection-info-pop {
     position:absolute; right:0; top:40px; z-index:20; width:min(330px,78vw); padding:13px;
     border:1px solid #dfe6ee; border-radius:12px; background:#fff;
@@ -871,8 +583,9 @@ section[data-testid="stSidebar"] [data-testid="stExpander"] summary:hover {
 .collection-stop {
     position:relative; background:#fff; border:1px solid #e2e8f0; border-radius:13px;
     padding:12px; box-shadow:0 2px 8px rgba(15,23,42,.035);
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
 }
-.collection-stop:hover { transform:translateY(-3px); border-color:#c9d7e6; box-shadow:0 10px 22px rgba(15,23,42,.08); }
+.collection-stop:hover { transform:translateY(-2px); border-color:#cbd8e8; box-shadow:0 8px 20px rgba(15,23,42,.08); }
 .collection-rank {
     position:absolute; top:10px; right:10px; width:28px; height:28px; border-radius:50%;
     display:grid; place-items:center; color:#fff; font-weight:700; font-size:12px;
@@ -883,28 +596,6 @@ section[data-testid="stSidebar"] [data-testid="stExpander"] summary:hover {
 .collection-detail { margin-top:8px; padding-top:8px; border-top:1px dashed #e5eaf1; font-size:10px; line-height:1.6; color:#667085; }
 .collection-note { margin-top:11px; text-align:center; color:#667085; font-size:10px; }
 .collection-empty { padding:18px; border-radius:12px; background:#f8fafc; color:#667085; text-align:center; font-size:12px; }
-@media (max-width:700px) {
-    .collection-section { padding:13px; }
-    .collection-title { font-size:18px; }
-    .collection-road { height:112px; }
-    .collection-stops { grid-template-columns:1fr; }
-}
-
-/* Modern dashboard header */
-.block-container {
-    max-width: 1180px !important;
-    padding-top: 1.15rem !important;
-    padding-bottom: 1.8rem !important;
-}
-
-[data-testid="stVerticalBlock"] { gap: 0.5rem; }
-
-h1, h2, h3, h4, p, label {
-    font-family: 'Prompt', 'Noto Sans Thai', Tahoma, sans-serif !important;
-}
-h1 { font-size: 1.55rem !important; }
-h2 { font-size: 1.28rem !important; }
-h3 { font-size: 1.08rem !important; }
 
 .app-brand {
     display: flex;
@@ -951,58 +642,6 @@ h3 { font-size: 1.08rem !important; }
     background: linear-gradient(90deg, transparent, #e5eaf1 10%, #e5eaf1 90%, transparent);
 }
 
-/* Soft interactive lift */
-.collection-stop {
-    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
-}
-
-.collection-stop:hover {
-    transform: translateY(-2px);
-    border-color: #cbd8e8;
-    box-shadow: 0 8px 20px rgba(15,23,42,.08);
-}
-
-[data-testid="stMetric"] {
-    transition: transform .18s ease, box-shadow .18s ease;
-}
-
-[data-testid="stMetric"]:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(15,23,42,.07);
-}
-
-[data-testid="stPopover"] > div {
-    border-radius: 12px !important;
-}
-[data-testid="stPopover"] [data-testid="stMarkdownContainer"] {
-    font-size: 12px !important;
-    line-height: 1.5 !important;
-}
-[data-testid="stPopover"] h3,
-[data-testid="stPopover"] h2 { font-size: 15px !important; }
-[data-testid="stMetricValue"] { font-size: 1.35rem !important; }
-[data-testid="stMetricLabel"] { font-size: 11px !important; }
-
-/* Make the truck face right without reversing its travel animation */
-.collection-truck span {
-    display: inline-block;
-    transform: scaleX(-1);
-    transform-origin: center;
-}
-
-@media (max-width: 800px) {
-    [data-testid="stHorizontalBlock"] {
-        gap: 0.5rem !important;
-    }
-
-    [data-testid="stPopover"] button {
-        min-width: 88px !important;
-        padding: 0 8px !important;
-    }
-}
-
-
-/* Final image-title / info-button polish */
 .camera-image-title {
     display: block !important;
     position: relative !important;
@@ -1017,112 +656,39 @@ h3 { font-size: 1.08rem !important; }
     color: #172033 !important;
 }
 
-.camera-image-title + * {
-    margin-top: 0 !important;
+@media (max-width:700px) {
+    .collection-section { padding:13px; }
+    .collection-title { font-size:18px; }
+    .collection-road { height:112px; }
+    .collection-stops { grid-template-columns:1fr; }
 }
-
-[data-testid="stExpander"] [data-testid="stImage"] {
-    margin-top: 0 !important;
-}
-
-[data-testid="stExpander"] [data-testid="stImage"] img {
-    display: block !important;
-    width: 100% !important;
-    margin-top: 0 !important;
-    border-radius: 10px !important;
-}
-
-/* Clean info (i) controls */
-.info-button {
-    width: 32px !important;
-    height: 32px !important;
-    min-height: 32px !important;
-    border: 1px solid #d7dee8 !important;
-    border-radius: 10px !important;
-    background: #ffffff !important;
-    color: #344054 !important;
-    font-family: "Prompt", "Noto Sans Thai", Tahoma, sans-serif !important;
-    font-size: 14px !important;
-    font-weight: 600 !important;
-    line-height: 1 !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    box-shadow: 0 3px 10px rgba(15,23,42,.06) !important;
-    transition: all .16s ease !important;
-}
-
-.info-button:hover {
-    background: #f7faff !important;
-    border-color: #b9c9d9 !important;
-    transform: translateY(-1px) !important;
-    box-shadow: 0 6px 14px rgba(15,23,42,.10) !important;
-}
-
-
-/* Modern information icon */
-.collection-info summary {
-    width: 32px !important;
-    height: 32px !important;
-    padding: 0 !important;
-}
-
-.collection-info .info-icon {
-    width: 17px;
-    height: 17px;
-    border: 1.5px solid #667085;
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: 12px;
-    font-style: italic;
-    font-weight: 700;
-    line-height: 1;
-    color: #475467;
-    background: #fff;
-}
-
 </style>
 """,
-
 unsafe_allow_html=True
-
 )
+
 
 # =====================================================
 # เก็บข้อมูลระหว่างการใช้งานหน้าเว็บ
 
 if "camera_results" not in st.session_state:
-
     st.session_state.camera_results = {}
 
 if "history" not in st.session_state:
-
     st.session_state.history = {}
 
-# เก็บข้อมูลที่เลือกจากกราฟแยกตามกล้อง
 if "selected_history_by_camera" not in st.session_state:
     st.session_state.selected_history_by_camera = {}
 
 if "selected_history_camera" not in st.session_state:
     st.session_state.selected_history_camera = None
 
-# เก็บข้อมูลแจ้งเตือนล่าสุดไว้ชั่วคราว
-# จะแจ้งเตือนเฉพาะตอนวิเคราะห์ภาพใหม่แล้วได้ระดับ High หรือ Critical
 if "density_alert" not in st.session_state:
     st.session_state.density_alert = None
 
-
-
-
 for cam in CAMERA_CONFIG:
-
     if cam not in st.session_state.history:
-
         st.session_state.history[cam] = []
-
 
 
 # =====================================================
@@ -1131,8 +697,6 @@ for cam in CAMERA_CONFIG:
 if "show_settings" not in st.session_state:
     st.session_state.show_settings = False
 
-# ค่าเริ่มต้นของ ROI และ Threshold จะอ่านจาก config.py โดยตรง
-# ดังนั้นเมื่อเปิด session ใหม่ หน้าเว็บจะใช้ค่าที่กำหนดไว้ใน config.py เป็น default
 if "default_camera_config" not in st.session_state:
     st.session_state.default_camera_config = copy.deepcopy(CAMERA_CONFIG)
 
@@ -1304,7 +868,6 @@ if st.session_state.show_settings:
             key=f"threshold_high_{setting_camera}"
         )
 
-
     apply_current = st.checkbox(
         "วิเคราะห์ภาพล่าสุดของกล้องนี้ใหม่ทันทีหลังบันทึก",
         value=False,
@@ -1359,13 +922,9 @@ if st.session_state.show_settings:
     st.divider()
 
 
-
-
-
-
-
 # =====================================================
 # HEADER
+
 header_left, header_actions = st.columns(
     [0.68, 0.32],
     vertical_alignment="center"
@@ -1387,7 +946,6 @@ with header_left:
         '</div>',
         unsafe_allow_html=True
     )
-
 
 with header_settings:
     if st.button(
@@ -1411,923 +969,4 @@ with header_help:
         st.markdown("### วิธีใช้งานระบบ")
         st.markdown(
             "**1. อัปโหลดภาพ**  \n"
-            "เปิดหัวข้อ 📷 อัปโหลดภาพ CCTV แล้วเลือกภาพของแต่ละกล้อง"
-        )
-        st.markdown(
-            "**2. ตรวจผล AI**  \n"
-            "ระบบจะแสดง ROI, Mask, WAR, ระดับขยะ และคำแนะนำ"
-        )
-        st.markdown(
-            "**3. ดูประวัติ**  \n"
-            "เปิดรายการ History เพื่อดูผลของแต่ละครั้ง"
-        )
-        st.markdown(
-            "**4. ดูกราฟ WAR**  \n"
-            "ใช้กราฟติดตามแนวโน้มของแต่ละกล้อง"
-        )
-        st.markdown(
-            "**5. ตั้งค่า**  \n"
-            "กด ⚙️ เพื่อปรับ ROI และ Threshold ได้ตามกล้อง"
-        )
-        st.caption("คำแนะนำ: ตั้ง ROI ให้ครอบคลุมเฉพาะพื้นที่ที่ต้องการวัด")
-
-st.markdown(
-    '<div class="header-divider"></div>',
-    unsafe_allow_html=True
-)
-# =====================================================
-# ส่วนรับภาพ CCTV จากผู้ใช้งาน
-
-with st.expander(" อัปโหลดภาพ CCTV", expanded=False):
-    upload_columns = st.columns(len(CAMERA_CONFIG), gap="small")
-
-    for upload_col, cam in zip(upload_columns, CAMERA_CONFIG):
-        with upload_col:
-            st.markdown(
-                f'<div class="upload-camera-label"><span>📷 {cam}</span><span>JPG / PNG</span></div>',
-                unsafe_allow_html=True
-            )
-            st.markdown(
-                '<div class="upload-hint">ลากไฟล์มาวาง หรือกด Browse เพื่อเลือกภาพ</div>',
-                unsafe_allow_html=True
-            )
-
-            uploaded_file = st.file_uploader(
-                "เลือกภาพ",
-                type=["jpg", "jpeg", "png"],
-                key=cam,
-                label_visibility="collapsed"
-            )
-
-            if uploaded_file is not None:
-
-
-                file_id = (
-
-                    uploaded_file.name,
-
-                    uploaded_file.size
-
-                )
-
-
-
-                old_file = (
-
-                    st.session_state.camera_results
-
-                    .get(cam, {})
-
-                    .get("file_id")
-
-                )
-
-
-
-                if file_id != old_file:
-
-
-
-                    bytes_data = np.asarray(
-
-                        bytearray(
-
-                            uploaded_file.read()
-
-                        ),
-
-                        dtype=np.uint8
-
-                    )
-
-
-
-                    img = cv2.imdecode(
-
-                        bytes_data,
-
-                        cv2.IMREAD_COLOR
-
-                    )
-
-
-
-                    result = analyze_frame(
-
-                        img,
-
-                        cam
-
-                    )
-
-                    # ถ้าระดับขยะสูง ให้สร้างแจ้งเตือนสำหรับภาพที่เพิ่งวิเคราะห์
-                    if result.get("level") in {"High", "Critical"}:
-                        st.session_state.density_alert = {
-                            "camera": cam,
-                            "level": result["level"],
-                            "war": float(result.get("WAR", 0)),
-                            "created_at": time.monotonic(),
-                        }
-
-
-
-
-                    st.session_state.selected_history_by_camera.pop(cam, None)
-                    st.session_state.selected_history_camera = cam
-
-                    st.session_state.camera_results[cam] = {
-                        "file_id": file_id,
-                        "original": img,
-                        "result": result,
-                        "config_roi": tuple(CAMERA_CONFIG[cam].get("roi", (0, 0, 0, 0))),
-                        "config_threshold": dict(CAMERA_CONFIG[cam].get("threshold", {})),
-                    }
-
-
-
-
-                    history_id = len(
-
-                        st.session_state.history[cam]
-
-                    )
-
-
-
-
-                    st.session_state.history[cam].append({
-
-
-                        "ID":
-
-                        history_id,
-
-
-                        "เวลา":
-
-                        datetime.now().strftime(
-
-                            "%Y-%m-%d %H:%M:%S"
-
-                        ),
-
-
-                        "ภาพ":
-
-                        img.copy(),
-
-
-                        "ผล":
-
-                        result["image"].copy(),
-
-
-                        "WAR":
-
-                        result["WAR"],
-
-
-                        "เปลี่ยนแปลง":
-
-                        result["change"],
-
-
-                        "ระดับ":
-
-                        result["level"]
-
-                    })
-
-
-
-
-
-# =====================================================
-# แจ้งเตือนเมื่อพบขยะระดับ High / Critical
-# =====================================================
-
-alert = st.session_state.get("density_alert")
-
-if alert is not None:
-
-    elapsed = time.monotonic() - float(
-        alert.get("created_at", 0)
-    )
-
-    remaining = max(
-        0.0,
-        10.0 - elapsed
-    )
-
-    # ครบเวลาแล้วก็ล้างแจ้งเตือนออก
-    if remaining <= 0:
-
-        st.session_state.density_alert = None
-
-    else:
-
-        alert_camera = str(
-            alert.get("camera", "Camera")
-        )
-
-        alert_level = str(
-            alert.get("level", "High")
-        )
-
-        alert_war = float(
-            alert.get("war", 0)
-        )
-
-        if alert_level == "Critical":
-
-            alert_color = "#dc2626"
-            alert_icon = "🚨"
-            alert_title = "แจ้งเตือนระดับวิกฤต"
-            alert_message = (
-                "ควรดำเนินการจัดเก็บขยะโดยด่วน"
-            )
-
-        else:
-
-            alert_color = "#ea580c"
-            alert_icon = "⚠️"
-            alert_title = "แจ้งเตือนระดับสูง"
-            alert_message = (
-                "ควรดำเนินการจัดเก็บขยะโดยเร็ว"
-            )
-
-        alert_id = (
-            f"density-alert-"
-            f"{abs(hash((alert_camera, alert.get('created_at'))))}"
-        )
-
-        alert_html = f"""
-<style>
-#{alert_id} {{
-    position: fixed;
-    right: 24px;
-    bottom: 24px;
-    z-index: 999999;
-    width: min(390px, calc(100vw - 32px));
-}}
-
-#{alert_id} .alert-box {{
-    position: relative;
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 15px 42px 15px 15px;
-    border: 1px solid rgba(255,255,255,.7);
-    border-left: 5px solid {alert_color};
-    border-radius: 14px;
-    background: rgba(255,255,255,.98);
-    box-shadow: 0 14px 36px rgba(15,23,42,.20);
-    color: #172033;
-    font-family: "Prompt", "Noto Sans Thai", Tahoma, sans-serif;
-    animation: densityAlertLife {remaining:.2f}s linear forwards;
-}}
-
-#{alert_id} .alert-icon {{
-    flex: 0 0 auto;
-    width: 38px;
-    height: 38px;
-    display: grid;
-    place-items: center;
-    border-radius: 11px;
-    background: {alert_color};
-    color: #fff;
-    font-size: 20px;
-}}
-
-#{alert_id} .alert-content {{
-    min-width: 0;
-    padding-top: 1px;
-}}
-
-#{alert_id} .alert-title {{
-    margin: 0 0 3px;
-    font-size: 14px;
-    font-weight: 700;
-    color: {alert_color};
-}}
-
-#{alert_id} .alert-message {{
-    margin: 0;
-    font-size: 12px;
-    line-height: 1.55;
-    color: #344054;
-}}
-
-#{alert_id} .alert-close {{
-    position: absolute;
-    top: 8px;
-    right: 9px;
-    width: 30px;
-    height: 30px;
-    display: grid;
-    place-items: center;
-    border: 0;
-    border-radius: 8px;
-    background: transparent;
-    color: #667085;
-    font-size: 20px;
-    line-height: 1;
-    cursor: pointer;
-    user-select: none;
-}}
-
-#{alert_id} .alert-close:hover {{
-    background: #f2f4f7;
-    color: #172033;
-}}
-
-@keyframes densityAlertLife {{
-    0% {{
-        opacity: 0;
-        transform: translateY(16px);
-    }}
-
-    8% {{
-        opacity: 1;
-        transform: translateY(0);
-    }}
-
-    90% {{
-        opacity: 1;
-        transform: translateY(0);
-    }}
-
-    100% {{
-        opacity: 0;
-        transform: translateY(8px);
-    }}
-}}
-
-@media (max-width: 600px) {{
-    #{alert_id} {{
-        right: 12px;
-        bottom: 12px;
-    }}
-}}
-</style>
-
-<div id="{alert_id}">
-    <div class="alert-box">
-
-        <div class="alert-icon">
-            {alert_icon}
-        </div>
-
-        <div class="alert-content">
-
-            <p class="alert-title">
-                {alert_title}
-            </p>
-
-            <p class="alert-message">
-                ขยะจาก <b>{alert_camera}</b>
-                อยู่ในระดับ <b>{alert_level}</b>
-                (WAR {alert_war:.2f}%)<br>
-                {alert_message}
-            </p>
-
-        </div>
-
-        <button
-            type="button"
-            class="alert-close"
-            title="ปิดการแจ้งเตือน"
-            aria-label="ปิดการแจ้งเตือน"
-            onclick="this.closest('#{alert_id}').remove()"
-        >
-            ×
-        </button>
-
-    </div>
-</div>
-"""
-
-        # st.html รับ HTML โดยตรง จึงไม่ต้องผ่าน Markdown
-        st.html(alert_html)
-
-# =====================================================
-# UPLOAD CCTV IMAGE
-
-
-# =====================================================
-# ส่วนแสดงผลการวิเคราะห์ของแต่ละกล้อง+
-
-def render_camera_details(cam, data):
-    result = data["result"]
-    level = result["level"]
-    info = LEVEL_INFO[level]
-
-    st.markdown(
-        f'<div class="camera-detail-card">'
-        f'<div class="camera-status-pill" '
-        f'style="background:{info["color"]};'
-        f'color:{"#172033" if level == "Medium" else "#ffffff"};">'
-        f'{info["name"]}'
-        f'</div>'
-        f'<div class="camera-action-card">'
-        f'<span class="action-label">คำแนะนำ</span>'
-        f'<span class="action-text">{info["action"]}</span>'
-        f'</div>',
-        unsafe_allow_html=True
-    )
-
-    # =========================
-    # IMAGE
-    # =========================
-
-    c1,c2 = st.columns(2)
-
-
-
-    with c1:
-
-
-        st.markdown(
-            '<div class="camera-image-title">ภาพจากกล้อง</div>',
-            unsafe_allow_html=True
-        )
-
-
-        show_image_viewer(
-            data["original"],
-            title="ภาพจากกล้อง",
-            display_width=340
-        )
-
-
-
-
-
-    with c2:
-
-
-        st.markdown(
-            '<div class="camera-image-title">ผล Segmentation</div>',
-            unsafe_allow_html=True
-        )
-
-
-        show_image_viewer(
-            result["image"],
-            title="ผล Segmentation",
-            display_width=340
-        )
-
-
-
-    # =========================
-    # CURRENT RESULT
-
-    st.subheader(
-
-        " ผลการวิเคราะห์"
-
-    )
-
-
-
-    a,b,c = st.columns(3)
-
-
-
-    a.metric(
-
-        "WAR",
-
-        f'{result["WAR"]}%'
-
-    )
-
-
-    b.metric(
-
-        "เปลี่ยนแปลง",
-
-        f'{result["change"]:+.2f}%'
-
-    )
-
-
-    c.metric(
-
-        "ระดับ",
-
-        info["name"]
-
-    )
-
-
-
-    # =========================
-    # GRAPH
-
-    war_title_col, war_info_col = st.columns(
-        [0.94, 0.06],
-        vertical_alignment="center"
-    )
-
-    with war_title_col:
-        st.subheader(
-            f" แนวโน้ม WAR : {cam}"
-        )
-
-    with war_info_col:
-        with st.popover("i"):
-            st.markdown("### WAR คืออะไร?")
-            st.markdown("**WAR = (พิกเซลขยะใน ROI ÷ พื้นที่ ROI) × 100**")
-            st.caption("ตัวอย่าง: ขยะ 25 px จาก ROI 100 px → WAR = 25%")
-            st.caption("ใช้วัดสัดส่วนพื้นที่ขยะภายใน ROI ของกล้องนั้น")
-
-    if len(st.session_state.history[cam]) > 0:
-        graph_data = pd.DataFrame(st.session_state.history[cam]).reset_index(drop=True)
-        graph_data["จุด"] = np.arange(len(graph_data))
-
-        fig = px.line(
-            graph_data,
-            x="จุด",
-            y="WAR",
-            markers=True,
-            custom_data=["เวลา", "ระดับ", "เปลี่ยนแปลง"],
-        )
-        fig.update_traces(
-            line=dict(width=3, color="#315b8a"),
-            marker=dict(size=8, color="#ffffff", line=dict(width=3, color="#315b8a")),
-            hovertemplate=(
-                "<b>จุดตรวจ %{x}</b><br>"
-                "WAR: <b>%{y:.2f}%</b><br>"
-                "เวลา: %{customdata[0]}<br>"
-                "ระดับ: %{customdata[1]}<br>"
-                "เปลี่ยนแปลง: %{customdata[2]:+.2f}%<extra></extra>"
-            ),
-        )
-
-        current_thr = CAMERA_CONFIG.get(cam, {}).get("threshold", {})
-        for key, color, label in [
-            ("low", "#4CAF50", "Low"),
-            ("medium", "#FFD600", "Medium"),
-            ("high", "#FF9800", "High"),
-        ]:
-            if key in current_thr:
-                try:
-                    y_value = float(current_thr[key])
-                    fig.add_hline(
-                        y=y_value,
-                        line_width=1,
-                        line_dash="dot",
-                        line_color=color,
-                        annotation_text=f"{label} {y_value:g}%",
-                        annotation_position="top left",
-                    )
-                except (TypeError, ValueError):
-                    pass
-
-        fig.update_layout(
-            height=285,
-            margin=dict(l=8, r=12, t=12, b=8),
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="#fbfcfe",
-            hovermode="x unified",
-            font=dict(family="Prompt, Noto Sans Thai, sans-serif", size=11, color="#172033"),
-            showlegend=False,
-            xaxis=dict(title="ลำดับการบันทึก", tickmode="linear", dtick=1, showgrid=False, zeroline=False),
-            yaxis=dict(title="WAR (%)", ticksuffix="%", showgrid=True, gridcolor="#e8edf3", zeroline=False, rangemode="tozero"),
-        )
-
-        st.markdown(
-            '<div class="chart-tip">💡 คลิกจุดบนกราฟเพื่อดูภาพและข้อมูลของการบันทึกครั้งนั้นด้านล่าง</div>',
-            unsafe_allow_html=True
-        )
-
-        chart_event = st.plotly_chart(
-            fig,
-            use_container_width=True,
-            key=f"war_chart_{cam}",
-            on_select="rerun",
-            selection_mode="points",
-        )
-
-        try:
-            selection = getattr(chart_event, "selection", None)
-            if selection is None and isinstance(chart_event, dict):
-                selection = chart_event.get("selection")
-            points = getattr(selection, "points", None) if selection is not None else None
-            if points is None and isinstance(selection, dict):
-                points = selection.get("points", [])
-
-            if points:
-                first_point = points[0]
-                point_index = getattr(first_point, "point_index", None)
-                if point_index is None and isinstance(first_point, dict):
-                    point_index = first_point.get("point_index")
-                if point_index is None:
-                    point_index = getattr(first_point, "pointNumber", None)
-                if point_index is None and isinstance(first_point, dict):
-                    point_index = first_point.get("pointNumber")
-
-                if point_index is not None:
-                    point_index = int(point_index)
-                    if 0 <= point_index < len(st.session_state.history[cam]):
-                        st.session_state.selected_history_by_camera[cam] = (
-                            st.session_state.history[cam][point_index]
-                        )
-                        st.session_state.selected_history_camera = cam
-        except Exception:
-            pass
-
-        # =========================
-        # SELECTED GRAPH DATA
-
-        selected_history = st.session_state.selected_history_by_camera.get(cam)
-
-        # แสดงข้อมูลที่เลือกจากกราฟเฉพาะกล้องที่ถูกคลิกเท่านั้น
-        if selected_history is not None and st.session_state.selected_history_camera == cam:
-
-            item = selected_history
-
-
-            st.subheader(
-
-                "🔎 ข้อมูลที่เลือกจากกราฟ"
-
-            )
-
-            st.caption(
-                f"จุดตรวจครั้งที่ #{int(item.get('ID', 0)) + 1}  ·  {item['เวลา']}"
-            )
-
-
-
-
-            x,y,z = st.columns(3)
-
-
-
-            x.metric(
-
-                "WAR",
-
-                f'{item["WAR"]}%'
-
-            )
-
-
-
-            y.metric(
-
-                "เปลี่ยนแปลง",
-
-                f'{item["เปลี่ยนแปลง"]:+.2f}%'
-
-            )
-
-
-
-            selected_info = LEVEL_INFO[
-
-                item["ระดับ"]
-
-            ]
-
-
-
-            z.metric(
-
-                "ระดับ",
-
-                selected_info["name"]
-
-            )
-
-
-
-
-
-            show_image_viewer(
-                item["ผล"],
-                title="ผล Segmentation จากข้อมูลที่เลือก",
-                display_width=340
-            )
-
-
-
-
-
-
-    # =================================================
-    # HISTORY
-
-    st.markdown(
-        f'<div class="history-title"> ประวัติการตรวจสอบ {cam}</div>',
-        unsafe_allow_html=True
-    )
-
-    histories = st.session_state.history[cam]
-
-    if len(histories) == 0:
-        st.caption("ยังไม่มีประวัติการตรวจสอบ")
-    else:
-        for item in reversed(histories):
-            history_info = LEVEL_INFO[item["ระดับ"]]
-            history_key = f"history_open_{cam}_{item['ID']}"
-
-            # ใช้ expander ของ Streamlit เป็นหัวรายการโดยตรง
-            # ไม่สร้างปุ่มลูกศรแยก
-            history_text_color = {
-                "Normal": "green",
-                "Low": "blue",
-                "Medium": "orange",
-                "High": "orange",
-                "Critical": "red",
-            }.get(item["ระดับ"], "gray")
-
-            with st.expander(
-                f"📋 #{int(item['ID']) + 1}  ·  {item['เวลา']}  ·  :{history_text_color}[{history_info['name']}]",
-                expanded=False
-            ):
-                st.markdown(
-                    f'<div class="history-detail-status" '
-                    f'style="background:{history_info["color"]};'
-                    f'color:{"#172033" if item["ระดับ"] == "Medium" else "#ffffff"};">'
-                    f'{history_info["name"]}'
-                    f'</div>',
-                    unsafe_allow_html=True
-                )
-
-                hx, hy, hz = st.columns(3)
-
-                hx.metric("WAR", f'{item["WAR"]}%')
-                hy.metric("เปลี่ยนแปลง", f'{item["เปลี่ยนแปลง"]:+.2f}%')
-                hz.metric("ระดับ", history_info["name"])
-
-                show_image_viewer(
-                    item["ผล"],
-                    title="ผล Segmentation",
-                    display_width=340
-                )
-
-
-# =====================================================
-# CAMERA DROPDOWN
-# =====================================================
-
-camera_items = list(st.session_state.camera_results.items())
-
-if camera_items:
-    camera_cols = st.columns(len(camera_items), gap="medium")
-
-    for camera_col, (cam, data) in zip(camera_cols, camera_items):
-        result = data["result"]
-        level = result["level"]
-        info = LEVEL_INFO[level]
-
-        level_text_color = {
-            "Normal": "green",
-            "Low": "blue",
-            "Medium": "orange",
-            "High": "orange",
-            "Critical": "red",
-        }.get(level, "gray")
-
-        with camera_col:
-            with st.expander(
-                f"📷 {cam}  ·  :{level_text_color}[{info['name']}]",
-                expanded=False
-            ):
-                render_camera_details(cam, data)
-else:
-    st.info("ยังไม่มีผลการวิเคราะห์จากกล้อง")
-
-
-# =====================================================
-# ลำดับการจัดเก็บขยะ
-
-LEVEL_ORDER = {"Normal": 0, "Low": 1, "Medium": 2, "High": 3, "Critical": 4}
-
-collection_priority = []
-reference_roi_area = 0
-
-for cam, data in st.session_state.camera_results.items():
-    result = data.get("result", {})
-    cfg = CAMERA_CONFIG.get(cam, {})
-    roi = data.get("config_roi", cfg.get("roi", (0, 0, 0, 0)))
-
-    try:
-        x1, y1, x2, y2 = [int(v) for v in roi]
-        roi_area = max(0, x2 - x1) * max(0, y2 - y1)
-    except (TypeError, ValueError):
-        roi_area = 0
-
-    garbage_mask = result.get("mask")
-    garbage_pixels = int(np.sum(np.asarray(garbage_mask) > 0)) if garbage_mask is not None else 0
-    level = result.get("level", "Normal")
-    war = float(result.get("WAR", 0))
-    reference_roi_area = max(reference_roi_area, roi_area)
-
-    collection_priority.append({
-        "camera": cam,
-        "WAR": war,
-        "level": level,
-        "level_rank": LEVEL_ORDER.get(level, 0),
-        "roi_area": roi_area,
-        "garbage_pixels": garbage_pixels,
-    })
-
-for item in collection_priority:
-    if item["roi_area"] > 0 and reference_roi_area > 0:
-        item["normalized_garbage_pixels"] = item["garbage_pixels"] * reference_roi_area / item["roi_area"]
-    else:
-        item["normalized_garbage_pixels"] = 0.0
-
-collection_priority.sort(
-    key=lambda item: (item["normalized_garbage_pixels"], item["level_rank"]),
-    reverse=True
-)
-
-if len(collection_priority) == 0:
-    st.markdown(
-        '''
-        <section class="collection-section">
-            <div class="collection-title">🚛 ลำดับการจัดเก็บขยะ</div>
-            <div class="collection-subtitle">รอข้อมูลจากกล้องเพื่อสร้างเส้นทางการจัดเก็บ</div>
-            <div class="collection-empty">ยังไม่มีข้อมูลจากกล้องสำหรับจัดลำดับการจัดเก็บขยะ</div>
-        </section>
-        ''',
-        unsafe_allow_html=True
-    )
-else:
-    checkpoint_html = []
-    cards = []
-
-    for rank, item in enumerate(collection_priority, start=1):
-        info = LEVEL_INFO.get(item["level"], LEVEL_INFO["Normal"])
-        checkpoint_html.append(
-            f'''
-            <div class="collection-checkpoint-wrap">
-                <div class="collection-checkpoint" style="background:{info["color"]};">
-                    <span>{rank}</span>
-                </div>
-                <div class="collection-checkpoint-label">{item["camera"]}</div>
-            </div>
-            '''
-        )
-        cards.append(
-            f'''
-            <div class="collection-stop">
-                <div class="collection-rank" style="background:{info["color"]};">{rank}</div>
-                <div class="collection-camera">📷 {item["camera"]}</div>
-                <div class="collection-war">WAR {item["WAR"]:.2f}%</div>
-                <div class="collection-level">{info["name"]}</div>
-                <div class="collection-detail">
-                    ขยะใน ROI: {item["garbage_pixels"]:,} px<br>
-                    ROI: {item["roi_area"]:,} px<br>
-                    พื้นที่ขยะเทียบ ROI อ้างอิง: {item["normalized_garbage_pixels"]:,.1f} px
-                </div>
-            </div>
-            '''
-        )
-
-    collection_html = f'''
-        <section class="collection-section">
-            <div class="collection-head">
-                <div>
-                    <div class="collection-title">🚛 ลำดับการจัดเก็บขยะ</div>
-                    <div class="collection-subtitle">รถเก็บขยะเดินทางทางเดียวจาก checkpoint ที่ควรจัดเก็บก่อน → จุดที่ควรจัดเก็บภายหลัง</div>
-                </div>
-                <details class="collection-info">
-                    <summary><span class="info-icon">i</span></summary>
-                    <div class="collection-info-pop">
-                        <b>ระบบเรียงจากอะไร?</b>
-                        <ol>
-                            <li>หาพิกเซลขยะที่อยู่ใน ROI</li>
-                            <li>ปรับพื้นที่ ROI ให้เทียบกับพื้นที่อ้างอิงเดียวกัน</li>
-                            <li>เปรียบเทียบพื้นที่ขยะหลังปรับ — มากกว่าจัดเก็บก่อน</li>
-                            <li>หากพื้นที่ขยะใกล้เคียงกัน จึงใช้ระดับความหนาแน่นเป็นตัวช่วย</li>
-                        </ol>
-                        <div class="collection-example">
-                            A = 5/50<br>
-                            B = 1/2 → ปรับเป็น 25/50<br>
-                            <b>ดังนั้น B มีพื้นที่ขยะเทียบมากกว่า → มาก่อน</b>
-                        </div>
-                    </div>
-                </details>
-            </div>
-
-            <div class="collection-road">
-                <div class="collection-lane"></div>
-                <div class="collection-checkpoints">{''.join(checkpoint_html)}</div>
-                <div class="collection-truck">🚛</div>
-                <div class="collection-road-arrow">→</div>
-                <div class="collection-road-label">เส้นทางรถเก็บขยะ</div>
-            </div>
-
-            <div class="collection-stops">{''.join(cards)}</div>
-            <div class="collection-note">อันดับ 1 คือ checkpoint แรกของเส้นทาง และรถจะวิ่งต่อไปตามลำดับจนถึง checkpoint สุดท้าย</div>
-        </section>
-        '''
-    st.html(collection_html)
-inject_theme()
+          
