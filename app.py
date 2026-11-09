@@ -61,7 +61,6 @@ def show_image_viewer(img_bgr, title="", display_width=360):
     if w <= 0 or h <= 0:
         return
 
-    # ย่อภาพ Preview ให้โหลดขึ้นมาแสดงผลทันทีแบบไม่หน่วง
     max_preview_w = 720
     if w > max_preview_w:
         scale = max_preview_w / float(w)
@@ -224,14 +223,6 @@ for cam in CAMERA_CONFIG:
         st.session_state.history[cam] = []
 
 
-def toggle_settings_drawer():
-    st.session_state.show_settings = not st.session_state.show_settings
-
-
-def toggle_dark_mode():
-    st.session_state.dark_mode = not st.session_state.dark_mode
-
-
 def save_camera_config(camera, roi, thresholds):
     new_config = copy.deepcopy(st.session_state.runtime_camera_config)
     if camera not in new_config:
@@ -279,13 +270,7 @@ def reset_threshold_callback(camera):
 
 
 # =====================================================
-# ฉีดธีม Liquid Glass ทันทีตั้งแต่ต้นหน้า
-# =====================================================
-inject_theme()
-
-
-# =====================================================
-# HEADER BAR (ปุ่มกดติด 100% ทุกปุ่มด้วย on_click callback)
+# HEADER BAR (ใช้ if st.button + st.rerun() โดยตรง เพื่อให้กดติด 100%)
 # =====================================================
 header_left, header_right = st.columns([0.62, 0.38], vertical_alignment="center")
 
@@ -308,21 +293,15 @@ with header_right:
 
     with btn_col1:
         settings_label = "✕ ปิดตั้งค่า" if st.session_state.show_settings else "⚙️ ตั้งค่า"
-        st.button(
-            settings_label,
-            key="btn_settings_toggle",
-            use_container_width=True,
-            on_click=toggle_settings_drawer,
-        )
+        if st.button(settings_label, key="btn_settings_toggle", use_container_width=True):
+            st.session_state.show_settings = not st.session_state.show_settings
+            st.rerun()
 
     with btn_col2:
         theme_label = "☀️ โหมดสว่าง" if st.session_state.dark_mode else "🌙 โหมดมืด"
-        st.button(
-            theme_label,
-            key="btn_theme_toggle",
-            use_container_width=True,
-            on_click=toggle_dark_mode,
-        )
+        if st.button(theme_label, key="btn_theme_toggle", use_container_width=True):
+            st.session_state.dark_mode = not st.session_state.dark_mode
+            st.rerun()
 
     with btn_col3:
         with st.popover("❔ วิธีใช้", use_container_width=True):
@@ -332,9 +311,12 @@ with header_right:
             st.markdown("3. **กราฟ & ประวัติ:** คลิกจุดบนกราฟเพื่อดูผลย้อนหลัง")
             st.markdown("4. **ตั้งค่า:** กดปุ่ม **⚙️ ตั้งค่า** เพื่อสไลด์เปิดแผงปรับ ROI และเกณฑ์วัด")
 
+# เรียกใช้ธีมหลังเช็กสถานะปุ่มล่าสุดเสมอ
+inject_theme()
+
 
 # =====================================================
-# SMOOTH SLIDE-DOWN SETTINGS DRAWER (อยู่ใน DOM ตลอดเพื่อให้เลื่อนขึ้น-ลงนุ่มนวล)
+# SMOOTH SLIDE-DOWN SETTINGS DRAWER (ซ่อนด้วย max-height:0 ตอนเริ่ม และสไลด์ลงเมื่อกดปุ่ม)
 # =====================================================
 with st.container(key="settings_drawer"):
     st.markdown(
@@ -477,12 +459,9 @@ with st.container(key="settings_drawer"):
                     )
                 st.rerun()
     with act4:
-        st.button(
-            "✕ ซ่อนแผงตั้งค่า",
-            use_container_width=True,
-            key="close_camera_config",
-            on_click=toggle_settings_drawer,
-        )
+        if st.button("✕ ซ่อนแผงตั้งค่า", use_container_width=True, key="close_camera_config"):
+            st.session_state.show_settings = False
+            st.rerun()
 
 
 # =====================================================
