@@ -6,7 +6,7 @@
 CAMERA_CONFIG = {
 
 
-    "Camera 01":{
+    "Camera 01": {
 
 
         "name":
@@ -25,11 +25,11 @@ CAMERA_CONFIG = {
         "threshold":
         {
 
-            "low":2,
+            "low": 2,
 
-            "medium":9,
+            "medium": 9,
 
-            "high":15
+            "high": 15
 
         }
 
@@ -37,7 +37,7 @@ CAMERA_CONFIG = {
 
 
 
-    "Camera 02":{
+    "Camera 02": {
 
 
         "name":
@@ -56,11 +56,11 @@ CAMERA_CONFIG = {
         "threshold":
         {
 
-            "low":3,
+            "low": 3,
 
-            "medium":7,
+            "medium": 7,
 
-            "high":10
+            "high": 10
 
         }
 
