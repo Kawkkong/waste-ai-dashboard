@@ -2,7 +2,7 @@ import streamlit as st
 
 
 def inject_theme() -> None:
-    """Inject High-Tech Ultra-Transparent Liquid Glass UI with Smooth CSS Drawer & Animations."""
+    """Inject High-Tech Ultra-Transparent Liquid Glass UI with guaranteed Dark/Light Mode & Smooth Slide Drawer."""
     dark_mode = bool(st.session_state.get("dark_mode", True))
     drawer_open = bool(st.session_state.get("show_settings", False))
 
@@ -15,25 +15,26 @@ def inject_theme() -> None:
         --accent-2: #6366f1;
         --accent-3: #a855f7;
         --accent-glow: rgba(0, 245, 212, 0.28);
+        --bg-solid: #050b16;
         --bg-mesh:
             radial-gradient(45% 45% at 15% 12%, rgba(0, 245, 212, 0.22) 0%, transparent 70%),
-            radial-gradient(45% 45% at 86% 16%, rgba(99, 102, 241, 0.25) 0%, transparent 70%),
+            radial-gradient(45% 45% at 86% 16%, rgba(99, 102, 241, 0.26) 0%, transparent 70%),
             radial-gradient(50% 50% at 78% 88%, rgba(168, 85, 247, 0.20) 0%, transparent 70%),
             radial-gradient(40% 40% at 18% 85%, rgba(14, 165, 233, 0.18) 0%, transparent 70%),
             linear-gradient(135deg, #030712 0%, #071022 50%, #090d1c 100%);
-        --grid-line: rgba(0, 245, 212, 0.045);
-        --liquid-bg: linear-gradient(135deg, rgba(15, 28, 48, 0.36) 0%, rgba(10, 18, 34, 0.18) 100%);
-        --liquid-bg-hover: linear-gradient(135deg, rgba(22, 40, 68, 0.48) 0%, rgba(14, 26, 48, 0.28) 100%);
-        --liquid-subtle: rgba(15, 23, 42, 0.32);
+        --grid-line: rgba(0, 245, 212, 0.05);
+        --liquid-bg: linear-gradient(135deg, rgba(15, 28, 48, 0.42) 0%, rgba(10, 18, 34, 0.22) 100%);
+        --liquid-bg-hover: linear-gradient(135deg, rgba(22, 40, 68, 0.56) 0%, rgba(14, 26, 48, 0.34) 100%);
+        --liquid-subtle: rgba(15, 23, 42, 0.38);
         --liquid-border: rgba(255, 255, 255, 0.16);
-        --liquid-border-hover: rgba(0, 245, 212, 0.55);
+        --liquid-border-hover: rgba(0, 245, 212, 0.58);
         --liquid-rim: inset 0 1px 1px rgba(255, 255, 255, 0.22), inset 0 -1px 1px rgba(0, 245, 212, 0.08);
         --shadow-glass: 0 12px 32px -6px rgba(0, 0, 0, 0.55);
-        --shadow-hover: 0 18px 40px -6px rgba(0, 245, 212, 0.20), 0 8px 24px -4px rgba(0, 0, 0, 0.65);
-        --btn-bg: linear-gradient(135deg, rgba(30, 45, 72, 0.45) 0%, rgba(15, 25, 45, 0.28) 100%);
-        --btn-bg-hover: linear-gradient(135deg, rgba(0, 245, 212, 0.22) 0%, rgba(99, 102, 241, 0.22) 100%);
-        --input-bg: rgba(8, 15, 28, 0.55);
-        --popover-bg: rgba(12, 21, 38, 0.92);
+        --shadow-hover: 0 18px 40px -6px rgba(0, 245, 212, 0.22), 0 8px 24px -4px rgba(0, 0, 0, 0.65);
+        --btn-bg: linear-gradient(135deg, rgba(30, 45, 72, 0.52) 0%, rgba(15, 25, 45, 0.34) 100%);
+        --btn-bg-hover: linear-gradient(135deg, rgba(0, 245, 212, 0.24) 0%, rgba(99, 102, 241, 0.24) 100%);
+        --input-bg: rgba(8, 15, 28, 0.65);
+        --popover-bg: rgba(12, 21, 38, 0.95);
         --title-gradient: linear-gradient(90deg, #ffffff 0%, #5eead4 48%, #a5b4fc 100%);
         """
     else:
@@ -44,50 +45,54 @@ def inject_theme() -> None:
         --accent: #0d9488;
         --accent-2: #4f46e5;
         --accent-3: #9333ea;
-        --accent-glow: rgba(13, 148, 136, 0.20);
+        --accent-glow: rgba(13, 148, 136, 0.22);
+        --bg-solid: #eef6ff;
         --bg-mesh:
-            radial-gradient(45% 45% at 14% 12%, rgba(94, 234, 212, 0.55) 0%, transparent 70%),
-            radial-gradient(45% 45% at 86% 15%, rgba(165, 180, 252, 0.55) 0%, transparent 70%),
-            radial-gradient(50% 50% at 80% 88%, rgba(216, 180, 254, 0.48) 0%, transparent 70%),
-            radial-gradient(40% 40% at 15% 86%, rgba(186, 230, 253, 0.52) 0%, transparent 70%),
-            linear-gradient(135deg, #ecfeff 0%, #eef2ff 50%, #f5f3ff 100%);
-        --grid-line: rgba(13, 148, 136, 0.05);
-        --liquid-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0.20) 100%);
-        --liquid-bg-hover: linear-gradient(135deg, rgba(255, 255, 255, 0.58) 0%, rgba(255, 255, 255, 0.34) 100%);
-        --liquid-subtle: rgba(255, 255, 255, 0.34);
-        --liquid-border: rgba(255, 255, 255, 0.72);
-        --liquid-border-hover: rgba(13, 148, 136, 0.55);
-        --liquid-rim: inset 0 1.5px 1px rgba(255, 255, 255, 0.92), inset 0 -1px 1px rgba(13, 148, 136, 0.08);
+            radial-gradient(45% 45% at 14% 12%, rgba(45, 212, 191, 0.45) 0%, transparent 70%),
+            radial-gradient(45% 45% at 86% 15%, rgba(129, 140, 248, 0.42) 0%, transparent 70%),
+            radial-gradient(50% 50% at 80% 88%, rgba(192, 132, 252, 0.36) 0%, transparent 70%),
+            radial-gradient(40% 40% at 15% 86%, rgba(125, 211, 252, 0.45) 0%, transparent 70%),
+            linear-gradient(135deg, #e0f2fe 0%, #eef2ff 50%, #f3e8ff 100%);
+        --grid-line: rgba(13, 148, 136, 0.06);
+        --liquid-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.52) 0%, rgba(255, 255, 255, 0.26) 100%);
+        --liquid-bg-hover: linear-gradient(135deg, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0.44) 100%);
+        --liquid-subtle: rgba(255, 255, 255, 0.42);
+        --liquid-border: rgba(255, 255, 255, 0.82);
+        --liquid-border-hover: rgba(13, 148, 136, 0.60);
+        --liquid-rim: inset 0 1.5px 1px rgba(255, 255, 255, 0.95), inset 0 -1px 1px rgba(13, 148, 136, 0.10);
         --shadow-glass: 0 10px 30px -6px rgba(15, 23, 42, 0.08);
-        --shadow-hover: 0 18px 36px -6px rgba(13, 148, 136, 0.18), 0 6px 18px -4px rgba(79, 70, 229, 0.10);
-        --btn-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.56) 0%, rgba(255, 255, 255, 0.32) 100%);
-        --btn-bg-hover: linear-gradient(135deg, rgba(255, 255, 255, 0.82) 0%, rgba(204, 251, 241, 0.45) 100%);
-        --input-bg: rgba(255, 255, 255, 0.52);
-        --popover-bg: rgba(255, 255, 255, 0.92);
+        --shadow-hover: 0 18px 36px -6px rgba(13, 148, 136, 0.18), 0 6px 18px -4px rgba(79, 70, 229, 0.12);
+        --btn-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.68) 0%, rgba(255, 255, 255, 0.40) 100%);
+        --btn-bg-hover: linear-gradient(135deg, rgba(255, 255, 255, 0.90) 0%, rgba(204, 251, 241, 0.55) 100%);
+        --input-bg: rgba(255, 255, 255, 0.68);
+        --popover-bg: rgba(255, 255, 255, 0.95);
         --title-gradient: linear-gradient(90deg, #0f172a 0%, #0d9488 50%, #4f46e5 100%);
         """
 
-    drawer_css = (
-        """
-        div:has(> . st-key-settings_drawer) {
-            grid-template-rows: 1fr !important;
+    if drawer_open:
+        drawer_state_css = """
+        .st-key-settings_drawer {
+            max-height: 900px !important;
             opacity: 1 !important;
-            transform: translateY(0) !important;
-            margin-bottom: 18px !important;
+            transform: translateY(0) scale(1) !important;
+            padding: 20px 22px !important;
+            margin: 6px 0 18px 0 !important;
+            border: 1px solid var(--liquid-border-hover) !important;
             pointer-events: auto !important;
         }
         """
-        if drawer_open
-        else """
-        div:has(> .st-key-settings_drawer) {
-            grid-template-rows: 0fr !important;
+    else:
+        drawer_state_css = """
+        .st-key-settings_drawer {
+            max-height: 0px !important;
             opacity: 0 !important;
-            transform: translateY(-14px) !important;
-            margin-bottom: 0px !important;
+            transform: translateY(-16px) scale(0.98) !important;
+            padding: 0px 22px !important;
+            margin: 0px !important;
+            border: 0px solid transparent !important;
             pointer-events: none !important;
         }
         """
-    ).replace(". st-key-settings_drawer", ".st-key-settings_drawer")
 
     css = f"""
     <style>
@@ -102,7 +107,7 @@ def inject_theme() -> None:
         --radius-sm: 11px;
     }}
 
-    /* ซ่อนแถบ預設ของ Streamlit */
+    /* ซ่อนแถบของ Streamlit */
     [data-testid="stHeader"],
     [data-testid="stToolbar"],
     [data-testid="stDecoration"] {{
@@ -112,29 +117,25 @@ def inject_theme() -> None:
         visibility: hidden !important;
     }}
 
-    /* พื้นหลัง Cyber Aurora + Tech Grid */
+    /* บังคับสีพื้นหลังลงบน html, body และ .stApp โดยตรง เพื่อให้สลับโหมดมืด/สว่างติด 100% */
+    html, body, .stApp,
     [data-testid="stApp"],
     [data-testid="stAppViewContainer"],
     [data-testid="stMain"],
     [data-testid="stMainBlockContainer"] {{
-        background: transparent !important;
+        background-color: var(--bg-solid) !important;
+        background-image: var(--bg-mesh) !important;
+        background-attachment: fixed !important;
         color: var(--ink) !important;
+        transition: background-color 0.35s ease, color 0.35s ease !important;
     }}
 
-    [data-testid="stApp"]::before {{
+    /* เส้นตาราง Cyber Grid บางๆ บนพื้นหลัง */
+    .stApp::after {{
         content: "";
         position: fixed;
         inset: 0;
-        z-index: -2;
-        background: var(--bg-mesh);
-        pointer-events: none;
-    }}
-
-    [data-testid="stApp"]::after {{
-        content: "";
-        position: fixed;
-        inset: 0;
-        z-index: -1;
+        z-index: 0;
         background-image:
             linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
             linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
@@ -145,13 +146,15 @@ def inject_theme() -> None:
     }}
 
     .block-container {{
+        position: relative;
+        z-index: 1;
         max-width: 1240px !important;
         padding-top: 1.2rem !important;
         padding-bottom: 3rem !important;
     }}
 
     [data-testid="stVerticalBlock"] {{
-        gap: 0.7rem;
+        gap: 0.65rem;
     }}
 
     html, body, button, input, textarea, select,
@@ -162,7 +165,7 @@ def inject_theme() -> None:
         font-family: 'Prompt', 'Noto Sans Thai', sans-serif !important;
     }}
 
-    /* รักษาไอคอนของ Streamlit ไม่ให้เพี้ยน */
+    /* รักษาไอคอนของ Streamlit */
     span[data-testid="stIconMaterial"],
     [data-testid="stIconMaterial"],
     .material-icons,
@@ -191,30 +194,24 @@ def inject_theme() -> None:
         color: var(--muted) !important;
     }}
 
-    /* ============ Smooth Settings Slide-Down Drawer ============ */
-    div:has(> .st-key-settings_drawer) {{
-        display: grid !important;
-        transition:
-            grid-template-rows 0.48s var(--spring),
-            opacity 0.38s ease,
-            transform 0.48s var(--spring),
-            margin-bottom 0.48s var(--spring) !important;
-        overflow: hidden !important;
-    }}
-
+    /* ============ Smooth Settings Slide-Down Drawer (ผูกกับ .st-key-settings_drawer โดยตรง) ============ */
     .st-key-settings_drawer {{
-        min-height: 0 !important;
         overflow: hidden !important;
-        padding: 20px 22px !important;
-        border: 1px solid var(--liquid-border-hover) !important;
         border-radius: var(--radius-xl) !important;
         background: var(--liquid-bg) !important;
         -webkit-backdrop-filter: blur(26px) saturate(190%) !important;
         backdrop-filter: blur(26px) saturate(190%) !important;
         box-shadow: var(--shadow-hover), var(--liquid-rim) !important;
+        transition:
+            max-height 0.52s var(--spring),
+            opacity 0.36s ease,
+            transform 0.48s var(--spring),
+            padding 0.45s var(--spring),
+            margin 0.45s var(--spring),
+            border-width 0.3s ease !important;
     }}
 
-    {drawer_css}
+    {drawer_state_css}
 
     /* ============ Header Capsule (Tech HUD Style) ============ */
     .app-brand {{
@@ -233,7 +230,6 @@ def inject_theme() -> None:
         backdrop-filter: blur(24px) saturate(185%) !important;
         box-shadow: var(--shadow-glass), var(--liquid-rim) !important;
         transition: all 0.35s var(--spring) !important;
-        animation: hudFadeIn 0.6s var(--spring) both;
     }}
 
     .app-brand:hover {{
@@ -297,11 +293,6 @@ def inject_theme() -> None:
         50% {{ transform: scale(1.3); opacity: 0.65; }}
     }}
 
-    @keyframes hudFadeIn {{
-        from {{ opacity: 0; transform: translateY(10px); }}
-        to {{ opacity: 1; transform: translateY(0); }}
-    }}
-
     /* ============ Ultra-Transparent Liquid Glass Surfaces ============ */
     [data-testid="stMetric"],
     [data-testid="stExpander"],
@@ -354,7 +345,6 @@ def inject_theme() -> None:
     [data-testid="stExpander"] {{
         overflow: hidden !important;
         margin: 6px 0 14px !important;
-        animation: hudFadeIn 0.45s var(--spring) both;
     }}
 
     [data-testid="stExpander"]:hover {{
@@ -402,7 +392,6 @@ def inject_theme() -> None:
     [data-testid="stExpander"] > div,
     [data-testid="stExpanderDetails"] {{
         padding: 6px 16px 16px !important;
-        animation: hudFadeIn 0.35s var(--spring) both;
     }}
 
     /* ============ Liquid Pill Buttons (Spring + Shimmer) ============ */
@@ -437,7 +426,7 @@ def inject_theme() -> None:
         left: -110%;
         width: 70%;
         height: 100%;
-        background: linear-gradient(110deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+        background: linear-gradient(110deg, transparent, rgba(255, 255, 255, 0.38), transparent);
         transition: left 0.5s var(--spring);
         pointer-events: none;
     }}
@@ -542,7 +531,7 @@ def inject_theme() -> None:
     [data-testid="stFileUploaderDropzone"] button {{
         border-radius: 10px !important;
         background: linear-gradient(135deg, var(--accent), var(--accent-2)) !important;
-        color: #030712 !important;
+        color: #ffffff !important;
         border: 0 !important;
         padding: 5px 14px !important;
         font-weight: 700 !important;
