@@ -825,6 +825,30 @@ def inject_theme() -> None:
         color: var(--ink) !important;
     }
 
+
+    /* ปุ่ม ℹ️ (st.popover) — ตัวปุ่มจริงคือ stPopoverButton ซึ่งอยู่ลึกกว่า > button */
+    [data-testid="stPopoverButton"],
+    [data-testid="stPopover"] button {
+        background: var(--btn-bg) !important;
+        background-color: var(--input-bg) !important;
+        color: var(--ink) !important;
+        border: 1px solid var(--liquid-border) !important;
+        border-radius: 14px !important;
+        min-height: 42px !important;
+        box-shadow: var(--shadow-glass), var(--liquid-rim) !important;
+    }
+    [data-testid="stPopoverButton"] *,
+    [data-testid="stPopover"] button * {
+        color: var(--ink) !important;
+        -webkit-text-fill-color: var(--ink) !important;
+        fill: var(--ink) !important;
+    }
+    [data-testid="stPopoverButton"]:hover,
+    [data-testid="stPopover"] button:hover {
+        background: var(--btn-bg-hover) !important;
+        border-color: var(--liquid-border-hover) !important;
+    }
+
     /* ============ 9) เก็บตกทุก element ที่ยังเป็นพื้นขาวในโหมดมืด ============ */
     html[data-wv-theme="dark"] { color-scheme: dark; }
     html[data-wv-theme="light"] { color-scheme: light; }
