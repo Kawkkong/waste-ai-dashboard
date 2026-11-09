@@ -283,12 +283,12 @@ header_html = """
     </div>
 
     <div class="wv-actions">
-        <button type="button" class="wv-btn" onclick="window.wvToggleDrawer()">
+        <button type="button" class="wv-btn" data-wv-action="toggle-drawer">
             <span class="wv-set-open-txt">⚙️ ตั้งค่า</span>
             <span class="wv-set-close-txt">✕ ปิดตั้งค่า</span>
         </button>
 
-        <button type="button" class="wv-btn" onclick="window.wvToggleTheme()">
+        <button type="button" class="wv-btn" data-wv-action="toggle-theme">
             <span class="wv-theme-light-txt">☀️ โหมดสว่าง</span>
             <span class="wv-theme-dark-txt">🌙 โหมดมืด</span>
         </button>
@@ -455,7 +455,7 @@ with st.container(key="settings_drawer"):
     with act4:
         st.html(
             '<button type="button" class="wv-btn" style="width:100%;min-height:42px;" '
-            'onclick="window.wvToggleDrawer(\'closed\')">✕ ซ่อนแผงตั้งค่า</button>'
+            'data-wv-action="close-drawer">✕ ซ่อนแผงตั้งค่า</button>'
         )
 
 
@@ -684,7 +684,7 @@ if alert is not None:
                         {alert_message}
                     </p>
                 </div>
-                <button type="button" class="alert-close" onclick="this.closest('#{alert_id}').remove()">×</button>
+                <button type="button" class="alert-close" data-wv-action="dismiss" data-wv-target="#{alert_id}">×</button>
             </div>
         </div>
         """
