@@ -3,6 +3,5 @@ ultralytics
 opencv-python-headless
 numpy
 pandas
-pillow
 plotly
-streamlit-plotly-events
+pillow
