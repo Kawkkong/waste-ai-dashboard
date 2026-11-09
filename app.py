@@ -21,7 +21,7 @@ st.set_page_config(
     layout="wide",
 )
 
-# โหลดโมเดลเข้า Cache ทันทีที่เปิดเว็บ
+# โหลดโมเดลเข้าหน่วยความจำตั้งแต่เปิดระบบ
 get_model()
 
 LEVEL_INFO = {
@@ -100,8 +100,8 @@ def show_image_viewer(img_bgr, title="", display_width=360):
                 margin: 0 auto;
                 overflow: hidden;
                 border-radius: 14px;
-                border: 1px solid rgba(255, 255, 255, 0.24);
-                background: rgba(15, 23, 42, 0.20);
+                border: 1px solid rgba(148, 163, 184, 0.28);
+                background: rgba(15, 23, 42, 0.25);
                 cursor: zoom-in;
             }}
             .viewer img {{
@@ -122,7 +122,7 @@ def show_image_viewer(img_bgr, title="", display_width=360):
                 border: 1px solid rgba(255, 255, 255, 0.35);
                 border-radius: 999px;
                 padding: 5px 12px;
-                background: rgba(15, 23, 42, 0.55);
+                background: rgba(15, 23, 42, 0.65);
                 backdrop-filter: blur(10px);
                 color: #ffffff;
                 font-size: 11px;
@@ -131,7 +131,7 @@ def show_image_viewer(img_bgr, title="", display_width=360):
                 transition: all 0.25s ease;
             }}
             .zoom-btn:hover {{
-                background: rgba(0, 245, 212, 0.85);
+                background: rgba(0, 245, 212, 0.88);
                 color: #030712;
                 transform: translateY(-1px);
             }}
@@ -188,12 +188,6 @@ def show_image_viewer(img_bgr, title="", display_width=360):
 # =====================================================
 # Session State Initialization
 # =====================================================
-if "dark_mode" not in st.session_state:
-    st.session_state.dark_mode = True
-
-if "show_settings" not in st.session_state:
-    st.session_state.show_settings = False
-
 if "camera_results" not in st.session_state:
     st.session_state.camera_results = {}
 
@@ -269,54 +263,54 @@ def reset_threshold_callback(camera):
     st.session_state[f"threshold_high_{camera}"] = float(default_thr["high"])
 
 
-# =====================================================
-# HEADER BAR (ใช้ if st.button + st.rerun() โดยตรง เพื่อให้กดติด 100%)
-# =====================================================
-header_left, header_right = st.columns([0.62, 0.38], vertical_alignment="center")
-
-with header_left:
-    st.markdown(
-        '<div class="app-brand">'
-        '<div class="app-brand-left">'
-        '<div class="app-brand-icon">🗑️</div>'
-        "<div>"
-        '<div class="app-title">ระบบตรวจสอบปริมาณขยะด้วย AI</div>'
-        '<div class="app-subtitle"><span class="live-dot"></span> YOLOv11-Seg · Real-Time WAR Analytics</div>'
-        "</div>"
-        "</div>"
-        "</div>",
-        unsafe_allow_html=True,
-    )
-
-with header_right:
-    btn_col1, btn_col2, btn_col3 = st.columns([1.15, 1.35, 0.95], vertical_alignment="center")
-
-    with btn_col1:
-        settings_label = "✕ ปิดตั้งค่า" if st.session_state.show_settings else "⚙️ ตั้งค่า"
-        if st.button(settings_label, key="btn_settings_toggle", use_container_width=True):
-            st.session_state.show_settings = not st.session_state.show_settings
-            st.rerun()
-
-    with btn_col2:
-        theme_label = "☀️ โหมดสว่าง" if st.session_state.dark_mode else "🌙 โหมดมืด"
-        if st.button(theme_label, key="btn_theme_toggle", use_container_width=True):
-            st.session_state.dark_mode = not st.session_state.dark_mode
-            st.rerun()
-
-    with btn_col3:
-        with st.popover("❔ วิธีใช้", use_container_width=True):
-            st.markdown("### วิธีใช้งานระบบ")
-            st.markdown("1. **อัปโหลดภาพ:** เลือกไฟล์ภาพจากกล้อง CCTV")
-            st.markdown("2. **ตรวจผล AI:** ดูภาพ Segmentation, ค่า WAR (%) และคำแนะนำ")
-            st.markdown("3. **กราฟ & ประวัติ:** คลิกจุดบนกราฟเพื่อดูผลย้อนหลัง")
-            st.markdown("4. **ตั้งค่า:** กดปุ่ม **⚙️ ตั้งค่า** เพื่อสไลด์เปิดแผงปรับ ROI และเกณฑ์วัด")
-
-# เรียกใช้ธีมหลังเช็กสถานะปุ่มล่าสุดเสมอ
+# ฉีดระบบธีมและ Client-Side Toggle Engine
 inject_theme()
 
 
 # =====================================================
-# SMOOTH SLIDE-DOWN SETTINGS DRAWER (ซ่อนด้วย max-height:0 ตอนเริ่ม และสไลด์ลงเมื่อกดปุ่ม)
+# HEADER BAR (สลับโหมดมืด/สว่าง และสไลด์เปิด/ปิดตั้งค่าใน 0ms ด้วย JS ไม่ต้องรอโหลดหน้าเว็บใหม่!)
+# =====================================================
+header_html = """
+<div class="wv-topbar">
+    <div class="app-brand">
+        <div class="app-brand-left">
+            <div class="app-brand-icon">🗑️</div>
+            <div>
+                <div class="app-title">ระบบตรวจสอบปริมาณขยะด้วย AI</div>
+                <div class="app-subtitle"><span class="live-dot"></span> YOLOv11-Seg · Real-Time WAR Analytics</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="wv-actions">
+        <button type="button" class="wv-btn" onclick="window.wvToggleDrawer()">
+            <span class="wv-set-open-txt">⚙️ ตั้งค่า</span>
+            <span class="wv-set-close-txt">✕ ปิดตั้งค่า</span>
+        </button>
+
+        <button type="button" class="wv-btn" onclick="window.wvToggleTheme()">
+            <span class="wv-theme-light-txt">☀️ โหมดสว่าง</span>
+            <span class="wv-theme-dark-txt">🌙 โหมดมืด</span>
+        </button>
+
+        <details class="wv-help-wrap">
+            <summary class="wv-btn">❔ วิธีใช้</summary>
+            <div class="wv-help-pop">
+                <b style="font-size:14px;color:var(--accent);">วิธีใช้งานระบบ</b><br><br>
+                <b>1. อัปโหลดภาพ:</b> เลือกไฟล์ภาพจากกล้อง CCTV<br>
+                <b>2. ตรวจผล AI:</b> ดูภาพ Segmentation, ค่า WAR (%) และคำแนะนำ<br>
+                <b>3. กราฟ & ประวัติ:</b> คลิกจุดบนกราฟเพื่อดูผลย้อนหลัง<br>
+                <b>4. ตั้งค่า:</b> กดปุ่ม <b>⚙️ ตั้งค่า</b> เพื่อสไลด์เปิดแผงปรับ ROI และเกณฑ์วัด
+            </div>
+        </details>
+    </div>
+</div>
+"""
+st.html(header_html)
+
+
+# =====================================================
+# SMOOTH SLIDE-DOWN SETTINGS DRAWER (ซ่อนสนิทตั้งแต่เข้าเว็บ เลื่อนลงทันทีเมื่อกด ⚙️ ตั้งค่า)
 # =====================================================
 with st.container(key="settings_drawer"):
     st.markdown(
@@ -459,9 +453,10 @@ with st.container(key="settings_drawer"):
                     )
                 st.rerun()
     with act4:
-        if st.button("✕ ซ่อนแผงตั้งค่า", use_container_width=True, key="close_camera_config"):
-            st.session_state.show_settings = False
-            st.rerun()
+        st.html(
+            '<button type="button" class="wv-btn" style="width:100%;min-height:42px;" '
+            'onclick="window.wvToggleDrawer(\'closed\')">✕ ซ่อนแผงตั้งค่า</button>'
+        )
 
 
 # =====================================================
@@ -595,7 +590,6 @@ if alert is not None:
     if remaining <= 0:
         st.session_state.density_alert = None
     else:
-        dark_mode = bool(st.session_state.get("dark_mode", True))
         alert_camera = str(alert.get("camera", "Camera"))
         alert_level = str(alert.get("level", "High"))
         alert_war = float(alert.get("war", 0))
@@ -610,10 +604,6 @@ if alert is not None:
             alert_icon = "⚠️"
             alert_title = "แจ้งเตือนปริมาณขยะระดับสูง"
             alert_message = "ควรวางแผนเข้าจัดเก็บขยะโดยเร็ว"
-
-        toast_bg = "rgba(12, 21, 38, 0.88)" if dark_mode else "rgba(255, 255, 255, 0.88)"
-        toast_text = "#f8fafc" if dark_mode else "#0f172a"
-        toast_sub = "#cbd5e1" if dark_mode else "#334155"
 
         alert_id = f"density-alert-{abs(hash((alert_camera, alert.get('created_at'))))}"
         alert_html = f"""
@@ -631,13 +621,13 @@ if alert is not None:
             align-items: flex-start;
             gap: 12px;
             padding: 15px 40px 15px 15px;
-            border: 1px solid rgba(255, 255, 255, 0.22);
+            border: 1px solid var(--liquid-border);
             border-left: 5px solid {alert_color};
             border-radius: 18px;
-            background: {toast_bg};
+            background: var(--popover-bg);
             backdrop-filter: blur(20px);
             box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
-            color: {toast_text};
+            color: var(--ink);
             font-family: "Prompt", "Noto Sans Thai", Tahoma, sans-serif;
             animation: densityAlertLife {remaining:.2f}s linear forwards;
         }}
@@ -662,7 +652,7 @@ if alert is not None:
             margin: 0;
             font-size: 12px;
             line-height: 1.55;
-            color: {toast_sub};
+            color: var(--ink-soft);
         }}
         #{alert_id} .alert-close {{
             position: absolute;
@@ -673,7 +663,7 @@ if alert is not None:
             border: 0;
             border-radius: 8px;
             background: transparent;
-            color: {toast_sub};
+            color: var(--ink-soft);
             font-size: 18px;
             cursor: pointer;
         }}
@@ -750,11 +740,6 @@ def render_camera_details(cam, data):
         graph_data = pd.DataFrame(st.session_state.history[cam]).reset_index(drop=True)
         graph_data["จุด"] = np.arange(1, len(graph_data) + 1)
 
-        dark_mode = bool(st.session_state.get("dark_mode", True))
-        chart_text = "#f8fafc" if dark_mode else "#0f172a"
-        chart_grid = "rgba(148, 163, 184, 0.15)" if dark_mode else "rgba(15, 23, 42, 0.08)"
-        line_color = "#00f5d4" if dark_mode else "#0d9488"
-
         fig = px.line(
             graph_data,
             x="จุด",
@@ -763,7 +748,7 @@ def render_camera_details(cam, data):
             custom_data=["เวลา", "ระดับ", "เปลี่ยนแปลง"],
         )
         fig.update_traces(
-            line=dict(width=3, color=line_color, shape="spline", smoothing=0.8),
+            line=dict(width=3, color="#14b8a6", shape="spline", smoothing=0.8),
             marker=dict(size=8, color="#ffffff", line=dict(width=2.5, color="#6366f1")),
             hovertemplate=(
                 "<b>ครั้งที่ %{x}</b><br>"
@@ -790,7 +775,6 @@ def render_camera_details(cam, data):
                         line_color=color,
                         annotation_text=f"{label} {y_val:g}%",
                         annotation_position="top left",
-                        annotation_font_color=chart_text,
                     )
                 except (TypeError, ValueError):
                     pass
@@ -801,7 +785,7 @@ def render_camera_details(cam, data):
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
             hovermode="x unified",
-            font=dict(family="Prompt, sans-serif", size=11, color=chart_text),
+            font=dict(family="Prompt, sans-serif", size=11, color="#94a3b8"),
             showlegend=False,
             xaxis=dict(
                 title="ครั้งที่บันทึก",
@@ -809,16 +793,14 @@ def render_camera_details(cam, data):
                 dtick=1,
                 showgrid=False,
                 zeroline=False,
-                color=chart_text,
             ),
             yaxis=dict(
                 title="WAR (%)",
                 ticksuffix="%",
                 showgrid=True,
-                gridcolor=chart_grid,
+                gridcolor="rgba(148, 163, 184, 0.16)",
                 zeroline=False,
                 rangemode="tozero",
-                color=chart_text,
             ),
         )
 
