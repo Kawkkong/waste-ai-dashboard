@@ -824,32 +824,183 @@ def inject_theme() -> None:
     [data-testid="stAlert"] * {
         color: var(--ink) !important;
     }
+
+    /* ============ 9) เก็บตกทุก element ที่ยังเป็นพื้นขาวในโหมดมืด ============ */
+    html[data-wv-theme="dark"] { color-scheme: dark; }
+    html[data-wv-theme="light"] { color-scheme: light; }
+
+    /* Scrollbar */
+    * { scrollbar-color: var(--muted) transparent; }
+
+    /* inline code / code block ใน markdown */
+    [data-testid="stMarkdownContainer"] code,
+    [data-testid="stCode"],
+    [data-testid="stCode"] pre,
+    pre {
+        background-color: var(--liquid-subtle) !important;
+        color: var(--accent) !important;
+        border-radius: 8px !important;
+    }
+
+    /* Tooltip (ไอคอน ? ของ widget) */
+    [data-testid="stTooltipContent"],
+    div[data-baseweb="tooltip"],
+    div[data-baseweb="tooltip"] > div {
+        background-color: var(--popover-bg) !important;
+        color: var(--ink) !important;
+        border: 1px solid var(--liquid-border) !important;
+    }
+
+    /* Popover (ปุ่ม ℹ️) และเนื้อหาข้างใน */
+    [data-testid="stPopoverBody"] * {
+        color: var(--ink) !important;
+    }
+    [data-testid="stPopoverBody"] {
+        border: 1px solid var(--liquid-border-hover) !important;
+        box-shadow: var(--shadow-hover) !important;
+    }
+
+    /* Selectbox: รายการใน dropdown + ช่องค้นหา */
+    ul[data-testid="stSelectboxVirtualDropdown"] li,
+    div[data-baseweb="menu"] li {
+        background-color: var(--popover-bg) !important;
+    }
+    div[data-baseweb="select"] [data-baseweb="tag"] {
+        background-color: var(--accent-glow) !important;
+    }
+
+    /* Checkbox กล่องติ๊ก */
+    [data-testid="stCheckbox"] label > span:first-child:not([data-testid]) {
+        background-color: var(--input-bg) !important;
+        border-color: var(--liquid-border-hover) !important;
+    }
+
+    /* File uploader: รายการไฟล์ที่อัปโหลดแล้ว + ปุ่มลบ */
+    [data-testid="stFileUploaderFile"],
+    [data-testid="stFileUploaderFileData"],
+    [data-testid="stFileUploader"] section + div,
+    [data-testid="stFileUploader"] [data-testid="stFileChips"] {
+        background-color: var(--liquid-subtle) !important;
+        color: var(--ink) !important;
+        border-radius: 12px !important;
+    }
+    [data-testid="stFileUploader"] small,
+    [data-testid="stFileUploader"] [data-testid="stFileUploaderFileName"] {
+        color: var(--ink-soft) !important;
+    }
+    [data-testid="stFileUploader"] [data-testid="stFileUploaderDeleteBtn"] button {
+        background: transparent !important;
+        box-shadow: none !important;
+        border: 0 !important;
+        min-height: 0 !important;
+    }
+
+    /* Alert (st.info / st.error / st.success) ให้ใช้พื้นกระจกเหมือนการ์ดอื่น */
+    [data-testid="stAlert"],
+    [data-testid="stAlertContainer"] {
+        background-color: transparent !important;
+        background: var(--liquid-bg) !important;
+        color: var(--ink) !important;
+    }
+
+    /* Expander: ส่วน header/ตัวห่อด้านนอกบางเวอร์ชันมีพื้นหลังของตัวเอง */
+    [data-testid="stExpander"] details,
+    [data-testid="stExpander"] summary,
+    [data-testid="stExpander"] > div {
+        background-color: transparent !important;
+    }
+
+    /* Plotly: hover label / modebar / ข้อความ annotation */
+    .js-plotly-plot .hoverlayer .hovertext path {
+        fill: var(--popover-bg) !important;
+        stroke: var(--liquid-border-hover) !important;
+    }
+    .js-plotly-plot .hoverlayer .hovertext text,
+    .js-plotly-plot .annotation-text {
+        fill: var(--ink) !important;
+    }
+    .js-plotly-plot .modebar { background: transparent !important; }
+    .js-plotly-plot .modebar-btn path { fill: var(--muted) !important; }
+    .js-plotly-plot .modebar-btn:hover path { fill: var(--accent) !important; }
+    .js-plotly-plot .gridlayer path { stroke: var(--liquid-border) !important; }
+
+    /* รูปภาพ (st.image) */
+    [data-testid="stImage"] img,
+    [data-testid="stImageContainer"] img {
+        border-radius: var(--radius-md) !important;
+        border: 1px solid var(--liquid-border) !important;
+    }
+
+    /* Dialog / Modal */
+    div[data-testid="stDialog"] div[role="dialog"] {
+        background-color: var(--popover-bg) !important;
+        color: var(--ink) !important;
+    }
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
 
-    # สคริปต์เริ่มต้นค่าโหมดมืด/สว่างและลิ้นชักตั้งค่าใน 0ms (ทำงานในเบราว์เซอร์ทันที ไม่ต้องรอ Server Rerun)
+    # สคริปต์สลับโหมด/ลิ้นชักตั้งค่า
+    # หมายเหตุ: st.html จะตัด <script> และ onclick ทิ้งโดยค่าเริ่มต้น ต้องเปิด unsafe_allow_javascript=True
+    # และใช้ event delegation (data-wv-action) เพื่อให้ปุ่มทำงานแม้ element ถูกวาดใหม่หลัง rerun
     init_js = """
     <script>
-    (function() {
+    (function () {
         const root = document.documentElement;
-        const savedTheme = localStorage.getItem('wv_theme') || 'dark';
-        const savedDrawer = sessionStorage.getItem('wv_drawer') || 'closed';
-        root.setAttribute('data-wv-theme', savedTheme);
-        root.setAttribute('data-wv-drawer', savedDrawer);
 
-        window.wvToggleTheme = function() {
-            const current = root.getAttribute('data-wv-theme') === 'light' ? 'dark' : 'light';
-            root.setAttribute('data-wv-theme', current);
-            localStorage.setItem('wv_theme', current);
+        function safeGet(store, key, fallback) {
+            try { return store.getItem(key) || fallback; } catch (e) { return fallback; }
+        }
+        function safeSet(store, key, value) {
+            try { store.setItem(key, value); } catch (e) {}
+        }
+
+        function applyTheme(theme) {
+            root.setAttribute('data-wv-theme', theme);
+            root.style.colorScheme = theme;
+            safeSet(localStorage, 'wv_theme', theme);
+        }
+        function applyDrawer(state) {
+            root.setAttribute('data-wv-drawer', state);
+            safeSet(sessionStorage, 'wv_drawer', state);
+        }
+
+        // ตั้งค่าเริ่มต้น (ทำทุกครั้งที่สคริปต์รัน แต่ไม่ทับค่าที่ผู้ใช้เลือกไว้แล้ว)
+        if (!root.hasAttribute('data-wv-theme')) {
+            applyTheme(safeGet(localStorage, 'wv_theme', 'dark'));
+        }
+        if (!root.hasAttribute('data-wv-drawer')) {
+            applyDrawer(safeGet(sessionStorage, 'wv_drawer', 'closed'));
+        }
+
+        window.wvToggleTheme = function () {
+            applyTheme(root.getAttribute('data-wv-theme') === 'light' ? 'dark' : 'light');
+        };
+        window.wvToggleDrawer = function (forceState) {
+            const open = root.getAttribute('data-wv-drawer') === 'open';
+            applyDrawer(forceState || (open ? 'closed' : 'open'));
         };
 
-        window.wvToggleDrawer = function(forceState) {
-            const next = forceState ? forceState : (root.getAttribute('data-wv-drawer') === 'open' ? 'closed' : 'open');
-            root.setAttribute('data-wv-drawer', next);
-            sessionStorage.setItem('wv_drawer', next);
-        };
+        // ผูก listener ครั้งเดียวทั้งหน้า (กันซ้ำเมื่อ Streamlit rerun)
+        if (!window.__wvBound) {
+            window.__wvBound = true;
+            document.addEventListener('click', function (ev) {
+                const el = ev.target.closest && ev.target.closest('[data-wv-action]');
+                if (!el) return;
+                const action = el.getAttribute('data-wv-action');
+                if (action === 'toggle-theme') {
+                    window.wvToggleTheme();
+                } else if (action === 'toggle-drawer') {
+                    window.wvToggleDrawer();
+                } else if (action === 'close-drawer') {
+                    window.wvToggleDrawer('closed');
+                } else if (action === 'dismiss') {
+                    const target = el.closest(el.getAttribute('data-wv-target') || '');
+                    if (target) target.remove();
+                }
+            });
+        }
     })();
     </script>
     """
-    st.html(init_js)
+    st.html(init_js, unsafe_allow_javascript=True)
